@@ -132,9 +132,9 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     /// It should be equal to its known value.
     /// </summary>
     [Test]
-    //todo: Fix this test by finding out a pointer path that actually works.
     public void ReadBytesTest() => Assert.That(
-        TestProcessMemory!.ReadBytes(OuterClassPointer + 0xB8, 4), Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
+        TestProcessMemory!.ReadBytes($"{OuterClassPointer:X}+18,10", 4),
+        Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.ReadLong(PointerPath)"/>.
