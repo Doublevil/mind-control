@@ -8,7 +8,6 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests <see cref="MindControl.ProcessMemory"/>'s general features.
 /// For memory reading tests, see <see cref="ProcessMemoryReadTest"/>.
 /// For memory path evaluation tests, see <see cref="ProcessMemoryEvaluateTest"/>.
-/// todo: complete
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryTest
@@ -27,12 +26,21 @@ public class ProcessMemoryTest
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "./Resources/TargetApp/MindControl.Test.TargetApp.exe",
+                FileName = "../../../MindControl.Test.TargetApp/bin/Release/MindControl.Test.TargetApp.exe",
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true
             }
         };
-        _targetProcess.Start();
+        
+        try
+        {
+            _targetProcess.Start();
+        }
+        catch (Exception e)
+        {
+            throw new Exception(
+                "An error occurred while attempting to start the testing target app. Please check that the MindControl.Test.TargetApp project has been built in Release before running the tests.", e);
+        }
         
         string? line = _targetProcess.StandardOutput.ReadLine();
         if (!IntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))

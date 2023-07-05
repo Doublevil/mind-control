@@ -2,9 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -18,10 +18,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Resources" />
     </ItemGroup>
 
     <ItemGroup>
