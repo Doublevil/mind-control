@@ -4,10 +4,32 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>MindControl</Title>
+    <RepositoryUrl>https://github.com/Doublevil/mind-control</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>0.1.0</Version>
   </PropertyGroup>
+  
+  <!-- Package-related features -->
+  <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>Doublevil</Authors>
+    <Description>A .net hacking library for Windows that allows you to manipulate a game or any other process and its internal memory.</Description>
+    <PackageTags>library, process, memory, win32, game, hacking, hack, trainer, cheat, cheating</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="res/icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Internal\HighResolutionTimer.cs" />
+    <PackageReference Include="DotNet.ReproducibleBuilds" Version="1.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
