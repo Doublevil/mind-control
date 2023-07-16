@@ -36,7 +36,7 @@ jobs:
         uses: actions/setup-dotnet@v3
       
       # Create the NuGet package in the folder from the environment variable NuGetDirectory
-      - run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }} -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg
+      - run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
       
       # Publish the NuGet package as an artifact, so they can be used in the following jobs
       - uses: actions/upload-artifact@v3
@@ -76,6 +76,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
+      - name: Build test target app
+        run: dotnet build test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release
       - name: Run tests
         run: dotnet test --configuration Release
 
