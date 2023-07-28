@@ -1,7 +1,7 @@
 ﻿// This application is intended to be used by unit tests as a target to attach to and read expected values.
 // It is designed in a way that allows it to be used in various memory manipulation scenarios.
-// The basic idea is to create a class instance, wait for a signal of some sort (tbd - input? timing?),
-// modify the values of the instance, then wait again for the same kind of signal, and write values in the output.
+// The basic idea is to create a class instance, wait for an input, modify the values of the instance, then wait for
+// another input, and write values in the output.
 // This will allow a unit test to both track values, and see if memory manipulation code worked by reading the output.
 
 var outer = new OuterClass();
@@ -57,6 +57,7 @@ Console.WriteLine(outer.MyShortValue);
 Console.WriteLine(outer.MyUshortValue);
 Console.WriteLine(outer.MyFloatValue);
 Console.WriteLine(outer.MyDoubleValue);
+Console.WriteLine(string.Join(",", outer.MyByteArray));
 
 public class OuterClass
 {

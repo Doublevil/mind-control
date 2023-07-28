@@ -19,6 +19,13 @@ public class ProcessMemory : IDisposable
     /// Gets a value indicating if the process is currently attached or not.
     /// </summary>
     public bool IsAttached { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the default way this instance deals with memory protection.
+    /// This value is used when no strategy is specified in memory write operations.
+    /// By default, this value will be <see cref="MemoryProtectionStrategy.RemoveAndRestore"/>.
+    /// </summary>
+    public MemoryProtectionStrategy DefaultStrategy { get; set; } = MemoryProtectionStrategy.RemoveAndRestore;
     
     /// <summary>
     /// Event handler used for the process detach event.
@@ -160,6 +167,15 @@ public class ProcessMemory : IDisposable
 
         return currentAddress;
     }
+
+    /// <summary>
+    /// Evaluates the given pointer path to the memory address it points to in the process.
+    /// If the path does not evaluate to a proper address, throws a <see cref="MemoryException"/>.
+    /// </summary>
+    /// <param name="pointerPath">Pointer path to evaluate.</param>
+    /// <returns>The memory address pointed by the pointer path.</returns>
+    private IntPtr EvaluateMemoryAddressOrThrow(PointerPath pointerPath) => EvaluateMemoryAddress(pointerPath)
+        ?? throw new MemoryException($"Could not evaluate pointer path \"{pointerPath}\".");
 
     /// <summary>
     /// Attempts to read an IntPtr from the given BigInteger value.
@@ -617,6 +633,48 @@ public class ProcessMemory : IDisposable
         if (address == IntPtr.Zero)
             return null;
         return _osService.ReadProcessMemory(_processHandle, address, length);
+    }
+    
+    #endregion
+    
+    #region Write methods
+
+    /// <summary>
+    /// Writes a sequence of bytes to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteBytes(PointerPath path, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a sequence of bytes to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteBytes(IntPtr address, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    {
+        // Remove protection if needed
+        MemoryProtection? previousProtection = null;
+        if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
+        {
+            previousProtection = _osService.ReadAndOverwriteProtection(
+                _processHandle, _is64Bits, address, MemoryProtection.ExecuteReadWrite);
+        }
+        
+        // Write memory
+        _osService.WriteProcessMemory(_processHandle, address, value);
+        
+        // Restore protection if needed
+        if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
+            && previousProtection != MemoryProtection.ExecuteReadWrite)
+        {
+            _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits, address, previousProtection!.Value);
+        }
     }
     
     #endregion

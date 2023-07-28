@@ -61,7 +61,7 @@ public class ProcessMemoryTest
     }
 
     private int _currentStep = 0;
-    protected readonly string[] FinalResults = new string[8]; 
+    protected readonly string[] FinalResults = new string[15]; 
     
     /// <summary>
     /// Sends input to the target app process in order to make it continue to the next step.
