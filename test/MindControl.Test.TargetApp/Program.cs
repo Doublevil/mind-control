@@ -4,6 +4,11 @@
 // another input, and write values in the output.
 // This will allow a unit test to both track values, and see if memory manipulation code worked by reading the output.
 
+using System.Text;
+
+Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+Console.OutputEncoding = Encoding.UTF8;
+
 var outer = new OuterClass();
 
 // Get a pointer to the instance and write it to the console. This will allow the unit test to get a base address to
@@ -16,7 +21,7 @@ unsafe
 }
 
 // Wait after creating the instance
-Console.In.Peek();
+Console.ReadLine();
 
 // Modify all values
 outer.MyBoolValue = false;
@@ -40,7 +45,7 @@ outer.MyByteArray[3] = 0x88;
 
 // Wait a second time to signal that values have been modified and to give a chance for the tests to modify memory
 Console.WriteLine("Waiting before outputting values...");
-Console.In.Peek();
+Console.ReadLine();
 
 // Output final values
 Console.WriteLine(outer.MyBoolValue);

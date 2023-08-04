@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
@@ -28,7 +29,8 @@ public class ProcessMemoryTest
             {
                 FileName = "../../../MindControl.Test.TargetApp/bin/Release/MindControl.Test.TargetApp.exe",
                 RedirectStandardOutput = true,
-                RedirectStandardInput = true
+                RedirectStandardInput = true,
+                StandardOutputEncoding = Encoding.UTF8
             }
         };
         

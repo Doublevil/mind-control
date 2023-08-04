@@ -640,6 +640,269 @@ public class ProcessMemory : IDisposable
     #region Write methods
 
     /// <summary>
+    /// Writes a value to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    /// <typeparam name="T">Type of the value to write.</typeparam>
+    /// <exception cref="ArgumentException">Thrown when the type of the value is not supported.</exception>
+    public void Write<T>(PointerPath path, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => Write(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a value to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    /// <typeparam name="T">Type of the value to write.</typeparam>
+    /// <exception cref="ArgumentException">Thrown when the type of the value is not supported.</exception>
+    public void Write<T>(IntPtr address, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    {
+        switch (value)
+        {
+            case bool v: WriteBool(address, v, memoryProtectionStrategy); break;
+            case byte v: WriteByte(address, v, memoryProtectionStrategy); break;
+            case short v: WriteShort(address, v, memoryProtectionStrategy); break;
+            case ushort v: WriteUShort(address, v, memoryProtectionStrategy); break;
+            case int v: WriteInt(address, v, memoryProtectionStrategy); break;
+            case uint v: WriteUInt(address, v, memoryProtectionStrategy); break;
+            case IntPtr v: WriteIntPtr(address, v, memoryProtectionStrategy); break;
+            case float v: WriteFloat(address, v, memoryProtectionStrategy); break;
+            case long v: WriteLong(address, v, memoryProtectionStrategy); break;
+            case ulong v: WriteULong(address, v, memoryProtectionStrategy); break;
+            case double v: WriteDouble(address, v, memoryProtectionStrategy); break;
+            case byte[] v: WriteBytes(address, v, memoryProtectionStrategy); break;
+            default: throw new ArgumentException($"Writing a value of type \"{typeof(T)}\" is not supported.");
+        }
+    }
+    
+    /// <summary>
+    /// Writes a boolean value to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write. True will be written as a byte with the value 1. False will be written
+    /// as a byte with the value 0.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteBool(PointerPath path, bool value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBool(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a boolean value to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write. True will be written as a byte with the value 1. False will be written
+    /// as a byte with the value 0.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteBool(IntPtr address, bool value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, new[] { (byte)(value ? 1 : 0) }, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a byte to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteByte(PointerPath path, byte value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteByte(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a byte to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteByte(IntPtr address, byte value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, new[] { value }, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a short to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteShort(PointerPath path, short value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteShort(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a short to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteShort(IntPtr address, short value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned short to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteUShort(PointerPath path, ushort value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteUShort(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned short to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteUShort(IntPtr address, ushort value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+
+    /// <summary>
+    /// Writes an integer to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteInt(PointerPath path, int value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteInt(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an integer to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteInt(IntPtr address, int value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned integer to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteUInt(PointerPath path, uint value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteUInt(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned integer to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteUInt(IntPtr address, uint value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a pointer to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteIntPtr(PointerPath path, IntPtr value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteIntPtr(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a pointer to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteIntPtr(IntPtr address, IntPtr value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, value.ToBytes(_is64Bits), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a float to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteFloat(PointerPath path, float value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteFloat(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a float to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteFloat(IntPtr address, float value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a long to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteLong(PointerPath path, long value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteLong(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a long to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteLong(IntPtr address, long value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned long to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteULong(PointerPath path, ulong value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteULong(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes an unsigned long to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteULong(IntPtr address, ulong value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a double to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteDouble(PointerPath path, double value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteDouble(EvaluateMemoryAddressOrThrow(path), value, memoryProtectionStrategy);
+    
+    /// <summary>
+    /// Writes a double to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultStrategy"/> of this instance is used.</param>
+    public void WriteDouble(IntPtr address, double value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+        => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
+    
+    /// <summary>
     /// Writes a sequence of bytes to the address referred by the given pointer path in the process memory.
     /// </summary>
     /// <param name="path">Optimized, reusable path to the target address.</param>

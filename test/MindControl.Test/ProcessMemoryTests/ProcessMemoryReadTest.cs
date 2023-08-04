@@ -6,6 +6,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// <summary>
 /// Tests the memory reading methods of <see cref="ProcessMemory"/>.
 /// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryReadTest : ProcessMemoryTest
 {
     /// <summary>

@@ -1,4 +1,6 @@
-﻿namespace MindControl.Internal;
+﻿using System.Runtime.InteropServices;
+
+namespace MindControl.Internal;
 
 /// <summary>
 /// Provides extension methods for byte arrays.
@@ -22,6 +24,20 @@ internal static class ByteArrayExtension
         ulong result = 0;
         for (int i = 0; i < bytes.Length; i++)
             result += (ulong)(bytes[i] * Math.Pow(256, i));
+        return result;
+    }
+
+    /// <summary>
+    /// Converts the pointer to an array of bytes.
+    /// </summary>
+    /// <param name="pointer">Pointer to convert.</param>
+    /// <param name="is64">A boolean value indicating if the target architecture of the pointer is 64-bits or not.
+    /// This value is used to determine the size of the returned array.</param>
+    /// <returns>The array of bytes representing the pointer.</returns>
+    public static byte[] ToBytes(this IntPtr pointer, bool is64)
+    {
+        var result = new byte[is64 ? 8 : 4];
+        Marshal.Copy(pointer, result, 0, result.Length);
         return result;
     }
 }
