@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+#pragma warning disable CS0649
 
 namespace MindControl.Native;
 
@@ -201,6 +202,42 @@ public class Win32Service : IOperatingSystemService
     private static extern int ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer,
         ulong nSize, out ulong lpNumberOfBytesRead);
     
+    /// <summary>
+    /// Changes the protection on a region of committed pages in the virtual address space of a specified process.
+    /// </summary>
+    /// <param name="hProcess">A handle to the process whose memory protection is to be changed. The handle must have
+    /// the PROCESS_VM_OPERATION access right.</param>
+    /// <param name="lpAddress">A pointer to the base address of the region of pages whose access protection attributes
+    /// are to be changed.</param>
+    /// <param name="dwSize">The size of the region whose access protection attributes are changed, in bytes.</param>
+    /// <param name="flNewProtect">The memory protection option. This parameter can be one of the memory protection
+    /// constants.</param>
+    /// <param name="lpflOldProtect">A pointer to a variable that receives the previous access protection of the first
+    /// page in the specified region of pages.</param>
+    /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
+    [DllImport("kernel32.dll")]
+    public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress,
+        IntPtr dwSize, MemoryProtection flNewProtect, out MemoryProtection lpflOldProtect);
+    
+    /// <summary>
+    /// Writes data to an area of memory in a specified process. The entire area to be written to must be accessible
+    /// or the operation fails.
+    /// </summary>
+    /// <param name="hProcess">A handle to the process memory to be modified. The handle must have PROCESS_VM_WRITE and
+    /// PROCESS_VM_OPERATION access to the process.</param>
+    /// <param name="lpBaseAddress">A pointer to the base address in the specified process to which data is written.
+    /// Before data transfer occurs, the system verifies that all data in the base address and memory of the specified
+    /// size is accessible for write access, and if it is not accessible, the function fails.</param>
+    /// <param name="lpBuffer">A pointer to the buffer that contains data to be written in the address space of the
+    /// specified process.</param>
+    /// <param name="nSize">The number of bytes to be written to the specified process.</param>
+    /// <param name="lpNumberOfBytesWritten">A pointer to a variable that receives the number of bytes transferred into
+    /// the specified process. This parameter is optional. If null, it will be ignored.</param>
+    /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
+    [DllImport("kernel32.dll")]
+    public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr nSize,
+        IntPtr lpNumberOfBytesWritten);
+    
     #endregion
 
     /// <summary>
@@ -246,6 +283,9 @@ public class Win32Service : IOperatingSystemService
     /// <returns>An array of bytes containing the data read from the memory.</returns>
     public byte[] ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length)
     {
+        if (processHandle == IntPtr.Zero)
+            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+        
         var result = new byte[length];
         int returnValue = ReadProcessMemory(processHandle, baseAddress, result, length, out _);
 
@@ -253,5 +293,58 @@ public class Win32Service : IOperatingSystemService
             throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
 
         return result;
+    }
+    
+    /// <summary>
+    /// Overwrites the memory protection of the page that the given address is part of.
+    /// Returns the memory protection that was effective on the page before being changed.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.
+    /// The handle must have PROCESS_VM_OPERATION access.</param>
+    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    /// <param name="targetAddress">An address in the target page.</param>
+    /// <param name="newProtection">New protection value for the page.</param>
+    /// <returns>The memory protection value that was effective on the page before being changed.</returns>
+    public MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, IntPtr targetAddress,
+        MemoryProtection newProtection)
+    {
+        if (processHandle == IntPtr.Zero)
+            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+        if (targetAddress == IntPtr.Zero)
+            throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
+
+        bool result = VirtualProtectEx(processHandle, targetAddress, (IntPtr)(is64Bits ? 8 : 4), newProtection,
+            out var previousProtection);
+
+        if (!result)
+            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+
+        return previousProtection;
+    }
+
+    /// <summary>
+    /// Writes the given bytes into the memory of the specified process, at the target address.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_WRITE and
+    /// PROCESS_VM_OPERATION access.</param>
+    /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
+    /// <param name="value">Byte array to write in the memory. It is assumed that the entire array will be
+    /// written, unless a size is specified.</param>
+    /// <param name="size">Specify this value if you only want to write part of the value array in memory.
+    /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
+    public void WriteProcessMemory(IntPtr processHandle, IntPtr targetAddress, byte[] value, int? size = null)
+    {
+        if (processHandle == IntPtr.Zero)
+            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+        if (targetAddress == IntPtr.Zero)
+            throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
+        if (size != null && size.Value > value.Length)
+            throw new ArgumentOutOfRangeException(nameof(size),"The size cannot exceed the length of the value array.");
+
+        bool result = WriteProcessMemory(processHandle, targetAddress, value,
+            (UIntPtr)(size ?? value.Length), IntPtr.Zero);
+        
+        if (!result)
+            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
     }
 }

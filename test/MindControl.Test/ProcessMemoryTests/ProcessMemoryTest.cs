@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
@@ -26,9 +27,10 @@ public class ProcessMemoryTest
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "../../../MindControl.Test.TargetApp/bin/Release/MindControl.Test.TargetApp.exe",
+                FileName = "./MindControl.Test.TargetApp.exe",
                 RedirectStandardOutput = true,
-                RedirectStandardInput = true
+                RedirectStandardInput = true,
+                StandardOutputEncoding = Encoding.UTF8
             }
         };
         
@@ -61,7 +63,7 @@ public class ProcessMemoryTest
     }
 
     private int _currentStep = 0;
-    protected readonly string[] FinalResults = new string[8]; 
+    protected readonly string[] FinalResults = new string[15]; 
     
     /// <summary>
     /// Sends input to the target app process in order to make it continue to the next step.

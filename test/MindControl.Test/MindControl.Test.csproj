@@ -18,24 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Update="Resources\TargetApp\MindControl.Test.TargetApp.dll">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Resources\TargetApp\MindControl.Test.TargetApp.exe">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Resources\TargetApp\MindControl.Test.TargetApp.pdb">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Resources\TargetApp\MindControl.Test.TargetApp.deps.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Resources\TargetApp\MindControl.Test.TargetApp.runtimeconfig.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+      <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
     </ItemGroup>
 
 </Project>
