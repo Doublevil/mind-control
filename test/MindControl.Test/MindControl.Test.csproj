@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
+      <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
     </ItemGroup>
 
 </Project>

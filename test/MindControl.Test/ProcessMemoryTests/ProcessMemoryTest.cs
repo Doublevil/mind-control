@@ -27,7 +27,7 @@ public class ProcessMemoryTest
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "../../../MindControl.Test.TargetApp/bin/Release/MindControl.Test.TargetApp.exe",
+                FileName = "./MindControl.Test.TargetApp.exe",
                 RedirectStandardOutput = true,
                 RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8
