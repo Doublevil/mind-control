@@ -39,7 +39,7 @@ public class ThreadingTimer : IStateTimer
     /// <param name="interval">Interval between two automatic ticks.</param>
     public ThreadingTimer(TimeSpan interval)
     {
-        Interval = interval;
+        _interval = interval;
         _timer = new Timer(OnElapsed, null, Timeout.InfiniteTimeSpan, interval);
     }
 

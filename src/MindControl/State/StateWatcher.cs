@@ -147,6 +147,8 @@ public abstract class StateWatcher<T>
             StateUpdated?.Invoke(this, new StateEventArgs<T>(LatestState!));
             OnAfterUpdate(previousState, LatestState!);
         }
+
+        _updateSemaphore.Release();
     }
 
     /// <summary>
