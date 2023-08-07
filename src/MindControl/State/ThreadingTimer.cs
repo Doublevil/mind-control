@@ -7,25 +7,11 @@ public class ThreadingTimer : IStateTimer
 {
     private bool _isRunning;
     private readonly Timer _timer;
-    
+
     /// <summary>
     /// Gets or sets a value indicating if the timer is currently running.
     /// </summary>
-    public bool IsEnabled
-    {
-        get => _isRunning;
-        set
-        {
-            if (_isRunning == value)
-                return;
-
-            // Call Start or Stop depending on the value set
-            if (value)
-                Start();
-            else
-                Stop();
-        }
-    }
+    public bool IsRunning => _isRunning;
 
     private TimeSpan _interval;
 

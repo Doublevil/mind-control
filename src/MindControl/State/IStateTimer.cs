@@ -6,9 +6,9 @@
 public interface IStateTimer
 {
     /// <summary>
-    /// Gets or sets a value indicating if the timer is currently running.
+    /// Gets a value indicating if the timer is currently running.
     /// </summary>
-    bool IsEnabled { get; set; }
+    bool IsRunning { get; }
     
     /// <summary>
     /// Gets or sets the interval between two automatic ticks.
@@ -19,6 +19,16 @@ public interface IStateTimer
     /// Event triggered when the timer ticks, either automatically or manually.
     /// </summary>
     event EventHandler? Tick;
+
+    /// <summary>
+    /// Starts the timer.
+    /// </summary>
+    void Start();
+
+    /// <summary>
+    /// Stops the timer.
+    /// </summary>
+    void Stop();
     
     /// <summary>
     /// Manually triggers a tick.

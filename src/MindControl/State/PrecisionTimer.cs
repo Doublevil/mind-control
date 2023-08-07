@@ -24,29 +24,12 @@ public class PrecisionTimer : IStateTimer
     /// </summary>
     private volatile float _interval;
 
-    /// <summary>
-    /// The timer is running
-    /// </summary>
     private volatile bool _isRunning;
 
     /// <summary>
     /// Gets or sets a value indicating if the timer is currently running.
     /// </summary>
-    public bool IsEnabled
-    {
-        get => _isRunning;
-        set
-        {
-            if (_isRunning == value)
-                return;
-
-            // Start or stop depending on the value wanted.
-            if (value)
-                Start();
-            else
-                Stop();
-        }
-    }
+    public bool IsRunning => _isRunning;
 
     /// <summary>
     /// Gets or sets the max duration of a stopwatch before it is restarted.
@@ -106,13 +89,13 @@ public class PrecisionTimer : IStateTimer
     /// <summary>
     /// Stops the timer.
     /// </summary>
-    public void Stop(bool joinThread = true)
+    public void Stop()
     {
         _isRunning = false;
 
         // Even if _thread.Join may take time it is guaranteed that 
         // Elapsed event is never called overlapped with different threads
-        if (_thread != null && joinThread && Thread.CurrentThread != _thread)
+        if (_thread != null && Thread.CurrentThread != _thread)
             _thread.Join();
     }
 
