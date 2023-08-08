@@ -102,11 +102,6 @@ public abstract class StateWatcher<T>
     /// Stops automatically refreshing state.
     /// </summary>
     public void Stop() => _timer.Stop();
-
-    /// <summary>
-    /// Manually updates the state.
-    /// </summary>
-    public void ForceUpdate() => _timer.ForceTick();
     
     /// <summary>
     /// Callback. Called when the timer ticks.
@@ -115,9 +110,9 @@ public abstract class StateWatcher<T>
     private void OnTimerTick(object? sender, EventArgs e) => UpdateState();
 
     /// <summary>
-    /// Performs a state update.
+    /// Performs a state update. This method is automatically called at regular intervals when the watcher is running.
     /// </summary>
-    protected void UpdateState()
+    public void UpdateState()
     {
         // Prevent multiple updates from occurring at the same time.
         if (!_updateSemaphore.Wait(0))
@@ -161,6 +156,6 @@ public abstract class StateWatcher<T>
     /// </summary>
     /// <param name="previousState">Previous state, before the update occurred.</param>
     /// <param name="newState">State that was just read. Provided for convenience, but should be the same as
-    /// <see cref="LatestState"/>.</param>
-    protected abstract void OnAfterUpdate(T? previousState, T newState);
+    /// the latest state of this instance.</param>
+    protected virtual void OnAfterUpdate(T? previousState, T newState) {}
 }
