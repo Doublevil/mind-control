@@ -52,3 +52,9 @@ Here are common reasons for your programs to fail:
 - Your hacking program may need to be run as an administrator. This can be required to manipulate memory, disable protections, and other internal operations that MindControl does.
 - You are getting/setting wrong values because your pointer path is not stable. Double-check with Cheat Engine that your pointer does work in the same circumstances.
 - You cannot read string properly. Check out the [Manipulating strings](ManipulatingStrings.md) documentation.
+
+## Tracking a process in real-time
+
+The `StateWatcher` class gives you a convenient way to access the internal data of your target process, with automatic refreshes.
+
+Check the [StateWatcher](StateWatcher.md) documentation to learn how to set it up.
