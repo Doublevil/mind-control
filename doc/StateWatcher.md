@@ -15,7 +15,7 @@ public class MyGameWatcher : StateWatcher<MyGameState>
 {
     private ProcessMemory _myGame;
     
-    public TestStateWatcher()
+    public MyGameWatcher()
         : base(30) // This makes it refresh 30 times per second
     {
         // We build a new ProcessMemory instance here, but we could also
