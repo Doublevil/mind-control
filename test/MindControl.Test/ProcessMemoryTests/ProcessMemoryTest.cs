@@ -88,11 +88,13 @@ public class ProcessMemoryTest
             _targetProcess!.StandardOutput.ReadLine();
         }
     }
-    
+
     /// <summary>
-    /// This test only ensures that the setup works, i.e. that opening a process as a <see cref="MindControl.ProcessMemory"/>
-    /// instance won't throw an exception.
+    /// Sends input to the target app process in order to make it continue to the end.
     /// </summary>
-    [Test]
-    public void OpenProcessTest() { }
+    protected void ProceedUntilProcessEnds()
+    {
+        ProceedToNextStep();
+        ProceedToNextStep();
+    }
 }
