@@ -23,7 +23,20 @@ public class ProcessMemoryTest
     [SetUp]
     public void Initialize()
     {
-        _targetProcess = new Process
+        _targetProcess = StartTargetAppProcess();
+        string? line = _targetProcess.StandardOutput.ReadLine();
+        if (!IntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))
+            throw new Exception($"Could not read the outer class pointer output by the app: \"{line}\".");
+        
+        TestProcessMemory = ProcessMemory.OpenProcess(_targetProcess);
+    }
+
+    /// <summary>
+    /// Starts the target app and returns its process.
+    /// </summary>
+    public static Process StartTargetAppProcess()
+    {
+        var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -33,22 +46,8 @@ public class ProcessMemoryTest
                 StandardOutputEncoding = Encoding.UTF8
             }
         };
-        
-        try
-        {
-            _targetProcess.Start();
-        }
-        catch (Exception e)
-        {
-            throw new Exception(
-                "An error occurred while attempting to start the testing target app. Please check that the MindControl.Test.TargetApp project has been built in Release before running the tests.", e);
-        }
-        
-        string? line = _targetProcess.StandardOutput.ReadLine();
-        if (!IntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))
-            throw new Exception($"Could not read the outer class pointer output by the app: \"{line}\".");
-        
-        TestProcessMemory = ProcessMemory.OpenProcess(_targetProcess);
+        process.Start();
+        return process;
     }
 
     /// <summary>
@@ -60,6 +59,8 @@ public class ProcessMemoryTest
         TestProcessMemory?.Dispose();
         _targetProcess?.Kill();
         _targetProcess?.Dispose();
+        // Make sure the process is exited before going on, otherwise it could cause other tests to fail. 
+        Thread.Sleep(250);
     }
 
     private int _currentStep = 0;
