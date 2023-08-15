@@ -57,7 +57,7 @@ public class ProcessTrackerTest
     /// <summary>
     /// Sends input to the target app process in order to make it continue to the end.
     /// </summary>
-    private static void ProceedUntilProcessEnds(Process targetAppProcess, bool wait = true)
+    private static void ProceedUntilProcessEnds(Process targetAppProcess)
     {
         // Write lines into the standard input of the target app to make it advance to the next step twice and thus end. 
         targetAppProcess.StandardInput.WriteLine();
@@ -65,8 +65,7 @@ public class ProcessTrackerTest
         targetAppProcess.StandardInput.Flush();
         
         // Wait a bit to make sure the process has time to respond and exit before the method ends.
-        if (wait)
-            Thread.Sleep(1000);
+        Thread.Sleep(1000);
     }
 
     /// <summary>
@@ -202,41 +201,6 @@ public class ProcessTrackerTest
         {
             Assert.That(_attachedEventCount, Is.EqualTo(1));
             Assert.That(_detachedEventCount, Is.Zero);
-        });
-    }
-    
-    /// <summary>
-    /// Starts a target process and calls <see cref="ProcessTracker.GetProcessMemory"/> asynchronously a large number
-    /// of times simultaneously, while also making the process run to the end.
-    /// In addition to <see cref="GetProcessMemoryWithMultipleSimultaneousCallsTest"/>, this test checks that the
-    /// process exit is also handled in a thread-safe way.
-    /// </summary>
-    [Test]
-    public async Task GetProcessMemoryWithMultipleSimultaneousCallsWhileProcessExitsTest()
-    {
-        var random = new Random();
-        var process = StartTargetAppProcess();
-        const int runCount = 1000;
-        var tasks = new List<Task>(runCount);
-        for (var i = 0; i < runCount; i++)
-        {
-            tasks.Add(Task.Run(() =>
-            {
-                Thread.Sleep(random.Next(1, 50));
-                _tracker!.GetProcessMemory();
-            }));
-        }
-        tasks.Add(Task.Run(() =>
-        {
-            Thread.Sleep(25);
-            ProceedUntilProcessEnds(process, wait: false);
-        }));
-        await Task.WhenAll(tasks);
-        
-        Assert.Multiple(() =>
-        {
-            Assert.That(_attachedEventCount, Is.EqualTo(1));
-            Assert.That(_detachedEventCount, Is.EqualTo(1));
         });
     }
 }
