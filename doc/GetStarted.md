@@ -9,8 +9,8 @@ This documentation aims to provide you with basic directions on how to get start
 Let's go through the basics of hacking a health value in an imaginary game.
 
 ```csharp
-// Open a process named "mygame.exe" that is currently running
-var myGame = ProcessMemory.OpenProcess("mygame.exe");
+// Open a process named "mygame" that is currently running
+var myGame = ProcessMemory.OpenProcess("mygame");
 
 // Build a path that points to the health value or anything else you want to hack
 // To determine these, use tools like Cheat Engine (keep reading the docs for more info)
@@ -58,3 +58,49 @@ Here are common reasons for your programs to fail:
 The `StateWatcher` class gives you a convenient way to access the internal data of your target process, with automatic refreshes.
 
 Check the [StateWatcher](StateWatcher.md) documentation to learn how to set it up.
+
+## Handle process exit and restart
+
+The `ProcessMemory` class has a `ProcessDetached` event that you can use to react to your target process exiting or crashing. Note that it will also fire when disposing the instance.
+
+```csharp
+var myGame = ProcessMemory.OpenProcess("mygame");
+myGame.ProcessDetached += (_, _) => { Console.WriteLine("Target process is detached."); }
+```
+
+However, a `ProcessMemory` instance that has been detached **cannot be reattached**.
+
+If you want to handle your target process exiting and potentially restarting (or starting after your hacking program), use the `ProcessTracker` class.
+
+```csharp
+var tracker = new ProcessTracker("mygame");
+tracker.Attached += (_, _) => { Console.WriteLine("Target is attached."); }
+tracker.Detached += (_, _) => { Console.WriteLine("Target is detached."); }
+
+var myGame = tracker.GetProcessMemory();
+```
+
+The `GetProcessMemory` method will return an attached `ProcessMemory` instance, or null if the target process is not running. It will automatically handle target process restarts by creating a new `ProcessMemory` instance when the existing one has been detached.
+
+Just make sure to use the freshest instance from the tracker in your reading/writing methods, and not a stored `ProcessMemory` variable:
+
+```csharp
+public MyHackingClass()
+{
+    Tracker = new ProcessTracker("mygame");
+}
+public void Update()
+    => DoSomeHacking(Tracker.GetProcessMemory()); // ✓ This will handle restarts
+```
+
+VS
+
+```csharp
+public MyHackingClass()
+{
+    var tracker = new ProcessTracker("mygame");
+    MyGame = tracker.GetProcessMemory();
+}
+public void Update()
+    => DoSomeHacking(MyGame); // ✖ This will NOT handle restarts.
+```

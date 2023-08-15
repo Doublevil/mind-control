@@ -26,16 +26,11 @@ public class ProcessMemory : IDisposable
     /// By default, this value will be <see cref="MemoryProtectionStrategy.RemoveAndRestore"/>.
     /// </summary>
     public MemoryProtectionStrategy DefaultStrategy { get; set; } = MemoryProtectionStrategy.RemoveAndRestore;
-    
-    /// <summary>
-    /// Event handler used for the process detach event.
-    /// </summary>
-    public delegate void ProcessDetachedEventHandler(object sender, EventArgs e);
 
     /// <summary>
     /// Event raised when the process detaches for any reason.
     /// </summary>
-    public event ProcessDetachedEventHandler? ProcessDetached;
+    public event EventHandler? ProcessDetached;
 
     /// <summary>
     /// Attaches to a process with the given name and returns the resulting <see cref="ProcessMemory"/> instance.
@@ -84,7 +79,7 @@ public class ProcessMemory : IDisposable
     /// Builds a new instance that attaches to the given process.
     /// </summary>
     /// <param name="process">Target process.</param>
-    private ProcessMemory(Process process) : this(process, new Win32Service()) {}
+    public ProcessMemory(Process process) : this(process, new Win32Service()) {}
 
     /// <summary>
     /// Builds a new instance that attaches to the given process.
@@ -93,7 +88,7 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="process">Target process.</param>
     /// <param name="osService">Service that provides system-specific process-oriented features.</param>
-    public ProcessMemory(Process process, IOperatingSystemService osService)
+    private ProcessMemory(Process process, IOperatingSystemService osService)
     {
         _process = process;
         _osService = osService;
