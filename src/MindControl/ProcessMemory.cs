@@ -123,6 +123,13 @@ public class ProcessMemory : IDisposable
     #region EvaluateMemoryAddress
 
     /// <summary>
+    /// Returns True if and only if the given pointer is compatible with the bitness of the target process.
+    /// In other words, returns false if the pointer is a 64-bit address but the target process is 32-bit. 
+    /// </summary>
+    /// <param name="pointer">Pointer to test.</param>
+    private bool IsBitnessCompatible(IntPtr pointer) => _is64Bits || pointer.ToInt64() <= uint.MaxValue;
+    
+    /// <summary>
     /// Evaluates the given pointer path to the memory address it points to in the process.
     /// </summary>
     /// <param name="pointerPath">Pointer path to evaluate.</param>
@@ -150,8 +157,8 @@ public class ProcessMemory : IDisposable
         {
             // Read the value pointed by the current address as a pointer address
             IntPtr? nextAddress = ReadIntPtr(currentAddress);
-            if (nextAddress == null)
-                return null;
+            if (nextAddress == null || !IsBitnessCompatible(nextAddress.Value))
+                return null; // Return null if the pointer is invalid (null pointer / 64-bit pointer in 32-bit process)
 
             // Apply the offset to the value we just read and keep going
             var offset = pointerPath.PointerOffsets[i];
@@ -625,7 +632,7 @@ public class ProcessMemory : IDisposable
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
     public byte[]? ReadBytes(IntPtr address, ulong length)
     {
-        if (address == IntPtr.Zero)
+        if (address == IntPtr.Zero || !IsBitnessCompatible(address))
             return null;
         return _osService.ReadProcessMemory(_processHandle, address, length);
     }
