@@ -157,13 +157,13 @@ public class ProcessMemory : IDisposable
         {
             // Read the value pointed by the current address as a pointer address
             IntPtr? nextAddress = ReadIntPtr(currentAddress);
-            if (nextAddress == null || !IsBitnessCompatible(nextAddress.Value))
-                return null; // Return null if the pointer is invalid (null pointer / 64-bit pointer in 32-bit process)
+            if (nextAddress == null)
+                return null;
 
             // Apply the offset to the value we just read and keep going
             var offset = pointerPath.PointerOffsets[i];
             currentAddress = ReadIntPtrFromBigInteger(nextAddress.Value.ToInt64() + offset);
-            if (currentAddress == IntPtr.Zero)
+            if (currentAddress == IntPtr.Zero || !IsBitnessCompatible(currentAddress))
                 return null;
         }
 
@@ -435,9 +435,9 @@ public class ProcessMemory : IDisposable
         var bytes = ReadBytes(address, (ulong)IntPtr.Size);
         if (bytes == null)
             return null;
-        return IntPtr.Size == 4 ?
-            (IntPtr)BitConverter.ToUInt32(bytes)
-            : (IntPtr)BitConverter.ToUInt64(bytes);
+        return _is64Bits ?
+            (IntPtr)BitConverter.ToUInt64(bytes)
+            : (IntPtr)BitConverter.ToUInt32(bytes);
     }
     
     /// <summary>

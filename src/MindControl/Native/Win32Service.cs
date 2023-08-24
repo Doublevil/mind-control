@@ -281,7 +281,7 @@ public class Win32Service : IOperatingSystemService
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>An array of bytes containing the data read from the memory.</returns>
-    public byte[] ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length)
+    public byte[]? ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length)
     {
         if (processHandle == IntPtr.Zero)
             throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
@@ -290,8 +290,20 @@ public class Win32Service : IOperatingSystemService
         int returnValue = ReadProcessMemory(processHandle, baseAddress, result, length, out _);
 
         if (returnValue == 0)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
-
+        {
+            int errorCode = Marshal.GetLastWin32Error();
+            
+            // ERROR_PARTIAL_COPY (299): Generic error that is raised when the address isn't valid for whatever reason.
+            // This error is quite generic and does not really allow users to identify what's wrong.
+            // In order to simplify error handling by a significant margin and also preserve performance, we will
+            // not throw when getting this particular error code.
+            if (errorCode == 299)
+                return null;
+            
+            // In other cases, throw.
+            throw new Win32Exception(errorCode);
+        }
+        
         return result;
     }
     

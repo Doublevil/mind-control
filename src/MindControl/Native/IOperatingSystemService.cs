@@ -26,7 +26,7 @@ public interface IOperatingSystemService
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>An array of bytes containing the data read from the memory.</returns>
-    byte[] ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length);
+    byte[]? ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length);
 
     /// <summary>
     /// Overwrites the memory protection of the page that the given address is part of.
