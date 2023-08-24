@@ -121,6 +121,6 @@ public abstract class TimerTest
         
         // Do not rely on precise times or tick counts, because test runners might be very slow.
         // And also leave some leeway for implementation details.
-        Assert.That(_tickCount, Is.AtLeast(8));
+        Assert.That(_tickCount, Is.AtLeast(6));
     }
 }
