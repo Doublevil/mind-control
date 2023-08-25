@@ -86,4 +86,5 @@ public class InnerClass
     public byte InnerFirstValue = 0xAA;
     public int InnerSecondValue = 1111111;
     public long InnerThirdValue = 999999999999L;
+    public ulong InnerUlongMaxValue = ulong.MaxValue;
 }

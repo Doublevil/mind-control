@@ -127,44 +127,50 @@ public class ProcessMemory : IDisposable
     /// In other words, returns false if the pointer is a 64-bit address but the target process is 32-bit. 
     /// </summary>
     /// <param name="pointer">Pointer to test.</param>
-    private bool IsBitnessCompatible(IntPtr pointer) => _is64Bits || pointer.ToInt64() <= uint.MaxValue;
+    private bool IsBitnessCompatible(UIntPtr pointer) => _is64Bits || pointer.ToUInt64() <= uint.MaxValue;
     
     /// <summary>
     /// Evaluates the given pointer path to the memory address it points to in the process.
     /// </summary>
     /// <param name="pointerPath">Pointer path to evaluate.</param>
     /// <returns>The memory address pointed by the pointer path.</returns>
-    public IntPtr? EvaluateMemoryAddress(PointerPath pointerPath)
+    public UIntPtr? EvaluateMemoryAddress(PointerPath pointerPath)
     {
         if (pointerPath.IsStrictly64Bits && (IntPtr.Size == 4 || !_is64Bits))
             throw new ArgumentException(
                 $"The pointer path \"{pointerPath.Expression}\" uses addresses intended for a 64-bits process, but this instance is targeting a 32-bits process.");
         
-        IntPtr? baseAddress = pointerPath.BaseModuleName != null
+        UIntPtr? baseAddress = pointerPath.BaseModuleName != null
             ? GetModuleAddress(pointerPath.BaseModuleName)
             : ReadIntPtrFromBigInteger(pointerPath.PointerOffsets.FirstOrDefault());
 
-        if (baseAddress == null || baseAddress == IntPtr.Zero)
-            return null;
+        if (baseAddress == null)
+            return null; // Module not found
 
         if (pointerPath.BaseModuleOffset > 0)
-            baseAddress = ReadIntPtrFromBigInteger(baseAddress.Value.ToInt64() + pointerPath.BaseModuleOffset);
+            baseAddress = ReadIntPtrFromBigInteger(baseAddress.Value.ToUInt64() + pointerPath.BaseModuleOffset);
 
+        if (baseAddress == null || baseAddress == UIntPtr.Zero)
+            return null; // Overflow after applying the module offset, or zero pointer
+        
         // Follow the pointer path offset by offset
-        IntPtr currentAddress = baseAddress.Value;
+        var currentAddress = baseAddress.Value;
         int startIndex = pointerPath.BaseModuleName == null ? 1 : 0;
         for (int i = startIndex; i < pointerPath.PointerOffsets.Length; i++)
         {
             // Read the value pointed by the current address as a pointer address
-            IntPtr? nextAddress = ReadIntPtr(currentAddress);
+            UIntPtr? nextAddress = ReadIntPtr(currentAddress);
             if (nextAddress == null)
-                return null;
+                return null; // Read operation failed on the address
 
-            // Apply the offset to the value we just read and keep going
+            // Apply the offset to the value we just read and check the result
             var offset = pointerPath.PointerOffsets[i];
-            currentAddress = ReadIntPtrFromBigInteger(nextAddress.Value.ToInt64() + offset);
-            if (currentAddress == IntPtr.Zero || !IsBitnessCompatible(currentAddress))
-                return null;
+            var nextValue = ReadIntPtrFromBigInteger(nextAddress.Value.ToUInt64() + offset);
+            if (nextValue == null || nextValue == UIntPtr.Zero || !IsBitnessCompatible(nextValue.Value))
+                return null; // Overflow after applying the offset; zero pointer; 64-bits pointer on 32-bits target
+            
+            // The next value has been vetted. Keep going with it as the current address
+            currentAddress = nextValue.Value;
         }
 
         return currentAddress;
@@ -176,16 +182,25 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Pointer path to evaluate.</param>
     /// <returns>The memory address pointed by the pointer path.</returns>
-    private IntPtr EvaluateMemoryAddressOrThrow(PointerPath pointerPath) => EvaluateMemoryAddress(pointerPath)
+    private UIntPtr EvaluateMemoryAddressOrThrow(PointerPath pointerPath) => EvaluateMemoryAddress(pointerPath)
         ?? throw new MemoryException($"Could not evaluate pointer path \"{pointerPath}\".");
 
     /// <summary>
     /// Attempts to read an IntPtr from the given BigInteger value.
     /// </summary>
     /// <param name="value">Value to read as an IntPtr.</param>
-    private static IntPtr ReadIntPtrFromBigInteger(BigInteger value)
+    private static UIntPtr? ReadIntPtrFromBigInteger(BigInteger value)
     {
-        return IntPtr.Size == 4 ? (IntPtr)(uint)value : (IntPtr)(ulong)value;
+        if ((IntPtr.Size == 4 && value > uint.MaxValue)
+            || (IntPtr.Size == 8 && value > ulong.MaxValue)
+            || value < 0)
+        {
+            // Don't let arithmetic overflows occur.
+            // The input value is just not addressable.
+            return null;
+        }
+
+        return IntPtr.Size == 4 ? (UIntPtr)(uint)value : (UIntPtr)(ulong)value;
     }
     
     /// <summary>
@@ -193,12 +208,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="moduleName">Name of the target module.</param>
     /// <returns>The base address of the module if found, null otherwise.</returns>
-    private IntPtr? GetModuleAddress(string moduleName)
+    private UIntPtr? GetModuleAddress(string moduleName)
     {
-        return _process.Modules
+        IntPtr? baseAddress = _process.Modules
             .Cast<ProcessModule>()
             .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
             ?.BaseAddress;
+
+        return baseAddress == null ? null : (UIntPtr)(long)baseAddress;
     }
     
     /// <summary>
@@ -259,7 +276,7 @@ public class ProcessMemory : IDisposable
     /// <typeparam name="T">Type of data to read. Some types are not supported and will cause the method to throw
     /// an <see cref="ArgumentException"/>. Do not use Nullable types.</typeparam>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public T? Read<T>(IntPtr address) => (T?)Read(typeof(T), address);
+    public T? Read<T>(UIntPtr address) => (T?)Read(typeof(T), address);
 
     /// <summary>
     /// Reads a specific type of data from the address referred by the given pointer path, in the process memory.
@@ -269,7 +286,7 @@ public class ProcessMemory : IDisposable
     /// an <see cref="ArgumentException"/>. Do not use Nullable types.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
     public object? Read(Type dataType, PointerPath pointerPath)
-        => Read(dataType, EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+        => Read(dataType, EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a specific type of data from the given address, in the process memory.
@@ -278,7 +295,7 @@ public class ProcessMemory : IDisposable
     /// <param name="dataType">Type of data to read. Some types are not supported and will cause the method to throw
     /// an <see cref="ArgumentException"/>. Do not use Nullable types.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public object? Read(Type dataType, IntPtr address)
+    public object? Read(Type dataType, UIntPtr address)
     {
         if (dataType == typeof(bool)) return ReadBool(address);
         if (dataType == typeof(byte)) return ReadByte(address);
@@ -300,14 +317,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public bool? ReadBool(PointerPath pointerPath) => ReadBool(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public bool? ReadBool(PointerPath pointerPath) => ReadBool(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a boolean from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public bool? ReadBool(IntPtr address)
+    public bool? ReadBool(UIntPtr address)
     {
         var bytes = ReadBytes(address, 1);
         if (bytes == null)
@@ -321,14 +338,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte? ReadByte(PointerPath pointerPath) => ReadByte(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public byte? ReadByte(PointerPath pointerPath) => ReadByte(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a byte from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte? ReadByte(IntPtr address)
+    public byte? ReadByte(UIntPtr address)
     {
         var bytes = ReadBytes(address, 1);
         return bytes?[0];
@@ -339,14 +356,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public short? ReadShort(PointerPath pointerPath) => ReadShort(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public short? ReadShort(PointerPath pointerPath) => ReadShort(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a short from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public short? ReadShort(IntPtr address)
+    public short? ReadShort(UIntPtr address)
     {
         var bytes = ReadBytes(address, 2);
         if (bytes == null)
@@ -360,14 +377,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ushort? ReadUShort(PointerPath pointerPath) => ReadUShort(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public ushort? ReadUShort(PointerPath pointerPath) => ReadUShort(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads an unsigned short from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ushort? ReadUShort(IntPtr address)
+    public ushort? ReadUShort(UIntPtr address)
     {
         var bytes = ReadBytes(address, 2);
         if (bytes == null)
@@ -381,14 +398,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public int? ReadInt(PointerPath pointerPath) => ReadInt(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public int? ReadInt(PointerPath pointerPath) => ReadInt(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads an integer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public int? ReadInt(IntPtr address)
+    public int? ReadInt(UIntPtr address)
     {
         var bytes = ReadBytes(address, 4);
         if (bytes == null)
@@ -402,14 +419,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public uint? ReadUInt(PointerPath pointerPath) => ReadUInt(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public uint? ReadUInt(PointerPath pointerPath) => ReadUInt(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads an unsigned integer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public uint? ReadUInt(IntPtr address)
+    public uint? ReadUInt(UIntPtr address)
     {
         var bytes = ReadBytes(address, 4);
         if (bytes == null)
@@ -423,21 +440,21 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public IntPtr? ReadIntPtr(PointerPath pointerPath) => ReadIntPtr(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public UIntPtr? ReadIntPtr(PointerPath pointerPath) => ReadIntPtr(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
     
     /// <summary>
     /// Reads a pointer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public IntPtr? ReadIntPtr(IntPtr address)
+    public UIntPtr? ReadIntPtr(UIntPtr address)
     {
         var bytes = ReadBytes(address, (ulong)IntPtr.Size);
         if (bytes == null)
             return null;
         return _is64Bits ?
-            (IntPtr)BitConverter.ToUInt64(bytes)
-            : (IntPtr)BitConverter.ToUInt32(bytes);
+            (UIntPtr)BitConverter.ToUInt64(bytes)
+            : (UIntPtr)BitConverter.ToUInt32(bytes);
     }
     
     /// <summary>
@@ -445,14 +462,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public float? ReadFloat(PointerPath pointerPath) => ReadFloat(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public float? ReadFloat(PointerPath pointerPath) => ReadFloat(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a float from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public float? ReadFloat(IntPtr address)
+    public float? ReadFloat(UIntPtr address)
     {
         var bytes = ReadBytes(address, 4);
         if (bytes == null)
@@ -466,14 +483,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public long? ReadLong(PointerPath pointerPath) => ReadLong(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public long? ReadLong(PointerPath pointerPath) => ReadLong(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a long from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public long? ReadLong(IntPtr address)
+    public long? ReadLong(UIntPtr address)
     {
         var bytes = ReadBytes(address, 8);
         if (bytes == null)
@@ -487,14 +504,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ulong? ReadULong(PointerPath pointerPath) => ReadULong(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public ulong? ReadULong(PointerPath pointerPath) => ReadULong(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads an unsigned long from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ulong? ReadULong(IntPtr address)
+    public ulong? ReadULong(UIntPtr address)
     {
         var bytes = ReadBytes(address, 8);
         if (bytes == null)
@@ -508,14 +525,14 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public double? ReadDouble(PointerPath pointerPath) => ReadDouble(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero);
+    public double? ReadDouble(PointerPath pointerPath) => ReadDouble(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
 
     /// <summary>
     /// Reads a double from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public double? ReadDouble(IntPtr address)
+    public double? ReadDouble(UIntPtr address)
     {
         var bytes = ReadBytes(address, 8);
         if (bytes == null)
@@ -544,7 +561,7 @@ public class ProcessMemory : IDisposable
     /// reasons.</param>
     /// <returns>The string read from memory, or null if any read operation fails.</returns>
     public string? ReadString(PointerPath pointerPath, int maxSizeInBytes = 256, StringSettings? stringSettings = null)
-        => ReadString(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero, maxSizeInBytes, stringSettings);
+        => ReadString(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero, maxSizeInBytes, stringSettings);
 
     /// <summary>
     /// Reads a string from the given address in the process memory.
@@ -565,7 +582,7 @@ public class ProcessMemory : IDisposable
     /// and provide your own string settings. It is recommended to at least use a preset, for performance and accuracy
     /// reasons.</param>
     /// <returns>The string read from memory, or null if any read operation fails.</returns>
-    public string? ReadString(IntPtr address, int maxSizeInBytes = 256, StringSettings? stringSettings = null)
+    public string? ReadString(UIntPtr address, int maxSizeInBytes = 256, StringSettings? stringSettings = null)
     {
         var actualStringSettings = stringSettings ?? GuessStringSettings();
         var lengthToRead = (ulong)maxSizeInBytes;
@@ -614,7 +631,7 @@ public class ProcessMemory : IDisposable
     /// <param name="length">Number of bytes to read.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
     public byte[]? ReadBytes(PointerPath pointerPath, ulong length)
-        => ReadBytes(EvaluateMemoryAddress(pointerPath) ?? IntPtr.Zero, length);
+        => ReadBytes(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero, length);
 
     /// <summary>
     /// Reads a sequence of bytes from the given address in the process memory.
@@ -622,7 +639,7 @@ public class ProcessMemory : IDisposable
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(IntPtr address, long length) => ReadBytes(address, (ulong)length);
+    public byte[]? ReadBytes(UIntPtr address, long length) => ReadBytes(address, (ulong)length);
     
     /// <summary>
     /// Reads a sequence of bytes from the given address in the process memory.
@@ -630,9 +647,9 @@ public class ProcessMemory : IDisposable
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
     /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(IntPtr address, ulong length)
+    public byte[]? ReadBytes(UIntPtr address, ulong length)
     {
-        if (address == IntPtr.Zero || !IsBitnessCompatible(address))
+        if (address == UIntPtr.Zero || !IsBitnessCompatible(address))
             return null;
         return _osService.ReadProcessMemory(_processHandle, address, length);
     }
@@ -662,7 +679,7 @@ public class ProcessMemory : IDisposable
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
     /// <typeparam name="T">Type of the value to write.</typeparam>
     /// <exception cref="ArgumentException">Thrown when the type of the value is not supported.</exception>
-    public void Write<T>(IntPtr address, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void Write<T>(UIntPtr address, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         switch (value)
         {
@@ -701,7 +718,7 @@ public class ProcessMemory : IDisposable
     /// as a byte with the value 0.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteBool(IntPtr address, bool value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteBool(UIntPtr address, bool value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { (byte)(value ? 1 : 0) }, memoryProtectionStrategy);
     
     /// <summary>
@@ -721,7 +738,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteByte(IntPtr address, byte value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteByte(UIntPtr address, byte value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { value }, memoryProtectionStrategy);
     
     /// <summary>
@@ -741,7 +758,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteShort(IntPtr address, short value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteShort(UIntPtr address, short value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -761,7 +778,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteUShort(IntPtr address, ushort value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteUShort(UIntPtr address, ushort value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
     /// <summary>
@@ -781,7 +798,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteInt(IntPtr address, int value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteInt(UIntPtr address, int value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -801,7 +818,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteUInt(IntPtr address, uint value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteUInt(UIntPtr address, uint value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -821,7 +838,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteIntPtr(IntPtr address, IntPtr value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteIntPtr(UIntPtr address, IntPtr value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, value.ToBytes(_is64Bits), memoryProtectionStrategy);
     
     /// <summary>
@@ -841,7 +858,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteFloat(IntPtr address, float value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteFloat(UIntPtr address, float value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -861,7 +878,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteLong(IntPtr address, long value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteLong(UIntPtr address, long value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -881,7 +898,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteULong(IntPtr address, ulong value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteULong(UIntPtr address, ulong value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -901,7 +918,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteDouble(IntPtr address, double value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteDouble(UIntPtr address, double value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -921,7 +938,7 @@ public class ProcessMemory : IDisposable
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultStrategy"/> of this instance is used.</param>
-    public void WriteBytes(IntPtr address, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    public void WriteBytes(UIntPtr address, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         // Remove protection if needed
         MemoryProtection? previousProtection = null;

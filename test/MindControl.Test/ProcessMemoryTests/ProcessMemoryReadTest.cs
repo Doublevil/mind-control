@@ -10,7 +10,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 public class ProcessMemoryReadTest : ProcessMemoryTest
 {
     /// <summary>
-    /// Tests <see cref="ProcessMemory.Read(Type,IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.Read(Type,UIntPtr)"/>.
     /// Reads a first time after initialization, and then a second time after value are modified.
     /// The values are expected to match the specified ones.
     /// </summary>
@@ -32,7 +32,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadTwoStepGenericTest(Type targetType, int pointerOffset, object? expectedResultBeforeBreak,
         object? expectedResultAfterBreak)
     {
-        IntPtr targetIntAddress = OuterClassPointer + pointerOffset;
+        UIntPtr targetIntAddress = OuterClassPointer + pointerOffset;
         object? resultBefore = TestProcessMemory!.Read(targetType, targetIntAddress);
         Assert.That(resultBefore, Is.EqualTo(expectedResultBeforeBreak));
         ProceedToNextStep();
@@ -41,7 +41,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBool(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadBool(UIntPtr)"/>.
     /// Reads a known boolean from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -49,7 +49,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadBoolTest() => Assert.That(TestProcessMemory!.ReadBool(OuterClassPointer + 0x48), Is.EqualTo(true));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadByte(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadByte(UIntPtr)"/>.
     /// Reads a known byte from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -57,7 +57,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadByteTest() => Assert.That(TestProcessMemory!.ReadByte(OuterClassPointer + 0x49), Is.EqualTo(0xAC));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadShort(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadShort(UIntPtr)"/>.
     /// Reads a known short from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -66,7 +66,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadShort(OuterClassPointer + 0x44), Is.EqualTo(-7777));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUShort(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadUShort(UIntPtr)"/>.
     /// Reads a known unsigned short from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -75,7 +75,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadUShort(OuterClassPointer + 0x46), Is.EqualTo(8888));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadInt(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadInt(UIntPtr)"/>.
     /// Reads a known integer from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -83,7 +83,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadIntTest() => Assert.That(TestProcessMemory!.ReadInt(OuterClassPointer + 0x38), Is.EqualTo(-7651));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUInt(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadUInt(UIntPtr)"/>.
     /// Reads a known unsigned integer from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -92,7 +92,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadUInt(OuterClassPointer + 0x3C), Is.EqualTo(6781631));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadLong(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadLong(UIntPtr)"/>.
     /// Reads a known long from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -101,7 +101,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadLong(OuterClassPointer + 0x20), Is.EqualTo(-65746876815103L));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadULong(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadULong(UIntPtr)"/>.
     /// Reads a known unsigned long from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -110,7 +110,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadULong(OuterClassPointer + 0x28), Is.EqualTo(76354111324644L));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadFloat(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadFloat(UIntPtr)"/>.
     /// Reads a known float from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -119,7 +119,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadFloat(OuterClassPointer + 0x40), Is.EqualTo(3456765.323f));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadDouble(IntPtr)"/>.
+    /// Tests <see cref="ProcessMemory.ReadDouble(UIntPtr)"/>.
     /// Reads a known double from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -128,7 +128,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         TestProcessMemory!.ReadDouble(OuterClassPointer + 0x30), Is.EqualTo(79879131651.33345));
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBytes(IntPtr,ulong)"/>.
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/>.
     /// Reads a known byte array from the target process after initialization.
     /// It should be equal to its known value.
     /// </summary>
@@ -147,6 +147,44 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadNestedLongTest() => Assert.That(
         TestProcessMemory!.ReadLong($"{OuterClassPointer:X}+10,8"), Is.EqualTo(999999999999L));
 
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadIntPtr(PointerPath)"/>.
+    /// Reads an ulong with the max value from the target process after initialization.
+    /// This method uses a <see cref="PointerPath"/> and reads a value that is nested in the known instance.
+    /// Reading this value as a pointer should yield a valid pointer. This test validates that there is no arithmetic
+    /// overflow caused by signed pointer usage.
+    /// </summary>
+    [Test]
+    public void ReadUIntPtrMaxValueTest()
+    {
+        var ptr = TestProcessMemory!.ReadIntPtr($"{OuterClassPointer:X}+10,10");
+        Assert.That(ptr.GetValueOrDefault().ToUInt64(), Is.EqualTo(ulong.MaxValue));
+    }
+
+    /// <summary>
+    /// Tests an edge case where the pointer path given to a read operation points to the last possible byte in memory
+    /// (the maximum value of a UIntPtr).
+    /// The read operation is expected to fail gracefully and return null (this memory region is not valid).
+    /// </summary>
+    [Test]
+    public void ReadAtMaxPointerValueTest()
+    {
+        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,0");
+        Assert.That(result, Is.Null);
+    }
+    
+    /// <summary>
+    /// Tests an edge case where the pointer path given to a read operation points to a value located after the last
+    /// possible byte in memory (the maximum value of a UIntPtr + 1).
+    /// The read operation is expected to fail gracefully and return null (the target pointer is not addressable).
+    /// </summary>
+    [Test]
+    public void ReadOverMaxPointerValueTest()
+    {
+        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,1");
+        Assert.That(result, Is.Null);
+    }
+    
     /// <summary>
     /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
     /// Reads a known string from the target process after initialization, without using any parameter beyond the

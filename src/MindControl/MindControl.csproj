@@ -7,7 +7,7 @@
     <Title>MindControl</Title>
     <RepositoryUrl>https://github.com/Doublevil/mind-control</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>0.3.2</Version>
+    <Version>0.3.3</Version>
   </PropertyGroup>
   
   <!-- Package-related features -->

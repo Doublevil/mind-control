@@ -199,7 +199,7 @@ public class Win32Service : IOperatingSystemService
     /// <returns>If the function succeeds, the return value is nonzero.
     /// If the function fails, the return value is 0.</returns>
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern int ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer,
+    private static extern int ReadProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, [Out] byte[] lpBuffer,
         ulong nSize, out ulong lpNumberOfBytesRead);
     
     /// <summary>
@@ -216,7 +216,7 @@ public class Win32Service : IOperatingSystemService
     /// page in the specified region of pages.</param>
     /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
     [DllImport("kernel32.dll")]
-    public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress,
+    public static extern bool VirtualProtectEx(IntPtr hProcess, UIntPtr lpAddress,
         IntPtr dwSize, MemoryProtection flNewProtect, out MemoryProtection lpflOldProtect);
     
     /// <summary>
@@ -235,7 +235,7 @@ public class Win32Service : IOperatingSystemService
     /// the specified process. This parameter is optional. If null, it will be ignored.</param>
     /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
     [DllImport("kernel32.dll")]
-    public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr nSize,
+    public static extern bool WriteProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr nSize,
         IntPtr lpNumberOfBytesWritten);
     
     #endregion
@@ -281,7 +281,7 @@ public class Win32Service : IOperatingSystemService
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>An array of bytes containing the data read from the memory.</returns>
-    public byte[]? ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length)
+    public byte[]? ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length)
     {
         if (processHandle == IntPtr.Zero)
             throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
@@ -300,6 +300,12 @@ public class Win32Service : IOperatingSystemService
             if (errorCode == 299)
                 return null;
             
+            // ERROR_NOACCESS (998): Error raised when the memory we are trying to read is protected for whatever
+            // reason. Since this can be due to trying to access an invalid address, for the same reasons as noted
+            // above (error 299), we will not throw. This behaviour might change or be configurable in later releases.
+            if (errorCode == 998)
+                return null;
+
             // In other cases, throw.
             throw new Win32Exception(errorCode);
         }
@@ -317,12 +323,12 @@ public class Win32Service : IOperatingSystemService
     /// <param name="targetAddress">An address in the target page.</param>
     /// <param name="newProtection">New protection value for the page.</param>
     /// <returns>The memory protection value that was effective on the page before being changed.</returns>
-    public MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, IntPtr targetAddress,
+    public MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, UIntPtr targetAddress,
         MemoryProtection newProtection)
     {
         if (processHandle == IntPtr.Zero)
             throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
-        if (targetAddress == IntPtr.Zero)
+        if (targetAddress == UIntPtr.Zero)
             throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
 
         bool result = VirtualProtectEx(processHandle, targetAddress, (IntPtr)(is64Bits ? 8 : 4), newProtection,
@@ -344,11 +350,11 @@ public class Win32Service : IOperatingSystemService
     /// written, unless a size is specified.</param>
     /// <param name="size">Specify this value if you only want to write part of the value array in memory.
     /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
-    public void WriteProcessMemory(IntPtr processHandle, IntPtr targetAddress, byte[] value, int? size = null)
+    public void WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null)
     {
         if (processHandle == IntPtr.Zero)
             throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
-        if (targetAddress == IntPtr.Zero)
+        if (targetAddress == UIntPtr.Zero)
             throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
         if (size != null && size.Value > value.Length)
             throw new ArgumentOutOfRangeException(nameof(size),"The size cannot exceed the length of the value array.");

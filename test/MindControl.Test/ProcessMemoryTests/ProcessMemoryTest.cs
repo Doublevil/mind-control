@@ -15,7 +15,7 @@ public class ProcessMemoryTest
 {
     private Process? _targetProcess;
     protected ProcessMemory? TestProcessMemory;
-    protected IntPtr OuterClassPointer;
+    protected UIntPtr OuterClassPointer;
     
     /// <summary>
     /// Initializes the necessary instances for the tests.
@@ -25,7 +25,7 @@ public class ProcessMemoryTest
     {
         _targetProcess = StartTargetAppProcess();
         string? line = _targetProcess.StandardOutput.ReadLine();
-        if (!IntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))
+        if (!UIntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))
             throw new Exception($"Could not read the outer class pointer output by the app: \"{line}\".");
         
         TestProcessMemory = ProcessMemory.OpenProcess(_targetProcess);

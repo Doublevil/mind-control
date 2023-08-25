@@ -26,7 +26,7 @@ public interface IOperatingSystemService
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>An array of bytes containing the data read from the memory.</returns>
-    byte[]? ReadProcessMemory(IntPtr processHandle, IntPtr baseAddress, ulong length);
+    byte[]? ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length);
 
     /// <summary>
     /// Overwrites the memory protection of the page that the given address is part of.
@@ -40,7 +40,7 @@ public interface IOperatingSystemService
     /// <returns>The memory protection value that was effective on the page before being changed.</returns>
     /// <exception cref="ArgumentException">The process handle is invalid (zero pointer).</exception>
     /// <exception cref="ArgumentOutOfRangeException">The target address is invalid (zero pointer).</exception>
-    MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, IntPtr targetAddress,
+    MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, UIntPtr targetAddress,
         MemoryProtection newProtection);
 
     /// <summary>
@@ -53,5 +53,5 @@ public interface IOperatingSystemService
     /// written, unless a size is specified.</param>
     /// <param name="size">Specify this value if you only want to write part of the value array in memory.
     /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
-    void WriteProcessMemory(IntPtr processHandle, IntPtr targetAddress, byte[] value, int? size = null);
+    void WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null);
 }
