@@ -139,6 +139,7 @@ public abstract class StateWatcher<T>
 
         if (isStateUpdated)
         {
+            OnBeforeUpdate(previousState, LatestState!);
             StateUpdated?.Invoke(this, new StateEventArgs<T>(LatestState!));
             OnAfterUpdate(previousState, LatestState!);
         }
@@ -151,6 +152,14 @@ public abstract class StateWatcher<T>
     /// </summary>
     protected abstract T ReadState();
 
+    /// <summary>
+    /// Performs actions in-between getting a new state and raising the <see cref="StateUpdated"/> event.
+    /// </summary>
+    /// <param name="previousState">Previous state, before the update.</param>
+    /// <param name="newState">State that was just read. Provided for convenience, but should be the same as
+    /// the latest state of this instance.</param>
+    protected virtual void OnBeforeUpdate(T? previousState, T newState) {}
+    
     /// <summary>
     /// Performs actions after the update.
     /// </summary>
