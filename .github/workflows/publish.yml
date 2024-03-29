@@ -81,7 +81,7 @@ jobs:
       - name: Build the C++ injection test DLL
         run: msbuild test/MindControl.Test.InjectedLibrary/MindControl.Test.InjectedLibrary.vcxproj /p:Configuration=Release /p:Platform=x64
       - name: Run tests
-        run: dotnet test --configuration Release
+        run: dotnet test test/MindControl.Test/MindControl.Test.csproj --configuration Release
 
   deploy:
     # Publish only when creating a GitHub Release
