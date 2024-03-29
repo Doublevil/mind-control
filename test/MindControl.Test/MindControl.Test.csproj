@@ -8,6 +8,11 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
+    <Target Name="BuildInjectedLibrary" AfterTargets="Build">
+        <MSBuild Projects="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj" Targets="Build"
+                 Properties="Configuration=Release;Platform=x64;OutDir=$(ProjectDir)\bin\$(Configuration)\" />
+    </Target>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
         <PackageReference Include="NUnit" Version="3.13.3" />
@@ -19,14 +24,6 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
       <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
-      <ProjectReference Include="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj">
-        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        <OutputItemType>Content</OutputItemType>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <SetConfiguration>Release</SetConfiguration>
-        <SetPlatform>x64</SetPlatform>
-        <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
-      </ProjectReference>
     </ItemGroup>
 
 </Project>

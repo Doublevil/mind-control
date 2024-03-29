@@ -11,6 +11,18 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     private const string InjectedLibraryPath = "./MindControl.Test.InjectedLibrary.dll";
 
     /// <summary>
+    /// Ensures the tests are correctly set up before running.
+    /// </summary>
+    [SetUp]
+    public void SetUp()
+    {
+        if (!File.Exists(InjectedLibraryPath))
+        {
+            throw new FileNotFoundException("Injected library not found. Make sure the project \"MindControl.Test.InjectedLibrary\" was built before running the tests.");
+        }
+    }
+    
+    /// <summary>
     /// Tests the <see cref="ProcessMemory.InjectLibrary"/> method.
     /// After injecting the library, the target process should output "Injected library attached", which is the text
     /// printed by code run from the injected library.
