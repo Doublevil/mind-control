@@ -25,6 +25,7 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <SetConfiguration>Release</SetConfiguration>
         <SetPlatform>x64</SetPlatform>
+        <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
       </ProjectReference>
     </ItemGroup>
 

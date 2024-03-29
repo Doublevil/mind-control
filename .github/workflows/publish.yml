@@ -77,7 +77,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v2
       - name: Build the C++ injection test DLL
         run: msbuild test/MindControl.Test.InjectedLibrary/MindControl.Test.InjectedLibrary.vcxproj /p:Configuration=Release /p:Platform=x64
       - name: Run tests
