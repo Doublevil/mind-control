@@ -104,3 +104,14 @@ public MyHackingClass()
 public void Update()
     => DoSomeHacking(MyGame); // ✖ This will NOT handle restarts.
 ```
+
+## Inject libraries
+
+MindControl allows you to inject DLLs into the target process, which can be used to execute arbitrary code in the target process.
+
+```csharp
+var myGame = ProcessMemory.OpenProcess("mygame");
+myGame.InjectLibrary("myhack.dll");
+```
+
+For example, you can use named pipes to communicate between your hacking program and the target process (send commands to the game or receive data from it).

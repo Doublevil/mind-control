@@ -19,6 +19,13 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
       <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
+      <ProjectReference Include="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj">
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        <OutputItemType>Content</OutputItemType>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <SetConfiguration>Release</SetConfiguration>
+        <SetPlatform>x64</SetPlatform>
+      </ProjectReference>
     </ItemGroup>
 
 </Project>

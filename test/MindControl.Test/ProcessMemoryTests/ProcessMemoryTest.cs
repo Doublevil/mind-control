@@ -13,7 +13,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryTest
 {
-    private Process? _targetProcess;
+    protected Process? _targetProcess;
     protected ProcessMemory? TestProcessMemory;
     protected UIntPtr OuterClassPointer;
     
@@ -69,7 +69,7 @@ public class ProcessMemoryTest
     /// <summary>
     /// Sends input to the target app process in order to make it continue to the next step.
     /// </summary>
-    protected void ProceedToNextStep()
+    protected string? ProceedToNextStep()
     {
         if (_currentStep >= 2)
             throw new InvalidOperationException("The target app has already reached its final step.");
@@ -86,8 +86,10 @@ public class ProcessMemoryTest
         }
         else
         {
-            _targetProcess!.StandardOutput.ReadLine();
+            return _targetProcess!.StandardOutput.ReadLine();
         }
+
+        return null;
     }
 
     /// <summary>

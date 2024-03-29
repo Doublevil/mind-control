@@ -29,6 +29,7 @@ See [the documentation](doc/GetStarted.md) for more information.
 - Read a memory address as a byte array, boolean, or any basic number types
 - Read a memory address as a string as simply as possible, or as complex as you need
 - Write byte arrays, booleans and basic number types at any memory address
+- Inject DLLs to execute arbitrary code in the target process
 - Designed for performance and simplicity of use
 - Unit tested and made with care
 

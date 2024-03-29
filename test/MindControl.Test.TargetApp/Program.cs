@@ -13,12 +13,14 @@ var outer = new OuterClass();
 
 // Get a pointer to the instance and write it to the console. This will allow the unit test to get a base address to
 // test reading methods, and also signal that the instance has been created and initial values are ready to be read.
+#pragma warning disable CS8500
 unsafe
 {
     var reference = __makeref(outer);
     IntPtr pointer = **(IntPtr**)(&reference);
     Console.WriteLine($"{pointer:X}");
 }
+#pragma warning restore CS8500
 
 // Wait after creating the instance
 Console.ReadLine();

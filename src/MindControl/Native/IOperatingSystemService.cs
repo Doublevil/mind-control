@@ -54,4 +54,52 @@ public interface IOperatingSystemService
     /// <param name="size">Specify this value if you only want to write part of the value array in memory.
     /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
     void WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null);
+    
+    /// <summary>
+    /// Allocates memory in the specified process.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="size">Size in bytes of the memory to allocate.</param>
+    /// <param name="allocationType">Type of memory allocation.</param>
+    /// <param name="protection">Protection flags of the memory to allocate.</param>
+    /// <returns>A pointer to the start of the allocated memory.</returns>
+    UIntPtr AllocateMemory(IntPtr processHandle, int size, MemoryAllocationType allocationType,
+        MemoryProtection protection);
+
+    /// <summary>
+    /// Gets the address of the function used to load a library in the current process.
+    /// </summary>
+    UIntPtr GetLoadLibraryFunctionAddress();
+    
+    /// <summary>
+    /// Spawns a thread in the specified process, starting at the given address.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="startAddress">Address of the start routine to be executed by the thread.</param>
+    /// <param name="parameterAddress">Address of any parameter to be passed to the start routine.</param>
+    /// <returns>Handle of the thread.</returns>
+    IntPtr CreateRemoteThread(IntPtr processHandle, UIntPtr startAddress, UIntPtr parameterAddress);
+
+    /// <summary>
+    /// Waits for the specified thread to finish execution.
+    /// </summary>
+    /// <param name="threadHandle">Handle of the target thread.</param>
+    /// <param name="timeout">Maximum time to wait for the thread to finish.</param>
+    /// <returns>True if the thread finished execution, false if the timeout was reached. Other failures will throw an
+    /// exception.</returns>
+    bool WaitThread(IntPtr threadHandle, TimeSpan timeout);
+
+    /// <summary>
+    /// Frees the memory allocated in the specified process for a region or a placeholder.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="regionBaseAddress">Base address of the region or placeholder to free, as returned by
+    /// <see cref="AllocateMemory"/>.</param>
+    void ReleaseMemory(IntPtr processHandle, UIntPtr regionBaseAddress);
+
+    /// <summary>
+    /// Closes the given handle.
+    /// </summary>
+    /// <param name="handle">Handle to close.</param>
+    void CloseHandle(IntPtr handle);
 }
