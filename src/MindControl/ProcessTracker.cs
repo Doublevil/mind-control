@@ -107,13 +107,32 @@ public class ProcessTracker : IDisposable
     private ProcessMemory? AttemptToAttachProcess()
     {
         var process = GetTargetProcess();
-        return process == null ? null : new ProcessMemory(process);
+        return process == null ? null : new ProcessMemory(process, ownsProcessInstance: true);
     }
     
     /// <summary>
     /// Gets the first process running with the target name. Returns null if no process with the given name is found. 
     /// </summary>
-    private Process? GetTargetProcess() => Process.GetProcessesByName(_processName).MinBy(p => p.Id);
+    private Process? GetTargetProcess()
+    {
+        var processes = Process.GetProcessesByName(_processName);
+
+        switch (processes.Length)
+        {
+            case 0:
+                return null;
+            case 1:
+                return processes.Single();
+            default:
+                // If we found multiple processes, take one (arbitrarily, the lowest by ID) and dispose the others.
+                var target = processes.MinBy(p => p.Id);
+                foreach (var process in processes.Except(new [] { target }))
+                {
+                    process?.Dispose();
+                }
+                return target;
+        }
+    }
 
     /// <summary>
     /// Releases the underlying process memory if required.

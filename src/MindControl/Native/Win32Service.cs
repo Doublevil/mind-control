@@ -412,7 +412,8 @@ public class Win32Service : IOperatingSystemService
         
         if (!IsWow64Process(process.Handle, out bool isWow64))
             throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
-
+        process.Dispose();
+        
         bool isSystem64Bits = IntPtr.Size == 8;
         
         // Process is 64 bits if we are running a 64-bits system and the process is NOT in wow64.

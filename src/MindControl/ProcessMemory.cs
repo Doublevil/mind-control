@@ -15,6 +15,7 @@ public class ProcessMemory : IDisposable
     private readonly IOperatingSystemService _osService;
     private IntPtr _processHandle;
     private bool _is64Bits;
+    private readonly bool _ownsProcessInstance;
     
     /// <summary>
     /// Gets a value indicating if the process is currently attached or not.
@@ -50,10 +51,16 @@ public class ProcessMemory : IDisposable
     /// <exception cref="ProcessException">Thrown when no running process with the given name can be found.</exception>
     public static ProcessMemory OpenProcessByName(string processName)
     {
-        var firstMatch = Process.GetProcessesByName(processName).FirstOrDefault();
-        if (firstMatch == null)
+        var matches = Process.GetProcessesByName(processName);
+        if (matches.Length == 0)
             throw new ProcessException($"No running process with the name \"{processName}\" could be found.");
-        return OpenProcess(firstMatch);
+
+        // If we have multiple results, we need to dispose those that we will not be using.
+        // Arbitrarily, we will use the first result. So we dispose everything starting from index 1.
+        for (var i = 1; i < matches.Length; i++)
+            matches[i].Dispose();
+        
+        return OpenProcess(matches.First(), true);
     }
 
     /// <summary>
@@ -67,7 +74,7 @@ public class ProcessMemory : IDisposable
         var process = Process.GetProcessById(pid);
         if (process == null)
             throw new ProcessException(pid, $"No running process with the PID {pid} could be found.");
-        return OpenProcess(process);
+        return OpenProcess(process, true);
     }
 
     /// <summary>
@@ -75,19 +82,31 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="target">Process to attach to.</param>
     /// <returns>The attached process instance resulting from the operation.</returns>
-    public static ProcessMemory OpenProcess(Process target)
+    public static ProcessMemory OpenProcess(Process target) => OpenProcess(target, false);
+
+    /// <summary>
+    /// Attaches to the given process, and returns the resulting <see cref="ProcessMemory"/> instance.
+    /// </summary>
+    /// <param name="target">Process to attach to.</param>
+    /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
+    /// <paramref name="target"/>, meaning it has the responsibility to dispose it.</param>
+    /// <returns>The attached process instance resulting from the operation.</returns>
+    private static ProcessMemory OpenProcess(Process target, bool ownsProcessInstance)
     {
         if (target.HasExited)
             throw new ProcessException(target.Id, $"Process {target.Id} has exited.");
 
-        return new ProcessMemory(target);
+        return new ProcessMemory(target, ownsProcessInstance);
     }
     
     /// <summary>
     /// Builds a new instance that attaches to the given process.
     /// </summary>
     /// <param name="process">Target process.</param>
-    public ProcessMemory(Process process) : this(process, new Win32Service()) {}
+    /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
+    /// <paramref name="process"/>, meaning it has the responsibility to dispose it.</param>
+    public ProcessMemory(Process process, bool ownsProcessInstance)
+        : this(process, ownsProcessInstance, new Win32Service()) {}
 
     /// <summary>
     /// Builds a new instance that attaches to the given process.
@@ -95,11 +114,14 @@ public class ProcessMemory : IDisposable
     /// <see cref="OpenProcessById"/> and <see cref="OpenProcessByName"/>.
     /// </summary>
     /// <param name="process">Target process.</param>
+    /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
+    /// <paramref name="process"/>, meaning it has the responsibility to dispose it.</param>
     /// <param name="osService">Service that provides system-specific process-oriented features.</param>
-    private ProcessMemory(Process process, IOperatingSystemService osService)
+    private ProcessMemory(Process process, bool ownsProcessInstance, IOperatingSystemService osService)
     {
         _process = process;
         _osService = osService;
+        _ownsProcessInstance = ownsProcessInstance;
         Attach();
     }
     
@@ -1068,6 +1090,10 @@ public class ProcessMemory : IDisposable
     {
         IsAttached = false;
         _process.Exited -= OnProcessExited;
+        
+        if (_ownsProcessInstance)
+            _process.Dispose();
+        
         ProcessDetached?.Invoke(this, EventArgs.Empty);
     }
     
