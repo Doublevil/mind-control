@@ -10,7 +10,16 @@ namespace MindControl.Native;
 /// </summary>
 public class Win32Service : IOperatingSystemService
 {
+    private SystemInfo? _systemInfo;
+    
     #region Imports
+    
+    /// <summary>
+    /// Retrieves information about the current system.
+    /// </summary>
+    /// <param name="lpSystemInfo">A pointer to a SYSTEM_INFO structure that receives the information.</param>
+    [DllImport("kernel32.dll")]
+    private static extern void GetSystemInfo(out SystemInfo lpSystemInfo);
     
     /// <summary>
     /// Opens an existing local process object.
@@ -50,21 +59,37 @@ public class Win32Service : IOperatingSystemService
     private static extern bool IsWow64Process(IntPtr hProcess, out bool wow64Process);
     
     /// <summary>
-    /// Contains information about a range of pages in the virtual address space of a process.
-    /// 32-bit variant, without the alignment values.
+    /// Retrieves information about a range of pages within the virtual address space of a specified process.
     /// </summary>
-    private struct MEMORY_BASIC_INFORMATION32
+    /// <param name="hProcess">A handle to the process whose memory information is queried. The handle must have been
+    /// opened with the PROCESS_QUERY_INFORMATION access right, which enables using the handle to read information from
+    /// the process object.</param>
+    /// <param name="lpAddress">A pointer to the base address of the region of pages to be queried. This value is
+    /// rounded down to the next page boundary. To determine the size of a page on the host computer, use the
+    /// GetSystemInfo function.</param>
+    /// <param name="lpBuffer">A pointer to a MEMORY_BASIC_INFORMATION structure in which information about the
+    /// specified page range is returned.</param>
+    /// <param name="dwLength">The size of the buffer pointed to by the lpBuffer parameter, in bytes.</param>
+    /// <returns>The actual number of bytes returned in the information buffer, or, if the operation fails, 0.</returns>
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern UIntPtr VirtualQueryEx(IntPtr hProcess, UIntPtr lpAddress,
+        out MemoryBasicInformation32 lpBuffer, UIntPtr dwLength);
+
+    /// <summary>
+    /// Contains information about a range of pages in the virtual address space of a process.
+    /// </summary>
+    private struct MemoryBasicInformation32
     {
         /// <summary>
         /// A pointer to the base address of the region of pages.
         /// </summary>
-        public UIntPtr BaseAddress;
+        public uint BaseAddress;
         
         /// <summary>
         /// A pointer to the base address of a range of pages allocated by the VirtualAlloc function. The page pointed
         /// to by the BaseAddress member is contained within this allocation range.
         /// </summary>
-        public UIntPtr AllocationBase;
+        public uint AllocationBase;
         
         /// <summary>
         /// The memory protection option when the region was initially allocated. This member can be one of the memory
@@ -78,20 +103,20 @@ public class Win32Service : IOperatingSystemService
         public uint RegionSize;
         
         /// <summary>
-        /// The state of the pages in the region: committed (0x1000), free (0x10000), or reserved (0x2000).
+        /// The state of the pages in the region.
         /// </summary>
-        public uint State;
+        public MemoryState State;
         
         /// <summary>
         /// The access protection of the pages in the region. This member is one of the values listed for the
         /// AllocationProtect member.
         /// </summary>
-        public uint Protect;
+        public MemoryProtection Protect;
         
         /// <summary>
-        /// The type of pages in the region: image (0x1000000), mapped (0x40000) or private (0x20000).
+        /// The type of pages in the region.
         /// </summary>
-        public uint Type;
+        public PageType Type;
     }
     
     /// <summary>
@@ -109,8 +134,126 @@ public class Win32Service : IOperatingSystemService
     /// <returns>The actual number of bytes returned in the information buffer, or, if the operation fails, 0.</returns>
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern UIntPtr VirtualQueryEx(IntPtr hProcess, UIntPtr lpAddress,
-        out MEMORY_BASIC_INFORMATION32 lpBuffer, UIntPtr dwLength);
+        out MemoryBasicInformation64 lpBuffer, UIntPtr dwLength);
+    
+    /// <summary>
+    /// Contains information about a range of pages in the virtual address space of a process.
+    /// 64-bit variant, with the alignment values.
+    /// </summary>
+    private struct MemoryBasicInformation64
+    {
+        /// <summary>
+        /// A pointer to the base address of the region of pages.
+        /// </summary>
+        public ulong BaseAddress;
+        
+        /// <summary>
+        /// A pointer to the base address of a range of pages allocated by the VirtualAlloc function. The page pointed
+        /// to by the BaseAddress member is contained within this allocation range.
+        /// </summary>
+        public ulong AllocationBase;
+        
+        /// <summary>
+        /// The memory protection option when the region was initially allocated. This member can be one of the memory
+        /// protection constants or 0 if the caller does not have access.
+        /// </summary>
+        public uint AllocationProtect;
+        
+        /// <summary>
+        /// First alignment value, specific to the 64-bit variant of this structure.
+        /// </summary>
+        public uint __alignment1;
+        
+        /// <summary>
+        /// The size of the region beginning at the base address in which all pages have identical attributes, in bytes.
+        /// </summary>
+        public ulong RegionSize;
+        
+        /// <summary>
+        /// The state of the pages in the region.
+        /// </summary>
+        public MemoryState State;
+        
+        /// <summary>
+        /// The access protection of the pages in the region. This member is one of the values listed for the
+        /// AllocationProtect member.
+        /// </summary>
+        public MemoryProtection Protect;
+        
+        /// <summary>
+        /// The type of pages in the region.
+        /// </summary>
+        public PageType Type;
+        
+        /// <summary>
+        /// Second alignment value, specific to the 64-bit variant of this structure.
+        /// </summary>
+        public uint __alignment2;
+    }
+    
+    /// <summary>
+    /// Contains information about a range of pages in the virtual address space of a process.
+    /// This is the bitness-agnostic version of <see cref="MemoryBasicInformation32"/> and
+    /// <see cref="MemoryBasicInformation64"/>.
+    /// </summary>
+    /// <param name="BaseAddress">A pointer to the base address of the region of pages.</param>
+    /// <param name="AllocationBase">A pointer to the base address of a range of pages allocated by the VirtualAlloc
+    /// function. The page pointed to by the BaseAddress member is contained within this allocation range.</param>
+    /// <param name="AllocationProtect">The memory protection option when the region was initially allocated. This
+    /// member can be one of the memory protection constants or 0 if the caller does not have access.</param>
+    /// <param name="RegionSize">The size of the region beginning at the base address in which all pages have identical
+    /// attributes, in bytes.</param>
+    /// <param name="State">The state of the pages in the region.</param>
+    /// <param name="Protect">The access protection of the pages in the region. This member is one of the values listed
+    /// for the AllocationProtect member.</param>
+    /// <param name="Type">The type of pages in the region.</param>
+    private record struct MemoryBasicInformation(UIntPtr BaseAddress, UIntPtr AllocationBase, uint AllocationProtect,
+        UIntPtr RegionSize, MemoryState State, MemoryProtection Protect, PageType Type);
+    
+    /// <summary>
+    /// Enumerates the memory allocation types, as returned by the VirtualQueryEx functions.
+    /// </summary>
+    private enum MemoryState : uint
+    {
+        /// <summary>
+        /// Indicates committed pages for which physical storage has been allocated, either in memory or in the paging
+        /// file on disk.
+        /// </summary>
+        Commit = 0x1000,
+        
+        /// <summary>
+        /// Indicates free pages not accessible to the calling process and available to be allocated.
+        /// </summary>
+        Reserve = 0x2000,
+        
+        /// <summary>
+        /// Indicates reserved pages where a range of the process's virtual address space is reserved without any
+        /// physical storage being allocated.
+        /// </summary>
+        Free = 0x10000
+    }
 
+    /// <summary>
+    /// Enumerates the page types, as returned by the VirtualQueryEx functions.
+    /// </summary>
+    private enum PageType : uint
+    {
+        /// <summary>
+        /// Indicates that the memory pages within the region are mapped into the view of an image section.
+        /// </summary>
+        Image = 0x1000000,
+        
+        /// <summary>
+        /// Indicates that the memory pages within the region are mapped into the view of a section.
+        /// </summary>
+        Mapped = 0x40000,
+        
+        /// <summary>
+        /// Indicates that the memory pages within the region are private (that is, not shared by other processes).
+        /// </summary>
+        Private = 0x20000
+    }
+    
     /// <summary>
     /// Reserves, commits, or changes the state of a region of memory within the virtual address space of a specified
     /// process. The function initializes the memory it allocates to zero.
@@ -257,78 +400,6 @@ public class Win32Service : IOperatingSystemService
     private static extern bool VirtualFreeEx(IntPtr hProcess, UIntPtr lpAddress, uint dwSize, uint dwFreeType);
     
     /// <summary>
-    /// Contains information about a range of pages in the virtual address space of a process.
-    /// 64-bit variant, with the alignment values.
-    /// </summary>
-    private struct MEMORY_BASIC_INFORMATION64
-    {
-        /// <summary>
-        /// A pointer to the base address of the region of pages.
-        /// </summary>
-        public UIntPtr BaseAddress;
-        
-        /// <summary>
-        /// A pointer to the base address of a range of pages allocated by the VirtualAlloc function. The page pointed
-        /// to by the BaseAddress member is contained within this allocation range.
-        /// </summary>
-        public UIntPtr AllocationBase;
-        
-        /// <summary>
-        /// The memory protection option when the region was initially allocated. This member can be one of the memory
-        /// protection constants or 0 if the caller does not have access.
-        /// </summary>
-        public uint AllocationProtect;
-        
-        /// <summary>
-        /// First alignment value, specific to the 64-bit variant of this structure.
-        /// </summary>
-        public uint __alignment1;
-        
-        /// <summary>
-        /// The size of the region beginning at the base address in which all pages have identical attributes, in bytes.
-        /// </summary>
-        public ulong RegionSize;
-        
-        /// <summary>
-        /// The state of the pages in the region: committed (0x1000), free (0x10000), or reserved (0x2000).
-        /// </summary>
-        public uint State;
-        
-        /// <summary>
-        /// The access protection of the pages in the region. This member is one of the values listed for the
-        /// AllocationProtect member.
-        /// </summary>
-        public uint Protect;
-        
-        /// <summary>
-        /// The type of pages in the region: image (0x1000000), mapped (0x40000) or private (0x20000).
-        /// </summary>
-        public uint Type;
-        
-        /// <summary>
-        /// Second alignment value, specific to the 64-bit variant of this structure.
-        /// </summary>
-        public uint __alignment2;
-    }
-    
-    /// <summary>
-    /// Retrieves information about a range of pages within the virtual address space of a specified process.
-    /// </summary>
-    /// <param name="hProcess">A handle to the process whose memory information is queried. The handle must have been
-    /// opened with the PROCESS_QUERY_INFORMATION access right, which enables using the handle to read information from
-    /// the process object.</param>
-    /// <param name="lpAddress">A pointer to the base address of the region of pages to be queried. This value is
-    /// rounded down to the next page boundary. To determine the size of a page on the host computer, use the
-    /// GetSystemInfo function.</param>
-    /// <param name="lpBuffer">A pointer to a MEMORY_BASIC_INFORMATION structure in which information about the
-    /// specified page range is returned.</param>
-    /// <param name="dwLength">The size of the buffer pointed to by the lpBuffer parameter, in bytes.</param>
-    /// <returns>The actual number of bytes returned in the information buffer, or, if the operation fails, 0.</returns>
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern UIntPtr VirtualQueryEx(IntPtr hProcess, UIntPtr lpAddress,
-        out MEMORY_BASIC_INFORMATION64 lpBuffer, UIntPtr dwLength);
-    
-    /// <summary>
     /// Reads memory in the given process.
     /// </summary>
     /// <param name="hProcess">A handle to the process with memory that is being read. The handle must have
@@ -458,7 +529,7 @@ public class Win32Service : IOperatingSystemService
         
         return result;
     }
-    
+
     /// <summary>
     /// Overwrites the memory protection of the page that the given address is part of.
     /// Returns the memory protection that was effective on the page before being changed.
@@ -630,5 +701,86 @@ public class Win32Service : IOperatingSystemService
         
         if (!WinCloseHandle(handle))
             throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+    }
+
+    /// <summary>
+    /// Gets information about the current system.
+    /// </summary>
+    private SystemInfo GetSystemInfo()
+    {
+        if (_systemInfo != null)
+            return _systemInfo.Value;
+
+        GetSystemInfo(out var info);
+        _systemInfo = info;
+        
+        return info;
+    }
+    
+    /// <summary>
+    /// Gets the range of memory addressable by applications in the current system.
+    /// </summary>
+    public MemoryRange GetFullMemoryRange()
+    {
+        var systemInfo = GetSystemInfo();
+        return new MemoryRange(systemInfo.MinimumApplicationAddress, systemInfo.MaximumApplicationAddress);
+    }
+
+    /// <summary>
+    /// Gets the metadata of a memory region in the virtual address space of a process.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="baseAddress">Base address of the target memory region.</param>
+    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.
+    /// If left null, the method will automatically determine the bitness of the process.</param>
+    public MemoryRangeMetadata GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress, bool? is64Bits = null)
+    {
+        bool is64 = is64Bits ?? IsProcess64Bits(Process.GetCurrentProcess().Id);
+
+        MemoryBasicInformation memoryBasicInformation;
+        if (is64)
+        {
+            // Use the 64-bit variant of the structure.
+            var memInfo64 = new MemoryBasicInformation64();
+            if (VirtualQueryEx(processHandle, baseAddress, out memInfo64,
+                    (UIntPtr)Marshal.SizeOf(memInfo64)) == UIntPtr.Zero)
+                throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+
+            memoryBasicInformation = new MemoryBasicInformation((UIntPtr)memInfo64.BaseAddress,
+                (UIntPtr)memInfo64.AllocationBase, memInfo64.AllocationProtect, (UIntPtr)memInfo64.RegionSize,
+                memInfo64.State, memInfo64.Protect, memInfo64.Type);
+        }
+        else
+        {
+            // Use the 32-bits variant of the structure.
+            var memInfo32 = new MemoryBasicInformation32();
+            if (VirtualQueryEx(processHandle, baseAddress, out memInfo32,
+                    (UIntPtr)Marshal.SizeOf(memInfo32)) == UIntPtr.Zero)
+                throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself;
+
+            memoryBasicInformation = new MemoryBasicInformation((UIntPtr)memInfo32.BaseAddress,
+                (UIntPtr)memInfo32.AllocationBase, memInfo32.AllocationProtect, (UIntPtr)memInfo32.RegionSize,
+                memInfo32.State, memInfo32.Protect, memInfo32.Type);
+        }
+        
+        // In the end, we have a bitness-agnostic structure that we can use to build the metadata.
+        return new MemoryRangeMetadata
+        {
+            StartAddress = memoryBasicInformation.BaseAddress,
+            Size = memoryBasicInformation.RegionSize,
+            IsCommitted = memoryBasicInformation.State == MemoryState.Commit,
+            IsProtected = memoryBasicInformation.Protect.HasFlag(MemoryProtection.PageGuard)
+                          || memoryBasicInformation.Protect.HasFlag(MemoryProtection.NoAccess),
+            IsMapped = memoryBasicInformation.Type == PageType.Mapped,
+            IsReadable = memoryBasicInformation.Protect.HasFlag(MemoryProtection.ReadOnly),
+            IsWritable = memoryBasicInformation.Protect.HasFlag(MemoryProtection.ReadWrite)
+                         || memoryBasicInformation.Protect.HasFlag(MemoryProtection.WriteCopy)
+                         || memoryBasicInformation.Protect.HasFlag(MemoryProtection.ExecuteReadWrite)
+                         || memoryBasicInformation.Protect.HasFlag(MemoryProtection.ExecuteWriteCopy),
+            IsExecutable = memoryBasicInformation.Protect.HasFlag(MemoryProtection.Execute)
+                           || memoryBasicInformation.Protect.HasFlag(MemoryProtection.ExecuteRead)
+                           || memoryBasicInformation.Protect.HasFlag(MemoryProtection.ExecuteReadWrite)
+                           || memoryBasicInformation.Protect.HasFlag(MemoryProtection.ExecuteWriteCopy)
+        };
     }
 }

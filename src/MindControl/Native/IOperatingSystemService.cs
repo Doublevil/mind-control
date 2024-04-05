@@ -102,4 +102,18 @@ public interface IOperatingSystemService
     /// </summary>
     /// <param name="handle">Handle to close.</param>
     void CloseHandle(IntPtr handle);
+    
+    /// <summary>
+    /// Gets the range of memory addressable by applications in the current system.
+    /// </summary>
+    MemoryRange GetFullMemoryRange();
+    
+    /// <summary>
+    /// Gets the metadata of a memory region in the virtual address space of a process.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="baseAddress">Base address of the target memory region.</param>
+    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.
+    /// If left null, the method will automatically determine the bitness of the process.</param>
+    MemoryRangeMetadata GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress, bool? is64Bits = null);
 }

@@ -9,7 +9,7 @@ namespace MindControl;
 /// <summary>
 /// Provides methods to manipulate the memory of a process.
 /// </summary>
-public class ProcessMemory : IDisposable
+public partial class ProcessMemory : IDisposable
 {
     private readonly Process _process;
     private readonly IOperatingSystemService _osService;
@@ -150,7 +150,7 @@ public class ProcessMemory : IDisposable
         }
     }
     
-    #region EvaluateMemoryAddress
+    #region Memory addressing
 
     /// <summary>
     /// Returns True if and only if the given pointer is compatible with the bitness of the target process.
@@ -238,7 +238,7 @@ public class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="moduleName">Name of the target module.</param>
     /// <returns>The base address of the module if found, null otherwise.</returns>
-    private UIntPtr? GetModuleAddress(string moduleName)
+    public UIntPtr? GetModuleAddress(string moduleName)
     {
         IntPtr? baseAddress = _process.Modules
             .Cast<ProcessModule>()
@@ -246,6 +246,23 @@ public class ProcessMemory : IDisposable
             ?.BaseAddress;
 
         return baseAddress == null ? null : (UIntPtr)(long)baseAddress;
+    }
+
+    /// <summary>
+    /// Gets the memory range of the process module with the given name.
+    /// </summary>
+    /// <param name="moduleName">Name of the target module.</param>
+    /// <returns>The memory range of the module if found, null otherwise.</returns>
+    public MemoryRange? GetModuleRange(string moduleName)
+    {
+        var module = _process.Modules
+            .Cast<ProcessModule>()
+            .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase));
+
+        if (module == null)
+            return null;
+        
+        return MemoryRange.FromStartAndSize((UIntPtr)(long)module.BaseAddress, (ulong)module.ModuleMemorySize - 1);
     }
     
     /// <summary>
@@ -287,7 +304,7 @@ public class ProcessMemory : IDisposable
     }
     
     #endregion
-
+    
     #region Read methods
 
     /// <summary>

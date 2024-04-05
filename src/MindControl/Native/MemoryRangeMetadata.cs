@@ -1,17 +1,47 @@
 ﻿namespace MindControl.Native;
 
 /// <summary>
-/// Contains properties of a memory range.
+/// Contains properties about a uniform range in the virtual address space of a process.
 /// </summary>
-public class MemoryRangeMetadata
+public struct MemoryRangeMetadata
 {
     /// <summary>
-    /// A pointer to the base address of the region of pages.
+    /// Gets a pointer to the start address of the range.
     /// </summary>
-    public UIntPtr BaseAddress;
+    public UIntPtr StartAddress { get; init; }
     
     /// <summary>
-    /// The size of the region beginning at the base address in which all pages have identical attributes, in bytes.
+    /// Gets the size of the range, in bytes.
     /// </summary>
-    public uint RegionSize;
+    public UIntPtr Size { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is committed.
+    /// </summary>
+    public bool IsCommitted { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is guarded or marked for no access.
+    /// </summary>
+    public bool IsProtected { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is readable.
+    /// </summary>
+    public bool IsReadable { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is writable.
+    /// </summary>
+    public bool IsWritable { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is executable.
+    /// </summary>
+    public bool IsExecutable { get; init; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the memory is mapped to a file.
+    /// </summary>
+    public bool IsMapped { get; init; }
 }
