@@ -1,11 +1,12 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace MindControl.Internal;
 
 /// <summary>
 /// Provides extension methods for byte arrays.
 /// </summary>
-internal static class ByteArrayExtension
+internal static class ConversionExtensions
 {
     /// <summary>
     /// Reads an unsigned number from the byte array.
@@ -39,5 +40,23 @@ internal static class ByteArrayExtension
         var result = new byte[is64 ? 8 : 4];
         Marshal.Copy(pointer, result, 0, result.Length);
         return result;
+    }
+    
+    /// <summary>
+    /// Attempts to read an IntPtr from the given BigInteger value.
+    /// </summary>
+    /// <param name="value">Value to read as an IntPtr.</param>
+    public static UIntPtr? ToUIntPtr(this BigInteger value)
+    {
+        if ((IntPtr.Size == 4 && value > uint.MaxValue)
+            || (IntPtr.Size == 8 && value > ulong.MaxValue)
+            || value < 0)
+        {
+            // Don't let arithmetic overflows occur.
+            // The input value is just not addressable.
+            return null;
+        }
+
+        return IntPtr.Size == 4 ? (UIntPtr)(uint)value : (UIntPtr)(ulong)value;
     }
 }

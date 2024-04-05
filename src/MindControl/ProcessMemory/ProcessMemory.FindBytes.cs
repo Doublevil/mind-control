@@ -52,6 +52,7 @@ public class FindBytesSettings
     }
 }
 
+// This partial class implements array of byte scanning methods.
 public partial class ProcessMemory
 {
     /// <summary>
