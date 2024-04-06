@@ -41,7 +41,7 @@ You can also specify a custom range by creating a `MemoryRange` instance:
 ```csharp
  // Both of the following ranges can be used to search from 0x5000 to 0x5FFF included
 var rangeWithStartAndEnd = new MemoryRange(0x5000, 0x5FFF);
-var rangeWithStartAndSize = new MemoryRange(0x5000, 0x1000);
+var rangeWithStartAndSize = MemoryRange.FromStartAndSize(0x5000, 0x1000);
 ```
 
 To optimize the performance of your search, you should always specify a range. Usually, you can figure out at least the module that contains the value you are looking for, but the more specific you can be, the faster the search will be.
