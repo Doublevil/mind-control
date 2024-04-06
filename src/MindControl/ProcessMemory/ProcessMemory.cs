@@ -157,6 +157,12 @@ public partial class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="pointer">Pointer to test.</param>
     private bool IsBitnessCompatible(UIntPtr pointer) => _is64Bits || pointer.ToUInt64() <= uint.MaxValue;
+
+    /// <summary>
+    /// Gets a new instance of <see cref="Process"/> representing the attached process.
+    /// The returned instance is owned by the caller and should be disposed when no longer needed.
+    /// </summary>
+    public Process GetAttachedProcessInstance() => Process.GetProcessById(_process.Id);
     
     #region Dispose
     

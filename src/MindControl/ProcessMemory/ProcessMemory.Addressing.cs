@@ -63,16 +63,40 @@ public partial class ProcessMemory
         ?? throw new MemoryException($"Could not evaluate pointer path \"{pointerPath}\".");
     
     /// <summary>
+    /// Gets the process module with the given name.
+    /// </summary>
+    /// <param name="moduleName">Name of the target module.</param>
+    /// <param name="process">The target process instance to get the module from.</param>
+    /// <returns>The module if found, null otherwise.</returns>
+    private static ProcessModule? GetModule(string moduleName, Process process)
+    {
+        return process.Modules
+            .Cast<ProcessModule>()
+            .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Gets the process module loaded in the attached process by its name.
+    /// </summary>
+    /// <param name="moduleName">Name of the target module.</param>
+    /// <returns>The module if found, null otherwise.</returns>
+    public ProcessModule? GetModule(string moduleName)
+    {
+        using var process = GetAttachedProcessInstance();
+        return GetModule(moduleName, process);
+    }
+    
+    /// <summary>
     /// Gets the base address of the process module with the given name.
     /// </summary>
     /// <param name="moduleName">Name of the target module.</param>
     /// <returns>The base address of the module if found, null otherwise.</returns>
     public UIntPtr? GetModuleAddress(string moduleName)
     {
-        IntPtr? baseAddress = _process.Modules
-            .Cast<ProcessModule>()
-            .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
-            ?.BaseAddress;
+        using var process = GetAttachedProcessInstance();
+
+        var module = GetModule(moduleName, process);
+        IntPtr? baseAddress = module?.BaseAddress;
 
         return baseAddress == null ? null : (UIntPtr)(long)baseAddress;
     }
@@ -84,9 +108,9 @@ public partial class ProcessMemory
     /// <returns>The memory range of the module if found, null otherwise.</returns>
     public MemoryRange? GetModuleRange(string moduleName)
     {
-        var module = _process.Modules
-            .Cast<ProcessModule>()
-            .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase));
+        using var process = GetAttachedProcessInstance();
+
+        var module = GetModule(moduleName, process);
 
         if (module == null)
             return null;
