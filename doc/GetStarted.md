@@ -53,11 +53,17 @@ Here are common reasons for your programs to fail:
 - You are getting/setting wrong values because your pointer path is not stable. Double-check with Cheat Engine that your pointer does work in the same circumstances.
 - You cannot read string properly. Check out the [Manipulating strings](ManipulatingStrings.md) documentation.
 
-## Tracking a process in real-time
+## Finding patterns in memory
 
-The `StateWatcher` class gives you a convenient way to access the internal data of your target process, with automatic refreshes.
+MindControl allows you to search for byte patterns in the memory of your target process. This can be useful to find the location of a value you want to hack, or to find a function you want to hook.
 
-Check the [StateWatcher](StateWatcher.md) documentation to learn how to set it up.
+```csharp
+var myGame = ProcessMemory.OpenProcess("mygame");
+UIntPtr targetAddress = myGame.FindBytes("4D 79 ?? ?? ?? ?? ?? ?? 56 61 6C 75 65")
+    .FirstOrDefault();
+```
+
+Find out more about this on the [FindBytes](FindBytes.md) documentation.
 
 ## Handle process exit and restart
 
@@ -115,3 +121,9 @@ myGame.InjectLibrary("myhack.dll");
 ```
 
 For example, you can use named pipes to communicate between your hacking program and the target process (send commands to the game or receive data from it).
+
+## Tracking a process in real-time
+
+The `StateWatcher` class gives you a convenient way to access the internal data of your target process, with automatic refreshes.
+
+Check the [StateWatcher](StateWatcher.md) documentation to learn how to set it up.

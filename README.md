@@ -18,6 +18,10 @@ Console.WriteLine($"You have {currentHp}HP"); // Example output: "You have 50HP"
 
 // Write values
 myGame.WriteInt(hpAddress, 9999);
+
+// Find the first occurrence of a pattern in memory, with wildcard bytes
+UIntPtr targetAddress = myGame.FindBytes("4D 79 ?? ?? ?? ?? ?? ?? 56 61 6C 75 65")
+    .FirstOrDefault();
 ```
 
 See [the documentation](doc/GetStarted.md) for more information.
@@ -30,11 +34,33 @@ See [the documentation](doc/GetStarted.md) for more information.
 - Read a memory address as a string as simply as possible, or as complex as you need
 - Write byte arrays, booleans and basic number types at any memory address
 - Inject DLLs to execute arbitrary code in the target process
+- Search for byte patterns in the target process memory
 - Designed for performance and simplicity of use
 - Unit tested and made with care
 
-## Planned Features
+## Comparison with other libraries
 
-MindControl is a work-in-progress. Here are some planned features:
-- AoB scans with masking support
-- Generic ValueTracker class that focuses on a single pointer path, with read and write operations, freeze and auto-refresh options
+MindControl is a small library that focuses on the most common use cases for hacking.
+
+It is not as feature-rich as the most used .net hacking library, [memory.dll](https://github.com/erfg12/memory.dll/), but it aims to be easier to use, have comparable performance, and most importantly to be more reliable and maintainable.
+
+If you are considering MindControl but unsure if it has the features you need, here is a comparison table. 
+
+| Feature                     | MindControl | memory.dll
+|-----------------------------|--- |--- |
+| **Handle pointer paths**    | ✔️ | ✔️ |
+| **Read primitive types**    | ✔️ | ✔️ |
+| **Write primitive types**   | ✔️ | ✔️ |
+| **Read strings**            | ✔️ | ✔️ |
+| **Write strings**           | ❌ | ✔️ |
+| **Array of bytes scanning** | ✔️ | ✔️ |
+| **Inject DLLs**             | ✔️ | ✔️ |
+| **State watchers**          | ✔️ | ❌ |
+| **Create code caves**       | ❌ | ✔️ |
+| **Bind to UI elements**     | ❌ | ✔️ |
+| **Freeze values**           | ❌ | ✔️ |
+| **Set focus to process**    | ❌ | ✔️ |
+| **Load from .ini file**     | ❌ | ✔️ |
+| **Suspend process**         | ❌ | ✔️ |
+| **Dump process memory**     | ❌ | ✔️ |
+| **Manipulate threads**      | ❌ | ✔️ |
