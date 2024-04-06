@@ -289,6 +289,7 @@ public partial class ProcessMemory
     public void WriteBytes(UIntPtr address, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         // Remove protection if needed
+        memoryProtectionStrategy ??= DefaultWriteStrategy;
         MemoryProtection? previousProtection = null;
         if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
         {
