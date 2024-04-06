@@ -70,6 +70,7 @@ public partial class ProcessMemory
     /// memory. Restricting the memory range can dramatically improve the performance of the scan.</param>
     /// <param name="settings">Settings for the search. Leave this to null (the default) to use the default settings.
     /// Using more restrictive settings can dramatically improve the performance of the scan.</param>
+    /// <returns>An enumerable of addresses where the pattern was found.</returns>
     public IEnumerable<UIntPtr> FindBytes(string bytePattern, MemoryRange? range = null,
         FindBytesSettings? settings = null)
     {
@@ -80,6 +81,30 @@ public partial class ProcessMemory
         
         (byte[] bytePatternArray, byte[] maskArray) = ParseBytePattern(bytePattern);
         return FindBytesInternal(bytePatternArray, maskArray, actualRange, actualSettings);
+    }
+    
+    /// <summary>
+    /// Scans the memory of the target process for a byte pattern. Returns the address of each occurrence in the
+    /// target range, or in the whole memory if no range is specified.
+    /// This is the asynchronous variant of <see cref="FindBytes"/>. Use this variant if you need to keep your program
+    /// responsive while the scan is going on.
+    /// Read the documentation to learn how to perform efficient scans.
+    /// </summary>
+    /// <param name="bytePattern">String representation of the byte pattern to find. This pattern should be a series of
+    /// hexadecimal bytes, optionally separated by spaces. Each character, excluding spaces, can be a specific value
+    /// (0-F) or a wildcard "?" character, indicating that the value to look for at this position could be any value.
+    /// Read the documentation for more information.</param>
+    /// <param name="range">Range of memory to scan. Leave this to null (the default) to scan the whole process
+    /// memory. Restricting the memory range can dramatically improve the performance of the scan.</param>
+    /// <param name="settings">Settings for the search. Leave this to null (the default) to use the default settings.
+    /// Using more restrictive settings can dramatically improve the performance of the scan.</param>
+    /// <returns>An asynchronous enumerable of addresses where the pattern was found.</returns>
+    public async IAsyncEnumerable<UIntPtr> FindBytesAsync(string bytePattern, MemoryRange? range = null,
+        FindBytesSettings? settings = null)
+    {
+        var results = await Task.Run(() => FindBytes(bytePattern, range, settings));
+        foreach (var result in results)
+            yield return result;
     }
 
     #region Parsing and input processing
