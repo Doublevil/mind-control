@@ -76,7 +76,6 @@ public partial class ProcessMemory
     {
         var actualSettings = settings ?? new FindBytesSettings();
         var actualRange = GetClampedMemoryRange(range);
-        actualRange.Validate();
         actualSettings.Validate();
         
         (byte[] bytePatternArray, byte[] maskArray) = ParseBytePattern(bytePattern);
