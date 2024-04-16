@@ -21,7 +21,7 @@ public readonly record struct MemoryRange
         this.Start = Start;
         this.End = End;
         
-        if (Start.ToUInt64() < End.ToUInt64())
+        if (Start.ToUInt64() > End.ToUInt64())
             throw new ArgumentException($"The start address of the memory range cannot be greater than the end address. If you are trying to build a range from a start address and a size, use the {nameof(FromStartAndSize)} static method instead.");
     }
 
@@ -31,7 +31,12 @@ public readonly record struct MemoryRange
     /// <param name="start">Start address of the range.</param>
     /// <param name="size">Size of the range in bytes.</param>
     public static MemoryRange FromStartAndSize(UIntPtr start, ulong size)
-        => new(start, (UIntPtr)(start.ToUInt64() + size));
+    {
+        if (size == 0)
+            throw new ArgumentException("The size of the memory range cannot be zero.", nameof(size));
+        
+        return new MemoryRange(start, (UIntPtr)(start.ToUInt64() + size - 1));
+    }
 
     /// <summary>
     /// Determines if the specified address is within the memory range.
@@ -92,22 +97,26 @@ public readonly record struct MemoryRange
     /// For example, a range of [2,9] aligned to 4 bytes will result in [4,8].
     /// </summary>
     /// <param name="alignment">Alignment in bytes. Usually 4 for 32-bits processes, or 8 for 64-bits processes.</param>
-    /// <param name="alignStart">Indicates if the start of the range should be aligned. Defaults to true.</param>
-    /// <param name="alignEnd">Indicates if the end of the range should be aligned. Defaults to true.</param>
+    /// <param name="alignmentMode">Alignment mode. Defines how the range should be aligned. Defaults to
+    /// <see cref="RangeAlignmentMode.AlignBlock"/>.</param>
     /// <returns>The aligned memory range. The returned range is always a subset of the range, or the range itself.
     /// </returns>
-    public MemoryRange AlignedTo(uint alignment, bool alignStart = true, bool alignEnd = true)
+    public MemoryRange AlignedTo(uint alignment, RangeAlignmentMode alignmentMode = RangeAlignmentMode.AlignBlock)
     {
-        if (!alignStart && !alignEnd)
+        if (alignment == 0)
+            throw new ArgumentException("The alignment value cannot be zero.", nameof(alignment));
+        
+        if (alignmentMode == RangeAlignmentMode.None || alignment == 1)
             return this;
+        bool alignSize = alignmentMode == RangeAlignmentMode.AlignBlock;
         
         var start = Start.ToUInt64();
-        var end = End.ToUInt64();
+        ulong alignedStart = start + (alignment - start % alignment) % alignment;
         
-        ulong alignedStart = alignStart ? start + (alignment - start % alignment) % alignment : start;
-        ulong alignedEnd = alignEnd ? end - end % alignment : end;
-
-        return new MemoryRange((UIntPtr)alignedStart, (UIntPtr)alignedEnd);
+        ulong size = End.ToUInt64() - alignedStart + 1;
+        ulong alignedSize = alignSize ? size - size % alignment : size;
+        
+        return new MemoryRange((UIntPtr)alignedStart, (UIntPtr)(alignedStart + alignedSize - 1));
     }
 
     /// <summary>
@@ -125,4 +134,19 @@ public readonly record struct MemoryRange
         start = Start;
         end = End;
     }
+}
+
+/// <summary>
+/// Defines a byte alignment mode for memory ranges.
+/// </summary>
+public enum RangeAlignmentMode
+{
+    /// <summary>Do not align the range.</summary>
+    None,
+    
+    /// <summary>Align the start of the range, but not the size.</summary>
+    AlignStart,
+    
+    /// <summary>Align both the start and the size of the range.</summary>
+    AlignBlock
 }
