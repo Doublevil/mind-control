@@ -21,6 +21,11 @@ public struct MemoryRangeMetadata
     public bool IsCommitted { get; init; }
     
     /// <summary>
+    /// Gets a boolean indicating if the memory is free.
+    /// </summary>
+    public bool IsFree { get; init; }
+    
+    /// <summary>
     /// Gets a boolean indicating if the memory is guarded or marked for no access.
     /// </summary>
     public bool IsProtected { get; init; }

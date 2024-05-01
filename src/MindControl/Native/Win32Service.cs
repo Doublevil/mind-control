@@ -147,6 +147,18 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="protection">Protection flags of the memory to allocate.</param>
     /// <returns>A pointer to the start of the allocated memory.</returns>
     public UIntPtr AllocateMemory(IntPtr processHandle, int size, MemoryAllocationType allocationType,
+        MemoryProtection protection) => AllocateMemory(processHandle, UIntPtr.Zero, size, allocationType, protection);
+    
+    /// <summary>
+    /// Allocates memory in the specified process at the specified address.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="address">Address where the memory will be allocated.</param>
+    /// <param name="size">Size in bytes of the memory to allocate.</param>
+    /// <param name="allocationType">Type of memory allocation.</param>
+    /// <param name="protection">Protection flags of the memory to allocate.</param>
+    /// <returns>A pointer to the start of the allocated memory.</returns>
+    public UIntPtr AllocateMemory(IntPtr processHandle, UIntPtr address, int size, MemoryAllocationType allocationType,
         MemoryProtection protection)
     {
         if (processHandle == IntPtr.Zero)
@@ -154,7 +166,7 @@ public partial class Win32Service : IOperatingSystemService
         if (size <= 0)
             throw new ArgumentOutOfRangeException(nameof(size),"The size to allocate must be strictly positive.");
         
-        var result = VirtualAllocEx(processHandle, UIntPtr.Zero, (uint)size, (uint)allocationType, (uint)protection);
+        var result = VirtualAllocEx(processHandle, address, (uint)size, (uint)allocationType, (uint)protection);
         if (result == UIntPtr.Zero)
             throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
 
@@ -282,6 +294,16 @@ public partial class Win32Service : IOperatingSystemService
     }
 
     /// <summary>
+    /// Gets the allocation granularity (minimal allocation size) of the system.
+    /// </summary>
+    public uint GetAllocationGranularity() => GetSystemInfo().AllocationGranularity;
+
+    /// <summary>
+    /// Gets the page size of the system.
+    /// </summary>
+    public uint GetPageSize() => GetSystemInfo().PageSize;
+
+    /// <summary>
     /// Gets the metadata of a memory region in the virtual address space of a process.
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
@@ -324,6 +346,7 @@ public partial class Win32Service : IOperatingSystemService
             StartAddress = memoryBasicInformation.BaseAddress,
             Size = memoryBasicInformation.RegionSize,
             IsCommitted = memoryBasicInformation.State == MemoryState.Commit,
+            IsFree = memoryBasicInformation.State == MemoryState.Free,
             IsProtected = memoryBasicInformation.Protect.HasFlag(MemoryProtection.PageGuard)
                           || memoryBasicInformation.Protect.HasFlag(MemoryProtection.NoAccess),
             IsMapped = memoryBasicInformation.Type == PageType.Mapped,

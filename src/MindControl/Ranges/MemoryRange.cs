@@ -63,6 +63,18 @@ public readonly record struct MemoryRange
         => Start.ToUInt64() <= range.End.ToUInt64() && range.Start.ToUInt64() <= End.ToUInt64();
 
     /// <summary>
+    /// Obtains the intersection of this range with the given range, which is the range that is common to both.
+    /// </summary>
+    /// <param name="otherRange">The range to intersect with.</param>
+    /// <returns>The intersection of the two ranges, or null if there is no intersection.</returns>
+    public MemoryRange? Intersect(MemoryRange otherRange)
+    {
+        ulong start = Math.Max(Start.ToUInt64(), otherRange.Start.ToUInt64());
+        ulong end = Math.Min(End.ToUInt64(), otherRange.End.ToUInt64());
+        return start <= end ? new MemoryRange((UIntPtr)start, (UIntPtr)end) : null;
+    }
+    
+    /// <summary>
     /// Returns the result of excluding the given range from this range. This can be seen as an XOR operation between
     /// the two ranges.
     /// This will result in no range when this range is entirely contained within the given range, two ranges when
@@ -100,8 +112,8 @@ public readonly record struct MemoryRange
     /// <param name="alignmentMode">Alignment mode. Defines how the range should be aligned. Defaults to
     /// <see cref="RangeAlignmentMode.AlignBlock"/>.</param>
     /// <returns>The aligned memory range. The returned range is always a subset of the range, or the range itself.
-    /// </returns>
-    public MemoryRange AlignedTo(uint alignment, RangeAlignmentMode alignmentMode = RangeAlignmentMode.AlignBlock)
+    /// If the aligned memory range cannot fit in the original range, returns null.</returns>
+    public MemoryRange? AlignedTo(uint alignment, RangeAlignmentMode alignmentMode = RangeAlignmentMode.AlignBlock)
     {
         if (alignment == 0)
             throw new ArgumentException("The alignment value cannot be zero.", nameof(alignment));
@@ -116,7 +128,11 @@ public readonly record struct MemoryRange
         ulong size = End.ToUInt64() - alignedStart + 1;
         ulong alignedSize = alignSize ? size - size % alignment : size;
         
-        return new MemoryRange((UIntPtr)alignedStart, (UIntPtr)(alignedStart + alignedSize - 1));
+        ulong end = alignedStart + alignedSize - 1;
+        if (alignedStart > End.ToUInt64())
+            return null;
+        
+        return new MemoryRange((UIntPtr)alignedStart, (UIntPtr)end);
     }
 
     /// <summary>

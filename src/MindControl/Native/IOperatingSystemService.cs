@@ -67,6 +67,18 @@ public interface IOperatingSystemService
         MemoryProtection protection);
 
     /// <summary>
+    /// Allocates memory in the specified process at the specified address.
+    /// </summary>
+    /// <param name="processHandle">Handle of the target process.</param>
+    /// <param name="address">Address where the memory will be allocated.</param>
+    /// <param name="size">Size in bytes of the memory to allocate.</param>
+    /// <param name="allocationType">Type of memory allocation.</param>
+    /// <param name="protection">Protection flags of the memory to allocate.</param>
+    /// <returns>A pointer to the start of the allocated memory.</returns>
+    UIntPtr AllocateMemory(IntPtr processHandle, UIntPtr address, int size, MemoryAllocationType allocationType,
+        MemoryProtection protection);
+
+    /// <summary>
     /// Gets the address of the function used to load a library in the current process.
     /// </summary>
     UIntPtr GetLoadLibraryFunctionAddress();
@@ -116,4 +128,14 @@ public interface IOperatingSystemService
     /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.
     /// If left null, the method will automatically determine the bitness of the process.</param>
     MemoryRangeMetadata GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress, bool? is64Bits = null);
+
+    /// <summary>
+    /// Gets the allocation granularity (minimal allocation size) of the system.
+    /// </summary>
+    uint GetAllocationGranularity();
+
+    /// <summary>
+    /// Gets the page size of the system.
+    /// </summary>
+    uint GetPageSize();
 }

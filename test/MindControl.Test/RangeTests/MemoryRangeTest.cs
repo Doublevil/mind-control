@@ -145,6 +145,43 @@ public class MemoryRangeTest
     
     #endregion
     
+    #region Intersect
+    
+    /// <summary>
+    /// Describes a test case for the <see cref="MemoryRange.Intersect"/> method.
+    /// </summary>
+    public record struct IntersectTestCase(ulong Start, ulong End, ulong OtherStart, ulong OtherEnd,
+        MemoryRange? ExpectedResult);
+
+    private static IntersectTestCase[] _intersectTestCases =
+    {
+        new(0x1000, 0x1FFF, 0x1001, 0x1FFE, new MemoryRange(new UIntPtr(0x1001), new UIntPtr(0x1FFE))),
+        new(0x1000, 0x1FFF, 0x1000, 0x1FFF, new MemoryRange(new UIntPtr(0x1000), new UIntPtr(0x1FFF))),
+        new(0x0FFF, 0x1000, 0x1000, 0x1FFF, new MemoryRange(new UIntPtr(0x1000), new UIntPtr(0x1000))),
+        new(0x1FFF, 0x2000, 0x1000, 0x1FFF, new MemoryRange(new UIntPtr(0x1FFF), new UIntPtr(0x1FFF))),
+        new(0x1000, 0x1FFF, 0x2000, 0x2FFF, null),
+        new(0x1000, 0x1FFF, 0x0000, 0x0FFF, null)
+    };
+    
+    /// <summary>
+    /// Tests the <see cref="MemoryRange.Intersect"/> method with specified ranges.
+    /// It should return the specified expected value.
+    /// </summary>
+    [TestCaseSource(nameof(_intersectTestCases))]
+    public void IntersectTest(IntersectTestCase testCase)
+    {
+        var range = new MemoryRange(new UIntPtr(testCase.Start), new UIntPtr(testCase.End));
+        var otherRange = new MemoryRange(new UIntPtr(testCase.OtherStart), new UIntPtr(testCase.OtherEnd));
+        
+        // We check both ways because Intersect is commutative
+        var result = range.Intersect(otherRange);
+        var result2 = otherRange.Intersect(range);
+        Assert.That(result, Is.EqualTo(testCase.ExpectedResult));
+        Assert.That(result2, Is.EqualTo(testCase.ExpectedResult));
+    }
+    
+    #endregion
+    
     #region Exclude
 
     /// <summary>
@@ -208,24 +245,26 @@ public class MemoryRangeTest
     /// Describes a test case for the <see cref="MemoryRange.AlignedTo"/> method.
     /// </summary>
     public record struct AlignedToTestCase(ulong Start, ulong End, uint Alignment,
-        RangeAlignmentMode AlignmentMode, ulong ExpectedStart, ulong ExpectedEnd);
+        RangeAlignmentMode AlignmentMode, MemoryRange? ExpectedResult);
     
     private static AlignedToTestCase[] _alignedToTestCases = {
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignBlock, 0x1000, 0x1FFF),
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignStart, 0x1000, 0x1FFF),
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.None, 0x1000, 0x1FFF),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
         
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignBlock, 0x1000, 0x1FFF),
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignStart, 0x1000, 0x1FFF),
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.None, 0x1000, 0x1FFF),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
         
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignBlock, 0x1004, 0x1FFB),
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignStart, 0x1004, 0x1FFE),
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.None, 0x1001, 0x1FFE),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1004, (UIntPtr)0x1FFB)),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1004, (UIntPtr)0x1FFE)),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1001, (UIntPtr)0x1FFE)),
         
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignBlock, 0x1008, 0x1FF7),
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignStart, 0x1008, 0x1FFE),
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.None, 0x1001, 0x1FFE)
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1008, (UIntPtr)0x1FF7)),
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1008, (UIntPtr)0x1FFE)),
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1001, (UIntPtr)0x1FFE)),
+        
+        new(0x1000, 0x1FFF, 0x2000, RangeAlignmentMode.AlignBlock, null)
     };
     
     /// <summary>
@@ -237,8 +276,7 @@ public class MemoryRangeTest
     {
         var range = new MemoryRange(new UIntPtr(testCase.Start), new UIntPtr(testCase.End));
         var alignedRange = range.AlignedTo(testCase.Alignment, testCase.AlignmentMode);
-        var expectedRange = new MemoryRange(new UIntPtr(testCase.ExpectedStart), new UIntPtr(testCase.ExpectedEnd));
-        Assert.That(alignedRange, Is.EqualTo(expectedRange));
+        Assert.That(alignedRange, Is.EqualTo(testCase.ExpectedResult));
     }
     
     /// <summary>

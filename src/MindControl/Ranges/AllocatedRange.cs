@@ -137,8 +137,8 @@ public class AllocatedRange : IDisposable
         
         var matchingRange = GetFreeRanges()
             .Select(r => byteAlignment == null ? r : r.AlignedTo(byteAlignment.Value))
-            .OrderBy(r => r.Start.ToUInt64())
-            .Cast<MemoryRange?>()
+            .Where(r => r.HasValue)
+            .OrderBy(r => r!.Value.Start.ToUInt64())
             .FirstOrDefault(r => r?.GetSize() > size);
 
         if (matchingRange == null)
