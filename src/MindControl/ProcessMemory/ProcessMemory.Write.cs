@@ -29,6 +29,9 @@ public partial class ProcessMemory
     /// <exception cref="ArgumentException">Thrown when the type of the value is not supported.</exception>
     public void Write<T>(UIntPtr address, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
+        if (value == null)
+            throw new ArgumentNullException(nameof(value), "The value to write cannot be null.");
+        
         switch (value)
         {
             case bool v: WriteBool(address, v, memoryProtectionStrategy); break;
@@ -43,7 +46,7 @@ public partial class ProcessMemory
             case ulong v: WriteULong(address, v, memoryProtectionStrategy); break;
             case double v: WriteDouble(address, v, memoryProtectionStrategy); break;
             case byte[] v: WriteBytes(address, v, memoryProtectionStrategy); break;
-            default: throw new ArgumentException($"Writing a value of type \"{typeof(T)}\" is not supported.");
+            default: WriteBytes(address, value.ToBytes(), memoryProtectionStrategy); break;
         }
     }
     

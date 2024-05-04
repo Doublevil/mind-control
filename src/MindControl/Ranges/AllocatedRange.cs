@@ -29,7 +29,7 @@ public class AllocatedRange : IDisposable
     public AllocatedRange? ParentRange { get; }
     
     /// <summary>
-    /// Gets a boolean indicating if the range has been freed and is thus unavailable for reservations.
+    /// Gets a boolean indicating if the range is in use. If false, the range has been freed and is no longer usable.
     /// </summary>
     public bool IsReserved => !_hasBeenFreed;
     
@@ -139,7 +139,7 @@ public class AllocatedRange : IDisposable
             .Select(r => byteAlignment == null ? r : r.AlignedTo(byteAlignment.Value))
             .Where(r => r.HasValue)
             .OrderBy(r => r!.Value.Start.ToUInt64())
-            .FirstOrDefault(r => r?.GetSize() > size);
+            .FirstOrDefault(r => r?.GetSize() >= size);
 
         if (matchingRange == null)
             return null;

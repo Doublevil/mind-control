@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace MindControl.Internal;
 
@@ -58,5 +59,54 @@ internal static class ConversionExtensions
         }
 
         return IntPtr.Size == 4 ? (UIntPtr)(uint)value : (UIntPtr)(ulong)value;
+    }
+
+    /// <summary>
+    /// Converts the given structure to an array of bytes.
+    /// </summary>
+    /// <param name="value">Value to convert. Must be a value type.</param>
+    /// <returns>The array of bytes representing the value.</returns>
+    private static byte[] StructToBytes(object value)
+    {
+        // Note: this code only works with structs.
+        // Do not try this at home with reference types!
+        
+        int size = Marshal.SizeOf(value);
+        var arr = new byte[size];
+
+        var ptr = Marshal.AllocHGlobal(size);
+        try
+        {
+            Marshal.StructureToPtr(value, ptr, true);
+            Marshal.Copy(ptr, arr, 0, size);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(ptr);
+        }
+
+        return arr;
+    }
+    
+    /// <summary>
+    /// Converts the object to an array of bytes.
+    /// </summary>
+    /// <param name="value">Value to convert.</param>
+    /// <returns>The array of bytes representing the value.</returns>
+    public static byte[] ToBytes(this object? value)
+    {
+        switch (value)
+        {
+            case null:
+                throw new ArgumentNullException(nameof(value));
+            case byte[] bytes:
+                return bytes;
+        }
+
+        // For now, we will only handle structs.
+        if (value is not ValueType)
+            throw new ArgumentException($"The value must be a value type. {value.GetType().Name}", nameof(value));
+        
+        return StructToBytes(value);
     }
 }

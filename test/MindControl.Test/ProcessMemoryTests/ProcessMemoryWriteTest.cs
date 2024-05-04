@@ -48,7 +48,7 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
     }
     
     #endregion
-
+    
     /// <summary>
     /// Write a value in the target app memory, and assert that the output of the app for that specific value (and no
     /// other value) reflects the change.
@@ -77,5 +77,23 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
         TestProcessMemory!.Write($"{OuterClassPointer:X}{pointerPathSuffix}", value);
         ProceedToNextStep();
         AssertFinalResults(finalResultsIndex, expectedValue);
+    }
+
+    /// <summary>A struct with a couple fields, to test writing structs in the target app memory. </summary>
+    public record struct TestStruct(int A, long B);
+    
+    /// <summary>
+    /// Write a struct instance in the target app memory, and attempt to read it back.
+    /// </summary>
+    [Test]
+    public void WriteStructTest()
+    {
+        var structInstance = new TestStruct(123, -456789);
+        ProceedToNextStep();
+        var pointerPath = new PointerPath($"{OuterClassPointer:X}+50");
+        TestProcessMemory!.Write(pointerPath, structInstance);
+        var valueReadBack = TestProcessMemory.Read<TestStruct>(pointerPath);
+        
+        Assert.That(valueReadBack, Is.EqualTo(structInstance));
     }
 }
