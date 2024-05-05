@@ -6,13 +6,13 @@ namespace MindControl;
 // This partial class implements methods related to memory allocation.
 public partial class ProcessMemory
 {
-    private readonly List<AllocatedRange> _allocatedRanges = new();
+    private readonly List<MemoryAllocation> _allocations = new();
     
     /// <summary>
-    /// Gets the ranges allocated in this process.
-    /// Dispose a range to free the memory and remove it from this list.
+    /// Gets the ranges that have been allocated for this process. Dispose a range to free the memory and remove it
+    /// from this list.
     /// </summary>
-    public IReadOnlyList<AllocatedRange> AllocatedRanges => _allocatedRanges.AsReadOnly();
+    public IReadOnlyList<MemoryAllocation> Allocations => _allocations.AsReadOnly();
 
     /// <summary>
     /// Attempts to allocate a memory range of the given size within the process.
@@ -21,7 +21,7 @@ public partial class ProcessMemory
     /// <param name="forExecutableCode">Determines if the memory range can be used to store executable code.</param>
     /// <param name="limitRange">Specify this parameter to limit the allocation to a specific range of memory.</param>
     /// <returns>The allocated memory range.</returns>
-    public AllocatedRange Allocate(ulong size, bool forExecutableCode, MemoryRange? limitRange = null)
+    public MemoryAllocation Allocate(ulong size, bool forExecutableCode, MemoryRange? limitRange = null)
     {
         if (size == 0)
             throw new ArgumentException("The size of the memory range to allocate must be greater than zero.",
@@ -33,24 +33,24 @@ public partial class ProcessMemory
             throw new InvalidOperationException("No suitable free memory range was found.");
         
         // Add the range to the list of allocated ranges and return it
-        var allocatedRange = new AllocatedRange(range.Value, forExecutableCode, this);
-        _allocatedRanges.Add(allocatedRange);
+        var allocatedRange = new MemoryAllocation(range.Value, forExecutableCode, this);
+        _allocations.Add(allocatedRange);
         return allocatedRange;
     }
     
     /// <summary>
-    /// Frees the memory allocated for the given range.
+    /// Releases a range of allocated memory.
     /// </summary>
-    /// <param name="range">Range to free.</param>
-    /// <remarks>This method is internal because it is designed to be called by <see cref="AllocatedRange.Dispose"/>.
-    /// Users would release memory by disposing ranges.</remarks>
-    internal void Free(AllocatedRange range)
+    /// <param name="allocation">Allocation to free.</param>
+    /// <remarks>This method is internal because it is designed to be called by <see cref="MemoryAllocation.Dispose"/>.
+    /// Users would release memory by disposing instances.</remarks>
+    internal void Free(MemoryAllocation allocation)
     {
-        if (!_allocatedRanges.Contains(range))
+        if (!_allocations.Contains(allocation))
             return;
         
-        _allocatedRanges.Remove(range);
-        _osService.ReleaseMemory(_processHandle, range.Range.Start);
+        _allocations.Remove(allocation);
+        _osService.ReleaseMemory(_processHandle, allocation.Range.Start);
     }
 
     /// <summary>
@@ -133,16 +133,16 @@ public partial class ProcessMemory
     #region Store
 
     /// <summary>
-    /// Reserves a range of memory of the given size. If no suitable range is found, a new range is allocated, and
-    /// a reservation is made on it.
+    /// Reserves a range of memory of the given size. If no suitable range is found within the current allocations,
+    /// a new range is allocated, and a reservation is made on it.
     /// </summary>
     /// <param name="size">Size of the memory range to reserve.</param>
     /// <param name="requireExecutable">Set to true if the memory range must be executable.</param>
-    /// <returns>The reserved memory range.</returns>
-    private AllocatedRange ReserveOrAllocateRange(ulong size, bool requireExecutable)
+    /// <returns>The resulting reservation.</returns>
+    private MemoryReservation FindOrMakeReservation(ulong size, bool requireExecutable)
     {
         uint alignment = _is64Bits ? (uint)8 : 4;
-        return _allocatedRanges.Select(r => r.TryReserveRange(size, alignment))
+        return _allocations.Select(r => r.TryReserveRange(size, alignment))
             .FirstOrDefault(r => r != null)
             ?? Allocate(size, requireExecutable).ReserveRange(size, alignment);
     }
@@ -154,48 +154,47 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="isCode">Set to true if the data is executable code. Defaults to false.</param>
     /// <returns>The reserved memory range.</returns>
-    public AllocatedRange Store(byte[] data, bool isCode = false)
+    public MemoryReservation Store(byte[] data, bool isCode = false)
     {
-        var reservedRange = ReserveOrAllocateRange((ulong)data.Length, isCode);
+        var reservedRange = FindOrMakeReservation((ulong)data.Length, isCode);
         WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
         return reservedRange;
     }
     
     /// <summary>
-    /// Stores the given data in the specified range of memory. Returns the reserved range that you can utilize to use
-    /// the data.
+    /// Stores the given data in the specified allocated range. Returns the reservation that holds the data.
     /// </summary>
     /// <param name="data">Data to store.</param>
-    /// <param name="range">Range of memory to store the data in.</param>
-    /// <returns>The reserved memory range.</returns>
-    public AllocatedRange Store(byte[] data, AllocatedRange range)
+    /// <param name="allocation">Allocated memory to store the data.</param>
+    /// <returns>The reservation holding the data.</returns>
+    public MemoryReservation Store(byte[] data, MemoryAllocation allocation)
     {
         uint alignment = _is64Bits ? (uint)8 : 4;
-        var reservedRange = range.ReserveRange((ulong)data.Length, alignment);
+        var reservedRange = allocation.ReserveRange((ulong)data.Length, alignment);
         WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
         return reservedRange;
     }
 
     /// <summary>
     /// Stores the given value or structure in the process memory. If needed, memory is allocated to store the data.
-    /// Returns the reserved range that you can utilize to use the data.
+    /// Returns the reservation that holds the data.
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>The reserved memory range.</returns>
-    public AllocatedRange Store<T>(T value)
+    /// <returns>The reservation holding the data.</returns>
+    public MemoryReservation Store<T>(T value)
         => Store(value.ToBytes(), false);
 
     /// <summary>
-    /// Stores the given value or structure in the specified range of memory. Returns the reserved range that you can
-    /// utilize to use the data.
+    /// Stores the given value or structure in the specified range of memory. Returns the reservation that holds the
+    /// data.
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
-    /// <param name="range">Range of memory to store the data in.</param>
+    /// <param name="allocation">Range of memory to store the data in.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>The reserved memory range.</returns>
-    public AllocatedRange Store<T>(T value, AllocatedRange range) where T: struct
-        => Store(value.ToBytes(), range);
+    /// <returns>The reservation holding the data.</returns>
+    public MemoryReservation Store<T>(T value, MemoryAllocation allocation) where T: struct
+        => Store(value.ToBytes(), allocation);
 
     #endregion
 }

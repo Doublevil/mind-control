@@ -174,16 +174,16 @@ public partial class ProcessMemory : IDisposable
         if (IsAttached)
         {
             IsAttached = false;
-            for (int i = _allocatedRanges.Count - 1; i >= 0; i--)
+            for (int i = _allocations.Count - 1; i >= 0; i--)
             {
                 try
                 {
-                    _allocatedRanges[i].Dispose();
+                    _allocations[i].Dispose();
                 }
                 catch (Exception)
                 {
                     // Just skip. We probably lost the process and thus cannot do anything with it anymore.
-                    _allocatedRanges.RemoveAt(i);
+                    _allocations.RemoveAt(i);
                 }
             }
 

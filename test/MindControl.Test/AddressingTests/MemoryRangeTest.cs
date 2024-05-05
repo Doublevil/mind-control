@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace MindControl.Test.RangeTests;
+namespace MindControl.Test.AddressingTests;
 
 /// <summary>
 /// Tests the <see cref="MemoryRange"/> class.

@@ -1,7 +1,7 @@
 ﻿namespace MindControl;
 
 /// <summary>
-/// Exception thrown by an <see cref="AllocatedRange"/> when trying to reserve a memory range with a size exceeding
+/// Exception thrown by a <see cref="MemoryAllocation"/> when trying to reserve a memory range with a size exceeding
 /// the largest contiguous unreserved space.
 /// </summary>
 public class InsufficientAllocatedMemoryException : Exception
@@ -22,7 +22,7 @@ public class InsufficientAllocatedMemoryException : Exception
     /// <param name="requestedSize">Requested size for the reservation attempt.</param>
     /// <param name="requestedAlignment">Requested byte alignment for the reservation attempt.</param>
     public InsufficientAllocatedMemoryException(ulong requestedSize, uint? requestedAlignment)
-        : base($"The requested size of {requestedSize} bytes with {(requestedAlignment == null ? "no alignment" : $"an alignment of {requestedAlignment.Value}")} bytes exceeds the largest contiguous unreserved space of the {nameof(AllocatedRange)} instance. Consider allocating more space, reserving multiple smaller blocks, or letting the {nameof(ProcessMemory)} instance handle allocations by using addressless Write method signatures. Read the \"Allocating memory\" section in the documentation for more information.")
+        : base($"The requested size of {requestedSize} bytes with {(requestedAlignment == null ? "no alignment" : $"an alignment of {requestedAlignment.Value}")} bytes exceeds the largest contiguous unreserved space of the {nameof(MemoryAllocation)} instance. Consider allocating more space, reserving multiple smaller blocks, or letting the {nameof(ProcessMemory)} instance handle allocations by using addressless Write method signatures. Read the \"Allocating memory\" section in the documentation for more information.")
     {
         RequestedSize = requestedSize;
         RequestedAlignment = requestedAlignment;

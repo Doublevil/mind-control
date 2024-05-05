@@ -1,7 +1,7 @@
 using System.Numerics;
 using NUnit.Framework;
 
-namespace MindControl.Test;
+namespace MindControl.Test.AddressingTests;
 
 /// <summary>
 /// Tests the <see cref="PointerPath"/> class.
