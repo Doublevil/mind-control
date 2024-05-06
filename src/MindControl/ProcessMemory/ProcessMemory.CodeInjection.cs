@@ -7,6 +7,13 @@ namespace MindControl;
 public partial class ProcessMemory
 {
     /// <summary>
+    /// Gets or sets the time to wait for the spawned thread to return when injecting a library using the
+    /// <see cref="InjectLibrary"/> method.
+    /// By default, this value will be set to 10 seconds.
+    /// </summary>
+    public TimeSpan LibraryInjectionThreadTimeout { get; set; } = TimeSpan.FromSeconds(10);
+    
+    /// <summary>
     /// Injects a library into the attached process.
     /// </summary>
     /// <param name="libraryPath">Path to the library file to inject into the process.</param>

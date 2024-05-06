@@ -29,13 +29,6 @@ public partial class ProcessMemory : IDisposable
     /// By default, this value will be <see cref="MemoryProtectionStrategy.RemoveAndRestore"/>.
     /// </summary>
     public MemoryProtectionStrategy DefaultWriteStrategy { get; set; } = MemoryProtectionStrategy.RemoveAndRestore;
-
-    /// <summary>
-    /// Gets or sets the time to wait for the spawned thread to return when injecting a library using the
-    /// <see cref="InjectLibrary"/> method.
-    /// By default, this value will be set to 10 seconds.
-    /// </summary>
-    public TimeSpan LibraryInjectionThreadTimeout { get; set; } = TimeSpan.FromSeconds(10);
     
     /// <summary>
     /// Event raised when the process detaches for any reason.
