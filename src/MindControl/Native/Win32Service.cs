@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using MindControl.Results;
 
 namespace MindControl.Native;
 
@@ -12,15 +13,24 @@ public partial class Win32Service : IOperatingSystemService
     private SystemInfo? _systemInfo;
 
     /// <summary>
+    /// Builds and returns a failure object representing the last Win32 error that occurred.
+    /// </summary>
+    private static OperatingSystemCallFailure GetLastSystemError()
+    {
+        int errorCode = Marshal.GetLastWin32Error();
+        return new OperatingSystemCallFailure(errorCode, new Win32Exception(errorCode).Message);
+    }
+    
+    /// <summary>
     /// Opens the process with the given identifier, in a way that allows memory manipulation.
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
     /// <returns>Handle of the opened process.</returns>
-    public IntPtr OpenProcess(int pid)
+    public Result<IntPtr, SystemFailure> OpenProcess(int pid)
     {
         var handle = OpenProcess(0x1F0FFF, true, pid);
         if (handle == IntPtr.Zero)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return GetLastSystemError();
 
         return handle;
     }
@@ -30,20 +40,24 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
     /// <returns>True if the process is 64-bits, false otherwise.</returns>
-    public bool IsProcess64Bits(int pid)
+    public Result<bool, SystemFailure> IsProcess64Bits(int pid)
     {
-        var process = Process.GetProcessById(pid);
-        if (process == null)
-            throw new ArgumentException($"Process {pid} was not found.");
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            if (!IsWow64Process(process.Handle, out bool isWow64))
+                return GetLastSystemError();
         
-        if (!IsWow64Process(process.Handle, out bool isWow64))
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
-        process.Dispose();
+            bool isSystem64Bits = IntPtr.Size == 8;
         
-        bool isSystem64Bits = IntPtr.Size == 8;
-        
-        // Process is 64 bits if we are running a 64-bits system and the process is NOT in wow64.
-        return !isWow64 && isSystem64Bits;
+            // Process is 64 bits if we are running a 64-bits system and the process is NOT in wow64.
+            return !isWow64 && isSystem64Bits;
+        }
+        catch (Exception)
+        {
+            return new SystemFailureOnInvalidArgument(nameof(pid),
+                $"The process of PID {pid} was not found. Check that the process is running.");
+        }
     }
 
     /// <summary>
@@ -53,36 +67,16 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>An array of bytes containing the data read from the memory.</returns>
-    public byte[]? ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length)
+    public Result<byte[], SystemFailure> ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         
         var result = new byte[length];
         int returnValue = ReadProcessMemory(processHandle, baseAddress, result, length, out _);
 
-        if (returnValue == 0)
-        {
-            int errorCode = Marshal.GetLastWin32Error();
-            
-            // ERROR_PARTIAL_COPY (299): Generic error that is raised when the address isn't valid for whatever reason.
-            // This error is quite generic and does not really allow users to identify what's wrong.
-            // In order to simplify error handling by a significant margin and also preserve performance, we will
-            // not throw when getting this particular error code.
-            if (errorCode == 299)
-                return null;
-            
-            // ERROR_NOACCESS (998): Error raised when the memory we are trying to read is protected for whatever
-            // reason. Since this can be due to trying to access an invalid address, for the same reasons as noted
-            // above (error 299), we will not throw. This behaviour might change or be configurable in later releases.
-            if (errorCode == 998)
-                return null;
-
-            // In other cases, throw.
-            throw new Win32Exception(errorCode);
-        }
-        
-        return result;
+        return returnValue == 0 ? GetLastSystemError() : result;
     }
 
     /// <summary>
@@ -95,21 +89,20 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="targetAddress">An address in the target page.</param>
     /// <param name="newProtection">New protection value for the page.</param>
     /// <returns>The memory protection value that was effective on the page before being changed.</returns>
-    public MemoryProtection ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits, UIntPtr targetAddress,
-        MemoryProtection newProtection)
+    public Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits,
+        UIntPtr targetAddress, MemoryProtection newProtection)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         if (targetAddress == UIntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
+            return new SystemFailureOnInvalidArgument(nameof(targetAddress),
+                "The target address cannot be a zero pointer.");
 
         bool result = VirtualProtectEx(processHandle, targetAddress, (IntPtr)(is64Bits ? 8 : 4), newProtection,
             out var previousProtection);
 
-        if (!result)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
-
-        return previousProtection;
+        return result ? previousProtection : GetLastSystemError();
     }
 
     /// <summary>
@@ -122,20 +115,22 @@ public partial class Win32Service : IOperatingSystemService
     /// written, unless a size is specified.</param>
     /// <param name="size">Specify this value if you only want to write part of the value array in memory.
     /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
-    public void WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null)
+    public Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         if (targetAddress == UIntPtr.Zero)
-            throw new ArgumentOutOfRangeException(nameof(targetAddress),"The target address cannot be a zero pointer.");
+            return new SystemFailureOnInvalidArgument(nameof(targetAddress),
+                "The target address cannot be a zero pointer.");
         if (size != null && size.Value > value.Length)
-            throw new ArgumentOutOfRangeException(nameof(size),"The size cannot exceed the length of the value array.");
+            return new SystemFailureOnInvalidArgument(nameof(size),
+                "The size cannot exceed the length of the value array.");
 
-        bool result = WriteProcessMemory(processHandle, targetAddress, value,
-            (UIntPtr)(size ?? value.Length), IntPtr.Zero);
-        
-        if (!result)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+        bool result = WriteProcessMemory(processHandle, targetAddress, value, (UIntPtr)(size ?? value.Length),
+            IntPtr.Zero);
+
+        return result ? Result<SystemFailure>.Success : GetLastSystemError();
     }
 
     /// <summary>
@@ -146,8 +141,9 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="allocationType">Type of memory allocation.</param>
     /// <param name="protection">Protection flags of the memory to allocate.</param>
     /// <returns>A pointer to the start of the allocated memory.</returns>
-    public UIntPtr AllocateMemory(IntPtr processHandle, int size, MemoryAllocationType allocationType,
-        MemoryProtection protection) => AllocateMemory(processHandle, UIntPtr.Zero, size, allocationType, protection);
+    public Result<UIntPtr, SystemFailure> AllocateMemory(IntPtr processHandle, int size,
+        MemoryAllocationType allocationType, MemoryProtection protection)
+        => AllocateMemory(processHandle, UIntPtr.Zero, size, allocationType, protection);
     
     /// <summary>
     /// Allocates memory in the specified process at the specified address.
@@ -158,19 +154,17 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="allocationType">Type of memory allocation.</param>
     /// <param name="protection">Protection flags of the memory to allocate.</param>
     /// <returns>A pointer to the start of the allocated memory.</returns>
-    public UIntPtr AllocateMemory(IntPtr processHandle, UIntPtr address, int size, MemoryAllocationType allocationType,
-        MemoryProtection protection)
+    public Result<UIntPtr, SystemFailure> AllocateMemory(IntPtr processHandle, UIntPtr address, int size,
+        MemoryAllocationType allocationType, MemoryProtection protection)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         if (size <= 0)
-            throw new ArgumentOutOfRangeException(nameof(size),"The size to allocate must be strictly positive.");
+            return new SystemFailureOnInvalidArgument(nameof(size), "The size to allocate must be strictly positive.");
         
         var result = VirtualAllocEx(processHandle, address, (uint)size, (uint)allocationType, (uint)protection);
-        if (result == UIntPtr.Zero)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
-
-        return result;
+        return result == UIntPtr.Zero ? GetLastSystemError() : result;
     }
 
     /// <summary>
@@ -179,15 +173,15 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="moduleName">Name or path of the module. This module must be loaded in the current process.</param>
     /// <param name="functionName">Name of the target function in the specified module.</param>
     /// <returns>The address of the function if located, or null otherwise.</returns>
-    private UIntPtr GetFunctionAddress(string moduleName, string functionName)
+    private Result<UIntPtr, SystemFailure> GetFunctionAddress(string moduleName, string functionName)
     {
         var moduleHandle = GetModuleHandle(moduleName);
         if (moduleHandle == IntPtr.Zero)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return GetLastSystemError();
         
         var functionAddress = GetProcAddress(moduleHandle, functionName);
         if (functionAddress == UIntPtr.Zero)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return GetLastSystemError();
 
         return functionAddress;
     }
@@ -195,7 +189,8 @@ public partial class Win32Service : IOperatingSystemService
     /// <summary>
     /// Gets the address of the function used to load a library in the current process.
     /// </summary>
-    public UIntPtr GetLoadLibraryFunctionAddress() => GetFunctionAddress("kernel32.dll", "LoadLibraryW");
+    public Result<UIntPtr, SystemFailure> GetLoadLibraryFunctionAddress()
+        => GetFunctionAddress("kernel32.dll", "LoadLibraryW");
 
     /// <summary>
     /// Spawns a thread in the specified process, starting at the given address.
@@ -204,16 +199,19 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="startAddress">Address of the start routine to be executed by the thread.</param>
     /// <param name="parameterAddress">Address of any parameter to be passed to the start routine.</param>
     /// <returns>Handle of the thread.</returns>
-    public IntPtr CreateRemoteThread(IntPtr processHandle, UIntPtr startAddress, UIntPtr parameterAddress)
+    public Result<IntPtr, SystemFailure> CreateRemoteThread(IntPtr processHandle, UIntPtr startAddress,
+        UIntPtr parameterAddress)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         if (startAddress == UIntPtr.Zero)
-            throw new ArgumentException("The start address is invalid (zero pointer).", nameof(startAddress));
+            return new SystemFailureOnInvalidArgument(nameof(startAddress),
+                "The start address is invalid (zero pointer).");
 
         var result = CreateRemoteThread(processHandle, IntPtr.Zero, 0, startAddress, parameterAddress, 0, out _);
         if (result == IntPtr.Zero)
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return GetLastSystemError();
 
         return result;
     }
@@ -223,51 +221,52 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="threadHandle">Handle of the target thread.</param>
     /// <param name="timeout">Maximum time to wait for the thread to finish.</param>
-    /// <returns>True if the thread finished execution, false if the timeout was reached. Other failures will throw an
-    /// exception.</returns>
-    public bool WaitThread(IntPtr threadHandle, TimeSpan timeout)
+    /// <returns>True if the thread finished execution, false if the timeout was reached. Other failures will return
+    /// a failure.</returns>
+    public Result<bool, SystemFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout)
     {
         if (threadHandle == IntPtr.Zero)
-            throw new ArgumentException("The thread handle is invalid (zero pointer).", nameof(threadHandle));
+            return new SystemFailureOnInvalidArgument(nameof(threadHandle),
+                "The thread handle is invalid (zero pointer).");
 
         uint result = WaitForSingleObject(threadHandle, (uint)timeout.TotalMilliseconds);
         if (WaitForSingleObjectResult.IsSuccessful(result))
             return true;
         if (result == WaitForSingleObjectResult.Timeout)
             return false;
-        
-        throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+
+        return GetLastSystemError();
     }
     
     /// <summary>
     /// Frees the memory allocated in the specified process for a region or a placeholder.
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
-    /// <param name="regionBaseAddress">Base address of the region or placeholder to free, as returned by
-    /// <see cref="AllocateMemory"/>.</param>
-    public void ReleaseMemory(IntPtr processHandle, UIntPtr regionBaseAddress)
+    /// <param name="regionBaseAddress">Base address of the region or placeholder to free, as returned by the memory
+    /// allocation methods.</param>
+    public Result<SystemFailure> ReleaseMemory(IntPtr processHandle, UIntPtr regionBaseAddress)
     {
         if (processHandle == IntPtr.Zero)
-            throw new ArgumentException("The process handle is invalid (zero pointer).", nameof(processHandle));
+            return new SystemFailureOnInvalidArgument(nameof(processHandle),
+                "The process handle is invalid (zero pointer).");
         if (regionBaseAddress == UIntPtr.Zero)
-            throw new ArgumentException("The region base address is invalid (zero pointer).",
-                nameof(regionBaseAddress));
-        
-        if (!VirtualFreeEx(processHandle, regionBaseAddress, 0, (uint)MemoryFreeType.Release))
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return new SystemFailureOnInvalidArgument(nameof(regionBaseAddress),
+                "The region base address is invalid (zero pointer).");
+
+        return VirtualFreeEx(processHandle, regionBaseAddress, 0, (uint)MemoryFreeType.Release)
+            ? Result<SystemFailure>.Success : GetLastSystemError();
     }
 
     /// <summary>
     /// Closes the given handle.
     /// </summary>
     /// <param name="handle">Handle to close.</param>
-    public void CloseHandle(IntPtr handle)
+    public Result<SystemFailure> CloseHandle(IntPtr handle)
     {
         if (handle == IntPtr.Zero)
-            throw new ArgumentException("The handle is invalid (zero pointer).", nameof(handle));
-        
-        if (!WinCloseHandle(handle))
-            throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+            return new SystemFailureOnInvalidArgument(nameof(handle), "The handle is invalid (zero pointer).");
+
+        return WinCloseHandle(handle) ? Result<SystemFailure>.Success : GetLastSystemError();
     }
 
     /// <summary>
@@ -308,20 +307,18 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.
-    /// If left null, the method will automatically determine the bitness of the process.</param>
-    public MemoryRangeMetadata GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress, bool? is64Bits = null)
+    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    public Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress,
+        bool is64Bits)
     {
-        bool is64 = is64Bits ?? IsProcess64Bits(Process.GetCurrentProcess().Id);
-
         MemoryBasicInformation memoryBasicInformation;
-        if (is64)
+        if (is64Bits)
         {
             // Use the 64-bit variant of the structure.
             var memInfo64 = new MemoryBasicInformation64();
             if (VirtualQueryEx(processHandle, baseAddress, out memInfo64,
                     (UIntPtr)Marshal.SizeOf(memInfo64)) == UIntPtr.Zero)
-                throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself.
+                return GetLastSystemError();
 
             memoryBasicInformation = new MemoryBasicInformation((UIntPtr)memInfo64.BaseAddress,
                 (UIntPtr)memInfo64.AllocationBase, memInfo64.AllocationProtect, (UIntPtr)memInfo64.RegionSize,
@@ -333,7 +330,7 @@ public partial class Win32Service : IOperatingSystemService
             var memInfo32 = new MemoryBasicInformation32();
             if (VirtualQueryEx(processHandle, baseAddress, out memInfo32,
                     (UIntPtr)Marshal.SizeOf(memInfo32)) == UIntPtr.Zero)
-                throw new Win32Exception(); // This constructor does all the job to retrieve the error by itself;
+                return GetLastSystemError();
 
             memoryBasicInformation = new MemoryBasicInformation((UIntPtr)memInfo32.BaseAddress,
                 (UIntPtr)memInfo32.AllocationBase, memInfo32.AllocationProtect, (UIntPtr)memInfo32.RegionSize,

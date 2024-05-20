@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using MindControl.Internal;
+using MindControl.Results;
 
 namespace MindControl;
 
@@ -8,73 +9,92 @@ namespace MindControl;
 public partial class ProcessMemory
 {
     #region Public methods
-    
+
     /// <summary>
     /// Reads a specific type of data from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <typeparam name="T">Type of data to read. Some types are not supported and will cause the method to throw
     /// an <see cref="ArgumentException"/>. Do not use Nullable types.</typeparam>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public T? Read<T>(PointerPath pointerPath) => (T?)Read(typeof(T), pointerPath);
-
-    /// <summary>
-    /// Reads a specific type of data from the given address, in the process memory.
-    /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <typeparam name="T">Type of data to read. Some types are not supported and will cause the method to throw
-    /// an <see cref="ArgumentException"/>. Do not use Nullable types.</typeparam>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public T? Read<T>(UIntPtr address) => (T?)Read(typeof(T), address);
-
-    /// <summary>
-    /// Reads a specific type of data from the address referred by the given pointer path, in the process memory.
-    /// </summary>
-    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <param name="dataType">Type of data to read. Some types are not supported and will cause the method to throw
-    /// an <see cref="ArgumentException"/>. Do not use Nullable types.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public object? Read(Type dataType, PointerPath pointerPath)
-        => Read(dataType, EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
-
-    /// <summary>
-    /// Reads a specific type of data from the given address, in the process memory.
-    /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <param name="dataType">Type of data to read. Some types are not supported and will cause the method to throw
-    /// an <see cref="ArgumentException"/>. Do not use Nullable types.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public object? Read(Type dataType, UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<T, ReadFailure> Read<T>(PointerPath pointerPath)
     {
-        if (dataType == typeof(bool)) return ReadBool(address);
-        if (dataType == typeof(byte)) return ReadByte(address);
-        if (dataType == typeof(short)) return ReadShort(address);
-        if (dataType == typeof(ushort)) return ReadUShort(address);
-        if (dataType == typeof(int)) return ReadInt(address);
-        if (dataType == typeof(uint)) return ReadUInt(address);
-        if (dataType == typeof(IntPtr)) return ReadIntPtr(address);
-        if (dataType == typeof(float)) return ReadFloat(address);
-        if (dataType == typeof(long)) return ReadLong(address);
-        if (dataType == typeof(ulong)) return ReadULong(address);
-        if (dataType == typeof(double)) return ReadDouble(address);
+        var objectReadResult = Read(typeof(T), pointerPath);
+        return objectReadResult.IsSuccess ? (T)objectReadResult.Value : objectReadResult.Error;
+    }
+
+    /// <summary>
+    /// Reads a specific type of data from the given address, in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <typeparam name="T">Type of data to read. Some types are not supported and will cause the method to throw
+    /// an <see cref="ArgumentException"/>. Do not use reference (nullable) types.</typeparam>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<T, ReadFailure> Read<T>(UIntPtr address)
+    {
+        var objectReadResult = Read(typeof(T), address);
+        return objectReadResult.IsSuccess ? (T)objectReadResult.Value : objectReadResult.Error;
+    }
+
+    /// <summary>
+    /// Reads a specific type of data from the address referred by the given pointer path, in the process memory.
+    /// </summary>
+    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
+    /// <param name="dataType">Type of data to read. Some types are not supported and will cause the method to throw
+    /// an <see cref="ArgumentException"/>. Do not use reference (nullable) types.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<object, ReadFailure> Read(Type dataType, PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? Read(dataType, addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
+
+    /// <summary>
+    /// Reads a specific type of data from the given address, in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="dataType">Type of data to read. Some types are not supported and will cause the method to throw
+    /// an <see cref="ArgumentException"/>. Do not use Nullable types.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<object, ReadFailure> Read(Type dataType, UIntPtr address)
+    {
+        if (dataType == typeof(bool)) return Result<object, ReadFailure>.CastValueFrom(ReadBool(address));
+        if (dataType == typeof(byte)) return Result<object, ReadFailure>.CastValueFrom(ReadByte(address));
+        if (dataType == typeof(short)) return Result<object, ReadFailure>.CastValueFrom(ReadShort(address));
+        if (dataType == typeof(ushort)) return Result<object, ReadFailure>.CastValueFrom(ReadUShort(address));
+        if (dataType == typeof(int)) return Result<object, ReadFailure>.CastValueFrom(ReadInt(address));
+        if (dataType == typeof(uint)) return Result<object, ReadFailure>.CastValueFrom(ReadUInt(address));
+        if (dataType == typeof(IntPtr)) return Result<object, ReadFailure>.CastValueFrom(ReadIntPtr(address));
+        if (dataType == typeof(float)) return Result<object, ReadFailure>.CastValueFrom(ReadFloat(address));
+        if (dataType == typeof(long)) return Result<object, ReadFailure>.CastValueFrom(ReadLong(address));
+        if (dataType == typeof(ulong)) return Result<object, ReadFailure>.CastValueFrom(ReadULong(address));
+        if (dataType == typeof(double)) return Result<object, ReadFailure>.CastValueFrom(ReadDouble(address));
         
         // Not a primitive type. Try to read it as a structure.
         // To do that, we first have to determine the size of the structure.
         int size = Marshal.SizeOf(dataType);
         
         // Then we read the bytes from the process memory.
-        var bytes = ReadBytes(address, (ulong)size);
-        if (bytes == null)
-            return null;
+        var bytesResult = ReadBytes(address, (ulong)size);
+        if (!bytesResult.IsSuccess)
+            return bytesResult;
         
         // We have the bytes. Now we need to convert them to the structure.
         // We cannot use MemoryMarshal.Read here because the data type is a variable, not a generic type.
         // So we have to use a GCHandle to pin the bytes in memory and then use Marshal.PtrToStructure.
-        var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        var handle = GCHandle.Alloc(bytesResult.Value, GCHandleType.Pinned);
         try
         {
             var pointer = handle.AddrOfPinnedObject();
-            return Marshal.PtrToStructure(pointer, dataType);
+            object? structure = Marshal.PtrToStructure(pointer, dataType);
+            if (structure == null)
+                return new ReadFailureOnConversionFailure();
+            return structure;
+        }
+        catch (Exception)
+        {
+            return new ReadFailureOnConversionFailure();
         }
         finally
         {
@@ -82,234 +102,265 @@ public partial class ProcessMemory
                 handle.Free();
         }
     }
-    
+
     /// <summary>
     /// Reads a boolean from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public bool? ReadBool(PointerPath pointerPath) => ReadBool(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<bool, ReadFailure> ReadBool(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadBool(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a boolean from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public bool? ReadBool(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<bool, ReadFailure> ReadBool(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 1);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToBoolean(bytes);
+        var bytesResult = ReadBytes(address, 1);
+        if (bytesResult.IsFailure)
+            return bytesResult.Error;
+        return BitConverter.ToBoolean(bytesResult.Value);
     }
-    
+
     /// <summary>
     /// Reads a byte from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte? ReadByte(PointerPath pointerPath) => ReadByte(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte, ReadFailure> ReadByte(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadByte(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a byte from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte? ReadByte(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte, ReadFailure> ReadByte(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 1);
-        return bytes?[0];
+        var bytesResult = ReadBytes(address, 1);
+        return bytesResult.IsSuccess ? bytesResult.Value[0] : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads a short from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public short? ReadShort(PointerPath pointerPath) => ReadShort(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<short, ReadFailure> ReadShort(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadShort(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a short from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public short? ReadShort(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<short, ReadFailure> ReadShort(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 2);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToInt16(bytes);
+        var bytesResult = ReadBytes(address, 2);
+        return bytesResult.IsSuccess ? BitConverter.ToInt16(bytesResult.Value) : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads an unsigned short from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ushort? ReadUShort(PointerPath pointerPath) => ReadUShort(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<ushort, ReadFailure> ReadUShort(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadUShort(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads an unsigned short from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ushort? ReadUShort(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<ushort, ReadFailure> ReadUShort(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 2);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToUInt16(bytes);
+        var bytesResult = ReadBytes(address, 2);
+        return bytesResult.IsSuccess ? BitConverter.ToUInt16(bytesResult.Value) : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads an integer from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public int? ReadInt(PointerPath pointerPath) => ReadInt(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<int, ReadFailure> ReadInt(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadInt(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads an integer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public int? ReadInt(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<int, ReadFailure> ReadInt(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 4);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToInt32(bytes);
+        var bytesResult = ReadBytes(address, 4);
+        return bytesResult.IsSuccess ? BitConverter.ToInt32(bytesResult.Value) : bytesResult.Error;
     }
 
     /// <summary>
     /// Reads an unsigned integer from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public uint? ReadUInt(PointerPath pointerPath) => ReadUInt(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<uint, ReadFailure> ReadUInt(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadUInt(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads an unsigned integer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public uint? ReadUInt(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<uint, ReadFailure> ReadUInt(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 4);
-        if (bytes == null)
-            return null;
-
-        return BitConverter.ToUInt32(bytes);
+        var bytesResult = ReadBytes(address, 4);
+        return bytesResult.IsSuccess ? BitConverter.ToUInt32(bytesResult.Value) : bytesResult.Error;
     }
 
     /// <summary>
     /// Reads a pointer from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public UIntPtr? ReadIntPtr(PointerPath pointerPath) => ReadIntPtr(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<UIntPtr, ReadFailure> ReadIntPtr(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadIntPtr(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
     
     /// <summary>
     /// Reads a pointer from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public UIntPtr? ReadIntPtr(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<UIntPtr, ReadFailure> ReadIntPtr(UIntPtr address)
     {
-        var bytes = ReadBytes(address, (ulong)IntPtr.Size);
-        if (bytes == null)
-            return null;
-        return _is64Bits ?
-            (UIntPtr)BitConverter.ToUInt64(bytes)
+        var bytesResult = ReadBytes(address, (ulong)IntPtr.Size);
+        if (bytesResult.IsFailure)
+            return bytesResult.Error;
+        
+        byte[] bytes = bytesResult.Value;
+        return _is64Bits ? (UIntPtr)BitConverter.ToUInt64(bytes)
             : (UIntPtr)BitConverter.ToUInt32(bytes);
     }
-    
+
     /// <summary>
     /// Reads a float from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public float? ReadFloat(PointerPath pointerPath) => ReadFloat(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<float, ReadFailure> ReadFloat(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadFloat(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a float from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public float? ReadFloat(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<float, ReadFailure> ReadFloat(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 4);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToSingle(bytes);
+        var bytesResult = ReadBytes(address, 4);
+        return bytesResult.IsSuccess ? BitConverter.ToSingle(bytesResult.Value) : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads a long from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public long? ReadLong(PointerPath pointerPath) => ReadLong(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<long, ReadFailure> ReadLong(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadLong(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a long from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public long? ReadLong(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<long, ReadFailure> ReadLong(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 8);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToInt64(bytes);
+        var bytesResult = ReadBytes(address, 8);
+        return bytesResult.IsSuccess ? BitConverter.ToInt64(bytesResult.Value) : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads an unsigned long from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ulong? ReadULong(PointerPath pointerPath) => ReadULong(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<ulong, ReadFailure> ReadULong(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadULong(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads an unsigned long from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public ulong? ReadULong(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<ulong, ReadFailure> ReadULong(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 8);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToUInt64(bytes);
+        var bytesResult = ReadBytes(address, 8);
+        return bytesResult.IsSuccess ? BitConverter.ToUInt64(bytesResult.Value) : bytesResult.Error;
     }
-    
+
     /// <summary>
     /// Reads a double from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public double? ReadDouble(PointerPath pointerPath) => ReadDouble(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<double, ReadFailure> ReadDouble(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadDouble(addressResult.Value)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a double from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public double? ReadDouble(UIntPtr address)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<double, ReadFailure> ReadDouble(UIntPtr address)
     {
-        var bytes = ReadBytes(address, 8);
-        if (bytes == null)
-            return null;
-        
-        return BitConverter.ToDouble(bytes);
+        var bytesResult = ReadBytes(address, 8);
+        return bytesResult.IsSuccess ? BitConverter.ToDouble(bytesResult.Value) : bytesResult.Error;
     }
 
     /// <summary>
@@ -330,9 +381,14 @@ public partial class ProcessMemory
     /// you can try one of the presets (e.g. <see cref="StringSettings.DefaultUtf8"/>), or try to figure out the details
     /// and provide your own string settings. It is recommended to at least use a preset, for performance and accuracy
     /// reasons.</param>
-    /// <returns>The string read from memory, or null if any read operation fails.</returns>
-    public string? ReadString(PointerPath pointerPath, int maxSizeInBytes = 256, StringSettings? stringSettings = null)
-        => ReadString(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero, maxSizeInBytes, stringSettings);
+    /// <returns>The string read from memory, or a read failure.</returns>
+    public Result<string, ReadFailure> ReadString(PointerPath pointerPath, int maxSizeInBytes = 256,
+        StringSettings? stringSettings = null)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadString(addressResult.Value, maxSizeInBytes, stringSettings)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a string from the given address in the process memory.
@@ -352,18 +408,22 @@ public partial class ProcessMemory
     /// you can try one of the presets (e.g. <see cref="StringSettings.DefaultUtf8"/>), or try to figure out the details
     /// and provide your own string settings. It is recommended to at least use a preset, for performance and accuracy
     /// reasons.</param>
-    /// <returns>The string read from memory, or null if any read operation fails.</returns>
-    public string? ReadString(UIntPtr address, int maxSizeInBytes = 256, StringSettings? stringSettings = null)
+    /// <returns>The string read from memory, or a read failure.</returns>
+    public Result<string, ReadFailure> ReadString(UIntPtr address, int maxSizeInBytes = 256,
+        StringSettings? stringSettings = null)
     {
         var actualStringSettings = stringSettings ?? GuessStringSettings();
         var lengthToRead = (ulong)maxSizeInBytes;
 
         if (actualStringSettings.PrefixSettings != null)
         {
-            var lengthPrefixBytes = ReadBytes(address, actualStringSettings.PrefixSettings.PrefixSize);
-            if (lengthPrefixBytes == null)
-                return null;
+            var lengthPrefixBytesResult = ReadBytes(address, actualStringSettings.PrefixSettings.PrefixSize);
+            
+            if (lengthPrefixBytesResult.IsFailure)
+                return lengthPrefixBytesResult.Error;
 
+            byte[] lengthPrefixBytes = lengthPrefixBytesResult.Value;
+            
             // Automatically determine the length unit if not provided:
             // Should be the minimal number of bytes supported by the encoding for a single character.
             // To get that, we make the encoding output the bytes for the string "a" and count the bytes.
@@ -376,9 +436,10 @@ public partial class ProcessMemory
         }
 
         // Read the actual bytes on the full length
-        var bytes = ReadBytes(address, lengthToRead);
-        if (bytes == null)
-            return null;
+        var stringBytesResult = ReadBytes(address, lengthToRead);
+        if (!stringBytesResult.IsSuccess)
+            return stringBytesResult.Error;
+        byte[] bytes = stringBytesResult.Value;
         
         // Convert the whole byte array to a string
         string fullString = actualStringSettings.Encoding.GetString(bytes);
@@ -392,37 +453,49 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(PointerPath pointerPath, long length) => ReadBytes(pointerPath, (ulong)length);
-    
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, long length)
+        => ReadBytes(pointerPath, (ulong)length);
+
     /// <summary>
     /// Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(PointerPath pointerPath, ulong length)
-        => ReadBytes(EvaluateMemoryAddress(pointerPath) ?? UIntPtr.Zero, length);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, ulong length)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadBytes(addressResult.Value, length)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
 
     /// <summary>
     /// Reads a sequence of bytes from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(UIntPtr address, long length) => ReadBytes(address, (ulong)length);
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, long length)
+        => ReadBytes(address, (ulong)length);
     
     /// <summary>
     /// Reads a sequence of bytes from the given address in the process memory.
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or null if no value could be read.</returns>
-    public byte[]? ReadBytes(UIntPtr address, ulong length)
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, ulong length)
     {
-        if (address == UIntPtr.Zero || !IsBitnessCompatible(address))
-            return null;
-        return _osService.ReadProcessMemory(_processHandle, address, length);
+        if (address == UIntPtr.Zero)
+            return new ReadFailureOnZeroPointer();
+
+        if (!IsBitnessCompatible(address))
+            return new ReadFailureOnIncompatibleBitness(address);
+        
+        var readResult = _osService.ReadProcessMemory(_processHandle, address, length);
+        return readResult.IsSuccess ? readResult.Value
+            : new ReadFailureOnSystemRead(readResult.Error);
     }
     
     #endregion
@@ -443,12 +516,12 @@ public partial class ProcessMemory
         // an attempt to simplify things for hacking beginners who might not be able to figure out what their string
         // settings should be. It is designed to only be called when the user doesn't provide a string setting.
         
-        string[] moduleNames = _process.Modules
+        var moduleNames = _process.Modules
             .Cast<ProcessModule>()
             .Select(m => m.ModuleName?.ToLowerInvariant())
             .Where(m => m != null)
             .Cast<string>()
-            .ToArray();
+            .ToHashSet();
         
         if (moduleNames.Contains("java.exe"))
             return StringSettings.Java;

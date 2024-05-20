@@ -16,7 +16,10 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void AllocateTest()
     {
-        var allocation = TestProcessMemory!.Allocate(0x1000, false);
+        var allocationResult = TestProcessMemory!.Allocate(0x1000, false);
+        
+        Assert.That(allocationResult.IsSuccess, Is.True);
+        var allocation = allocationResult.Value;
         
         // To check that the memory is writable, we will write a byte array to the allocated range.
         // We will use the WriteBytes method rather than Store, because Store is built on top of Allocate, and we only
@@ -37,7 +40,10 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void AllocateExecutableTest()
     {
-        var allocation = TestProcessMemory!.Allocate(0x1000, true);
+        var allocationResult = TestProcessMemory!.Allocate(0x1000, true);
+        
+        Assert.That(allocationResult.IsSuccess, Is.True);
+        var allocation = allocationResult.Value;
         Assert.That(allocation, Is.Not.Null);
         Assert.That(allocation.IsDisposed, Is.False);
         Assert.That(allocation.Range.GetSize(), Is.AtLeast(0x1000));
@@ -61,10 +67,12 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     public void StoreWithRangeTest()
     {
         var value = new byte[] { 1, 2, 3, 4 };
-        var allocation = TestProcessMemory!.Allocate(0x1000, false);
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         
-        var reservation = TestProcessMemory.Store(value, allocation);
-        var read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length);
+        var reservationResult = TestProcessMemory.Store(value, allocation);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        byte[] read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length).Value;
         
         Assert.That(reservation.IsDisposed, Is.False);
         // The resulting range should be a range reserved from our original range.
@@ -83,8 +91,10 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     {
         var value = new byte[] { 1, 2, 3, 4 };
         
-        var reservation = TestProcessMemory!.Store(value);
-        var read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length);
+        var reservationResult = TestProcessMemory!.Store(value);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        var read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length).Value;
         
         // The store method should have allocated a new range.
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
@@ -103,8 +113,13 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     {
         var value = new byte[] { 1, 2, 3, 4 };
 
-        var reservations = Enumerable.Range(0, 4).Select(_ => TestProcessMemory!.Store(value)).ToList();
-        var readBackValues = reservations.Select(r => TestProcessMemory!.ReadBytes(r.Range.Start, value.Length));
+        var reservationResults = Enumerable.Range(0, 4).Select(_ => TestProcessMemory!.Store(value)).ToList();
+        foreach (var result in reservationResults)
+            Assert.That(result.IsSuccess, Is.True);
+        
+        var reservations = reservationResults.Select(r => r.Value).ToList();
+        var readBackValues = reservations.Select(r => TestProcessMemory!.ReadBytes(r.Range.Start, value.Length)
+            .GetValueOrDefault());
         
         // The store method should have allocated only one range that's big enough to accomodate all the values.
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(1));
@@ -126,18 +141,20 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void StoreWithMultipleOverflowingValuesTest()
     {
-        var allocation = TestProcessMemory!.Allocate(0x1000, false);
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         var value = new byte[allocation.Range.GetSize()];
 
-        TestProcessMemory!.Store(value);
+        var firstStoreResult = TestProcessMemory!.Store(value);
         
         // So far, we should have only one allocated range.
+        Assert.That(firstStoreResult.IsSuccess, Is.True);
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(1));
         
         // Now we store the same value again, which should overflow the range.
-        TestProcessMemory!.Store(value);
+        var secondStoreResult = TestProcessMemory!.Store(value);
         
         // We should have two allocated ranges now, because there is no room left in the first range.
+        Assert.That(secondStoreResult.IsSuccess, Is.True);
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(2));
     }
 }

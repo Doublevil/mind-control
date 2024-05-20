@@ -285,8 +285,8 @@ public class MemoryRangeTest
     /// </summary>
     [Test]
     public void AlignedToWithZeroAlignmentTest()
-        => Assert.That(() => new MemoryRange(new UIntPtr(0x1000), new UIntPtr(0x1FFF)).AlignedTo(0),
-            Throws.ArgumentException);
+        => Assert.Throws<ArgumentException>(() =>
+            new MemoryRange(new UIntPtr(0x1000), new UIntPtr(0x1FFF)).AlignedTo(0));
     
     #endregion
 }

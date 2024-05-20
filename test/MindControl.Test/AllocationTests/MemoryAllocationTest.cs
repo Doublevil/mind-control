@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using MindControl.Results;
 using MindControl.Test.ProcessMemoryTests;
 using NUnit.Framework;
 
@@ -22,7 +23,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
     public void SetUp()
     {
         // Allocate a range of memory for the tests
-        _allocation = TestProcessMemory!.Allocate(0x1000, false);
+        _allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
         Assert.That(TestProcessMemory!.Allocations, Is.Empty);
         
         // Check that the memory has been released (we should not be able to write to it)
-        Assert.Throws<Win32Exception>(() => TestProcessMemory.Write(address, 0, MemoryProtectionStrategy.Ignore));
+        Assert.That(TestProcessMemory.Write(address, 0, MemoryProtectionStrategy.Ignore).IsSuccess, Is.False);
     }
     
     /// <summary>
@@ -53,7 +54,10 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void ReserveRangeTest()
     {
-        var reservedRange = _allocation.ReserveRange(0x10);
+        var result = _allocation.ReserveRange(0x10);
+        Assert.That(result.IsSuccess, Is.True);
+        
+        var reservedRange = result.Value;
         
         // Check the reserved range
         Assert.That(reservedRange, Is.Not.Null);
@@ -72,8 +76,8 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void ReserveRangeWithFullRangeTest()
     {
-        // Just test that it doesn't throw.
-        _allocation.ReserveRange(_allocation.Range.GetSize());
+        var result = _allocation.ReserveRange(_allocation.Range.GetSize());
+        Assert.That(result.IsSuccess, Is.True);
     }
     
     /// <summary>
@@ -86,22 +90,28 @@ public class MemoryAllocationTest : ProcessMemoryTest
 
     /// <summary>
     /// Tests the <see cref="MemoryAllocation.ReserveRange"/> method.
-    /// Attempt to reserve 1 byte more than the size of the full reservation range. This should throw.
+    /// Attempt to reserve 1 byte more than the size of the full reservation range. This should fail.
     /// </summary>
     [Test]
     public void ReserveRangeWithRangeLargerThanAllocationTest()
-        => Assert.Throws<InsufficientAllocatedMemoryException>(() => _allocation.ReserveRange(0x1001));
-    
+    {
+        var result = _allocation.ReserveRange(0x1001);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<ReservationFailureOnNoSpaceAvailable>());
+    }
+
     /// <summary>
     /// Tests the <see cref="MemoryAllocation.ReserveRange"/> method.
     /// Reserve 0x100 bytes, and then attempt to reserve 0x1000 bytes (full allocation range).
-    /// The second reservation should throw.
+    /// The second reservation should fail.
     /// </summary>
     [Test]
     public void ReserveRangeWithMultipleReservationsTooLargeToFitTest()
     {
         _allocation.ReserveRange(0x100);
-        Assert.Throws<InsufficientAllocatedMemoryException>(() => _allocation.ReserveRange(0x1000));
+        var result = _allocation.ReserveRange(0x1000);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<ReservationFailureOnNoSpaceAvailable>());
     }
     
     /// <summary>
@@ -112,8 +122,8 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void ReserveRangeWithRealignmentTest()
     {
-        var a = _allocation.ReserveRange(5, byteAlignment: 4);
-        var b = _allocation.ReserveRange(5, byteAlignment: 4);
+        var a = _allocation.ReserveRange(5, byteAlignment: 4).Value;
+        var b = _allocation.ReserveRange(5, byteAlignment: 4).Value;
         
         Assert.That(a.Range, Is.EqualTo(new MemoryRange(_allocation.Range.Start, _allocation.Range.Start + 7)));
         Assert.That(b.Range, Is.EqualTo(new MemoryRange(_allocation.Range.Start + 8, _allocation.Range.Start + 15)));
@@ -127,8 +137,8 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void ReserveRangeWithNoAlignmentTest()
     {
-        var a = _allocation.ReserveRange(5, byteAlignment: null);
-        var b = _allocation.ReserveRange(5, byteAlignment: null);
+        var a = _allocation.ReserveRange(5, byteAlignment: null).Value;
+        var b = _allocation.ReserveRange(5, byteAlignment: null).Value;
         
         Assert.That(a.Range, Is.EqualTo(new MemoryRange(_allocation.Range.Start, _allocation.Range.Start + 4)));
         Assert.That(b.Range, Is.EqualTo(new MemoryRange(_allocation.Range.Start + 5, _allocation.Range.Start + 9)));
@@ -144,7 +154,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
         
         // Make 3 0x10 allocations and check that the remaining space is total space - 0x30
         _allocation.ReserveRange(0x10);
-        var b = _allocation.ReserveRange(0x10);
+        var b = _allocation.ReserveRange(0x10).Value;
         _allocation.ReserveRange(0x10);
         Assert.That(_allocation.GetRemainingSpace(), Is.EqualTo(_allocation.Range.GetSize() - 0x30));
 
@@ -163,7 +173,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
         
         // Make 3 0x10 allocations and check that the reserved space is 0x30
         _allocation.ReserveRange(0x10);
-        var b = _allocation.ReserveRange(0x10);
+        var b = _allocation.ReserveRange(0x10).Value;
         _allocation.ReserveRange(0x10);
         Assert.That(_allocation.GetTotalReservedSpace(), Is.EqualTo(0x30));
 
@@ -182,7 +192,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
         
         // Make 3 0x500 allocations. The largest unreserved space should now be the last 0x100 bytes of the range.
         _allocation.ReserveRange(0x500);
-        var b = _allocation.ReserveRange(0x500);
+        var b = _allocation.ReserveRange(0x500).Value;
         _allocation.ReserveRange(0x500);
         var expectedRange = new MemoryRange(_allocation.Range.End - 0xFF, _allocation.Range.End);
         Assert.That(_allocation.GetLargestReservableSpace(), Is.EqualTo(expectedRange));
@@ -213,7 +223,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
         
         // Make 3 0x10 allocations. The next available 0x10 space should be right after these three.
         _allocation.ReserveRange(0x10);
-        var b = _allocation.ReserveRange(0x10);
+        var b = _allocation.ReserveRange(0x10).Value;
         _allocation.ReserveRange(0x10);
         Assert.That(_allocation.GetNextRangeFittingSize(0x10),
             Is.EqualTo(new MemoryRange(_allocation.Range.Start + 0x30, _allocation.Range.Start + 0x3F)));
@@ -278,7 +288,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void FreeRangeWithFullReservationRangeTest()
     {
-        var reservation = _allocation.ReserveRange(0x10);
+        var reservation = _allocation.ReserveRange(0x10).Value;
         _allocation.FreeRange(reservation.Range);
         
         Assert.That(reservation.IsDisposed, Is.True);
@@ -294,7 +304,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void FreeRangeWithRangeOverlappingStartOfExistingReservationTest()
     {
-        var reservation = _allocation.ReserveRange(0x10);
+        var reservation = _allocation.ReserveRange(0x10).Value;
         _allocation.FreeRange(new MemoryRange(reservation.Range.Start - 4, reservation.Range.Start + 4));
         
         Assert.That(reservation.IsDisposed, Is.True);
@@ -312,7 +322,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void FreeRangeWithRangeOverlappingEndOfExistingReservationTest()
     {
-        var reservation = _allocation.ReserveRange(0x10);
+        var reservation = _allocation.ReserveRange(0x10).Value;
         _allocation.FreeRange(new MemoryRange(reservation.Range.Start + 4, reservation.Range.Start + 0xF));
         
         Assert.That(reservation.IsDisposed, Is.True);
@@ -330,7 +340,7 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void FreeRangeWithRangeInsideExistingReservationTest()
     {
-        var reservation = _allocation.ReserveRange(0x10);
+        var reservation = _allocation.ReserveRange(0x10).Value;
         _allocation.FreeRange(new MemoryRange(reservation.Range.Start + 4, reservation.Range.Start + 6));
         
         Assert.That(reservation.IsDisposed, Is.True);
@@ -351,9 +361,9 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void FreeRangeWithRangeOverlappingMultipleExistingReservationsTest()
     {
-        var a = _allocation.ReserveRange(0x10);
-        var b = _allocation.ReserveRange(0x10);
-        var c = _allocation.ReserveRange(0x10);
+        var a = _allocation.ReserveRange(0x10).Value;
+        var b = _allocation.ReserveRange(0x10).Value;
+        var c = _allocation.ReserveRange(0x10).Value;
         _allocation.FreeRange(new MemoryRange(a.Range.Start + 8, b.Range.End));
         
         Assert.That(a.IsDisposed, Is.True);
@@ -373,9 +383,9 @@ public class MemoryAllocationTest : ProcessMemoryTest
     [Test]
     public void ClearReservationsTest()
     {
-        var a = _allocation.ReserveRange(0x10);
-        var b = _allocation.ReserveRange(0x10);
-        var c = _allocation.ReserveRange(0x10);
+        var a = _allocation.ReserveRange(0x10).Value;
+        var b = _allocation.ReserveRange(0x10).Value;
+        var c = _allocation.ReserveRange(0x10).Value;
         _allocation.ClearReservations();
         
         Assert.That(a.IsDisposed, Is.True);

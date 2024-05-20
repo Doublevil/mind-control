@@ -13,7 +13,7 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
     /// <summary>
     /// Stores the line-by-line expected output of the target app.
     /// </summary>
-    private static string[] ExpectedFinalValues =
+    private static readonly string[] ExpectedFinalValues =
     {
         "False",
         "220",
@@ -92,8 +92,10 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
         ProceedToNextStep();
         var pointerPath = new PointerPath($"{OuterClassPointer:X}+50");
         TestProcessMemory!.Write(pointerPath, structInstance);
-        var valueReadBack = TestProcessMemory.Read<TestStruct>(pointerPath);
         
-        Assert.That(valueReadBack, Is.EqualTo(structInstance));
+        var readBackResult = TestProcessMemory.Read<TestStruct>(pointerPath);
+        
+        Assert.That(readBackResult.IsSuccess, Is.True);
+        Assert.That(readBackResult.Value, Is.EqualTo(structInstance));
     }
 }

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using MindControl.Results;
+using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
 
@@ -30,7 +31,8 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     [Test]
     public void InjectLibraryTest()
     {
-        TestProcessMemory!.InjectLibrary(InjectedLibraryPath);
+        var result = TestProcessMemory!.InjectLibrary(InjectedLibraryPath);
+        Assert.That(result.IsSuccess, Is.True);
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
     }
@@ -45,8 +47,26 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     {
         const string targetPath = "憂 鬱.dll";
         File.Copy(InjectedLibraryPath, targetPath, true);
-        TestProcessMemory!.InjectLibrary(targetPath);
+        var result = TestProcessMemory!.InjectLibrary(targetPath);
+        Assert.That(result.IsSuccess, Is.True);
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.InjectLibrary"/> method.
+    /// Specify a path to a non-existent library file.
+    /// The method should fail with a <see cref="InjectionFailureOnLibraryFileNotFound"/>.
+    /// </summary>
+    [Test]
+    public void InjectLibraryWithLibraryFileNotFoundTest()
+    {
+        const string path = "./NonExistentLibrary.dll";
+        var result = TestProcessMemory!.InjectLibrary(path);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<InjectionFailureOnLibraryFileNotFound>());
+        var error = (InjectionFailureOnLibraryFileNotFound)result.Error;
+        Assert.That(error.LibraryPath, Has.Length.GreaterThan(path.Length)); // We expect a full path
+        Assert.That(error.LibraryPath, Does.EndWith("NonExistentLibrary.dll"));
     }
 }

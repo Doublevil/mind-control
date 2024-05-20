@@ -1,4 +1,6 @@
-﻿namespace MindControl;
+﻿using MindControl.Results;
+
+namespace MindControl;
 
 /// <summary>
 /// Represents a range of memory that has been allocated in a process.
@@ -139,39 +141,21 @@ public class MemoryAllocation
     /// <summary>
     /// Reserves and returns the next available range with the specified size.
     /// Data stored in the returned range will not be overwritten by future reservations until the reservation is freed.
-    /// This method throws if there is no contiguous memory large enough in the range. See <see cref="TryReserveRange"/>
-    /// for a non-throwing alternative.
     /// </summary>
     /// <param name="size">Minimal size that the range to get must be able to accomodate, in bytes.</param>
     /// <param name="byteAlignment">Optional byte alignment for the range. When null, values are not aligned. The
     /// default value is 8, meaning that for example a range of [0x15,0x3C] will be aligned to [0x18,0x38] and thus
     /// only accomodate 32 bytes. Alignment means the actual reserved space might be bigger than the
     /// <paramref name="size"/>, but will never make it smaller.</param>
-    /// <returns>The resulting reservation.</returns>
-    public MemoryReservation ReserveRange(ulong size, uint? byteAlignment = 8)
-        => TryReserveRange(size, byteAlignment) ?? throw new InsufficientAllocatedMemoryException(size, byteAlignment);
-    
-    /// <summary>
-    /// Attempts to reserve and return the next available range with the specified size.
-    /// Data stored in the returned range will not be overwritten by future reservations until the reservation is freed.
-    /// This method returns null if there is no contiguous memory large enough in the range. See
-    /// <see cref="ReserveRange"/> if you expect an exception to be thrown on a reservation failure.
-    /// Note that this method will still throw if the range has been disposed.
-    /// </summary>
-    /// <param name="size">Minimal size that the range to get must be able to accomodate, in bytes.</param>
-    /// <param name="byteAlignment">Optional byte alignment for the range. When null, values are not aligned. The
-    /// default value is 8, meaning that for example a range of [0x15,0x3C] will be aligned to [0x18,0x38] and thus
-    /// only accomodate 32 bytes. Alignment means the actual reserved space might be bigger than the
-    /// <paramref name="size"/>, but will never make it smaller.</param>
-    /// <returns>The resulting reservation if possible, null otherwise.</returns>
-    public MemoryReservation? TryReserveRange(ulong size, uint? byteAlignment = 8)
+    /// <returns>A result holding the resulting reservation or a reservation failure.</returns>
+    public Result<MemoryReservation, ReservationFailure> ReserveRange(ulong size, uint? byteAlignment = 8)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(MemoryAllocation));
         
         var range = GetNextRangeFittingSize(size, byteAlignment);
         if (range == null)
-            return null;
+            return new ReservationFailureOnNoSpaceAvailable();
         
         var reservedRange = new MemoryReservation(range.Value, this);
         _reservations.Add(reservedRange);

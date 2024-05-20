@@ -150,6 +150,10 @@ public readonly record struct MemoryRange
         start = Start;
         end = End;
     }
+
+    /// <summary>Returns the fully qualified type name of this instance.</summary>
+    /// <returns>The fully qualified type name.</returns>
+    public override string ToString() => $"[{Start:X}, {End:X}]";
 }
 
 /// <summary>

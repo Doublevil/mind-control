@@ -10,7 +10,7 @@ public partial class Win32Service
     /// Retrieves information about the current system.
     /// </summary>
     /// <param name="lpSystemInfo">A pointer to a SYSTEM_INFO structure that receives the information.</param>
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     private static extern void GetSystemInfo(out SystemInfo lpSystemInfo);
     
     /// <summary>
@@ -287,7 +287,7 @@ public partial class Win32Service
     /// process.</param>
     /// <returns>If the function succeeds, the return value is a handle to the specified module. If the function fails,
     /// the return value is NULL. To get extended error information, call GetLastError.</returns>
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string lpModuleName);
     
     /// <summary>
@@ -423,7 +423,7 @@ public partial class Win32Service
     /// <param name="lpflOldProtect">A pointer to a variable that receives the previous access protection of the first
     /// page in the specified region of pages.</param>
     /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool VirtualProtectEx(IntPtr hProcess, UIntPtr lpAddress,
         IntPtr dwSize, MemoryProtection flNewProtect, out MemoryProtection lpflOldProtect);
     
@@ -442,7 +442,7 @@ public partial class Win32Service
     /// <param name="lpNumberOfBytesWritten">A pointer to a variable that receives the number of bytes transferred into
     /// the specified process. This parameter is optional. If null, it will be ignored.</param>
     /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool WriteProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr nSize,
         IntPtr lpNumberOfBytesWritten);
 }

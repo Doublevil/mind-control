@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MindControl.Internal;
+using MindControl.Results;
 
 namespace MindControl;
 
@@ -11,24 +12,39 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Pointer path to evaluate.</param>
     /// <returns>The memory address pointed by the pointer path.</returns>
-    public UIntPtr? EvaluateMemoryAddress(PointerPath pointerPath)
+    public Result<UIntPtr, PathEvaluationFailure> EvaluateMemoryAddress(PointerPath pointerPath)
     {
         if (pointerPath.IsStrictly64Bits && (IntPtr.Size == 4 || !_is64Bits))
-            throw new ArgumentException(
-                $"The pointer path \"{pointerPath.Expression}\" uses addresses intended for a 64-bits process, but this instance is targeting a 32-bits process.");
+            return new PathEvaluationFailureOnIncompatibleBitness();
         
-        UIntPtr? baseAddress = pointerPath.BaseModuleName != null
-            ? GetModuleAddress(pointerPath.BaseModuleName)
-            : pointerPath.PointerOffsets.FirstOrDefault().ToUIntPtr();
+        UIntPtr? baseAddress;
+        if (pointerPath.BaseModuleName != null)
+        {
+            baseAddress = GetModuleAddress(pointerPath.BaseModuleName);
+            if (baseAddress == null)
+                return new PathEvaluationFailureOnBaseModuleNotFound(pointerPath.BaseModuleName);
+        }
+        else
+        {
+            var bigIntAddress = pointerPath.PointerOffsets.FirstOrDefault(); 
+            baseAddress = bigIntAddress.ToUIntPtr();
+            if (baseAddress == null)
+                return new PathEvaluationFailureOnPointerOutOfRange(null, bigIntAddress);
+        }
 
-        if (baseAddress == null)
-            return null; // Module not found
-
+        // Apply the base offset if there is one
         if (pointerPath.BaseModuleOffset > 0)
-            baseAddress = (baseAddress.Value.ToUInt64() + pointerPath.BaseModuleOffset).ToUIntPtr();
+        {
+            var bigIntAddress = baseAddress.Value.ToUInt64() + pointerPath.BaseModuleOffset; 
+            baseAddress = bigIntAddress.ToUIntPtr();
+            
+            if (baseAddress == null)
+                return new PathEvaluationFailureOnPointerOutOfRange(null, bigIntAddress);
+        }
 
-        if (baseAddress == null || baseAddress == UIntPtr.Zero)
-            return null; // Overflow after applying the module offset, or zero pointer
+        // Check if the base address is valid
+        if (baseAddress == UIntPtr.Zero)
+            return new PathEvaluationFailureOnPointerOutOfRange(null, 0);
         
         // Follow the pointer path offset by offset
         var currentAddress = baseAddress.Value;
@@ -36,15 +52,24 @@ public partial class ProcessMemory
         for (int i = startIndex; i < pointerPath.PointerOffsets.Length; i++)
         {
             // Read the value pointed by the current address as a pointer address
-            UIntPtr? nextAddress = ReadIntPtr(currentAddress);
-            if (nextAddress == null)
-                return null; // Read operation failed on the address
+            var nextAddressResult = ReadIntPtr(currentAddress);
+            if (nextAddressResult.IsFailure)
+                return new PathEvaluationFailureOnPointerReadFailure(currentAddress, nextAddressResult.Error);
+            
+            var nextAddress = nextAddressResult.Value;
 
             // Apply the offset to the value we just read and check the result
             var offset = pointerPath.PointerOffsets[i];
-            var nextValue = (nextAddress.Value.ToUInt64() + offset).ToUIntPtr();
-            if (nextValue == null || nextValue == UIntPtr.Zero || !IsBitnessCompatible(nextValue.Value))
-                return null; // Overflow after applying the offset; zero pointer; 64-bits pointer on 32-bits target
+            var nextValueBigInt = nextAddress.ToUInt64() + offset; 
+            var nextValue = nextValueBigInt.ToUIntPtr();
+            
+            // Check for invalid address values
+            if (nextValue == null)
+                return new PathEvaluationFailureOnPointerOutOfRange(currentAddress, nextValueBigInt);
+            if (nextValue == UIntPtr.Zero)
+                return new PathEvaluationFailureOnPointerOutOfRange(currentAddress, 0);
+            if (!IsBitnessCompatible(nextValue.Value))
+                return new PathEvaluationFailureOnIncompatibleBitness(currentAddress);
             
             // The next value has been vetted. Keep going with it as the current address
             currentAddress = nextValue.Value;
@@ -52,15 +77,6 @@ public partial class ProcessMemory
 
         return currentAddress;
     }
-
-    /// <summary>
-    /// Evaluates the given pointer path to the memory address it points to in the process.
-    /// If the path does not evaluate to a proper address, throws a <see cref="MemoryException"/>.
-    /// </summary>
-    /// <param name="pointerPath">Pointer path to evaluate.</param>
-    /// <returns>The memory address pointed by the pointer path.</returns>
-    private UIntPtr EvaluateMemoryAddressOrThrow(PointerPath pointerPath) => EvaluateMemoryAddress(pointerPath)
-        ?? throw new MemoryException($"Could not evaluate pointer path \"{pointerPath}\".");
     
     /// <summary>
     /// Gets the process module with the given name.
@@ -116,5 +132,22 @@ public partial class ProcessMemory
             return null;
         
         return MemoryRange.FromStartAndSize((UIntPtr)(long)module.BaseAddress, (ulong)module.ModuleMemorySize - 1);
+    }
+    
+    /// <summary>
+    /// Returns the intersection of the input range with the full addressable memory range.
+    /// If the input memory range is null, the full memory range is returned.
+    /// </summary>
+    /// <param name="input">Input memory range to clamp. If null, the full memory range is returned.</param>
+    /// <returns>The clamped memory range, or the full memory range if the input is null.</returns>
+    private MemoryRange GetClampedMemoryRange(MemoryRange? input)
+    {
+        var fullMemoryRange = _osService.GetFullMemoryRange();
+        return input == null ? fullMemoryRange : new MemoryRange(
+            Start: input.Value.Start.ToUInt64() < fullMemoryRange.Start.ToUInt64()
+                ? fullMemoryRange.Start : input.Value.Start,
+            End: input.Value.End.ToUInt64() > fullMemoryRange.End.ToUInt64()
+                ? fullMemoryRange.End : input.Value.End
+        );
     }
 }

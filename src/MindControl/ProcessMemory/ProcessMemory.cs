@@ -12,6 +12,10 @@ namespace MindControl;
 /// </summary>
 public partial class ProcessMemory : IDisposable
 {
+    /// <summary>Exception message to use in exceptions thrown when trying to use a detached process.</summary>
+    private const string DetachedErrorMessage =
+        "The process is not attached. It may have exited or this instance may have been disposed.";
+    
     private readonly Process _process;
     private readonly IOperatingSystemService _osService;
     private IntPtr _processHandle;
@@ -126,14 +130,16 @@ public partial class ProcessMemory : IDisposable
     {
         try
         {
-            _is64Bits = _osService.IsProcess64Bits(_process.Id);
+            _is64Bits = _osService.IsProcess64Bits(_process.Id).GetValueOrDefault(defaultValue: true);
             
             if (_is64Bits && !Environment.Is64BitOperatingSystem)
                 throw new ProcessException(_process.Id, "A 32-bit program cannot attach to a 64-bit process.");
             
             _process.EnableRaisingEvents = true;
             _process.Exited += OnProcessExited;
-            _processHandle = _osService.OpenProcess(_process.Id);
+            var openResult = _osService.OpenProcess(_process.Id);
+            openResult.ThrowOnError();
+            _processHandle = openResult.Value;
 
             IsAttached = true;
         }

@@ -22,10 +22,10 @@ public class MemoryReservationTest : ProcessMemoryTest
     public void SetUp()
     {
         // Allocate a range of memory for the tests
-        _allocation = TestProcessMemory!.Allocate(0x1000, false);
+        _allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         
         // Reserve a portion of the memory
-        _reservation = _allocation.ReserveRange(0x10);
+        _reservation = _allocation.ReserveRange(0x10).Value;
     }
     
     /// <summary>
