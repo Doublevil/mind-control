@@ -52,7 +52,7 @@ public partial class ProcessMemory
         for (int i = startIndex; i < pointerPath.PointerOffsets.Length; i++)
         {
             // Read the value pointed by the current address as a pointer address
-            var nextAddressResult = ReadIntPtr(currentAddress);
+            var nextAddressResult = Read<UIntPtr>(currentAddress);
             if (nextAddressResult.IsFailure)
                 return new PathEvaluationFailureOnPointerReadFailure(currentAddress, nextAddressResult.Error);
             

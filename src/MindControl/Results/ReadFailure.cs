@@ -28,7 +28,12 @@ public enum ReadFailureReason
     /// <summary>
     /// Failure when trying to convert the bytes read from memory to the target type.
     /// </summary>
-    ConversionFailure
+    ConversionFailure,
+    
+    /// <summary>
+    /// The type to read is not supported.
+    /// </summary>
+    UnsupportedType
 }
 
 /// <summary>
@@ -98,6 +103,17 @@ public record ReadFailureOnConversionFailure()
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => "Failed to convert the bytes read from memory to the target type. Try using primitive types or structure types.";
+    public override string ToString() => "Failed to convert the bytes read from memory to the target type. Check that the type does not contain references or pointers.";
+}
+
+/// <summary>
+/// Represents a failure in a memory read operation when the type to read is not supported.
+/// </summary>
+/// <param name="ProvidedType">Type that caused the failure.</param>
+public record ReadFailureOnUnsupportedType(Type ProvidedType)
+    : ReadFailure(ReadFailureReason.UnsupportedType)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The type {ProvidedType} is not supported. Reference types are not supported.";
 }

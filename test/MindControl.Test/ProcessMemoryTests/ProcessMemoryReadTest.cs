@@ -11,6 +11,9 @@ namespace MindControl.Test.ProcessMemoryTests;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryReadTest : ProcessMemoryTest
 {
+    /// <summary>A struct with a couple fields, to test reading structs.</summary>
+    public record struct TestStruct(double A, int B);
+    
     /// <summary>
     /// Tests <see cref="ProcessMemory.Read(Type,UIntPtr)"/>.
     /// Reads a first time after initialization, and then a second time after value are modified.
@@ -43,118 +46,206 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBool(UIntPtr)"/>.
-    /// Reads a known boolean from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known boolean from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadBoolTest()
-        => Assert.That(TestProcessMemory!.ReadBool(OuterClassPointer + 0x48).GetValueOrDefault(), Is.EqualTo(true));
-    
+    {
+        var address = OuterClassPointer + 0x48;
+        Assert.That(TestProcessMemory!.Read<bool>(address).GetValueOrDefault(), Is.EqualTo(true));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<bool>(address).GetValueOrDefault(), Is.EqualTo(false));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadByte(UIntPtr)"/>.
-    /// Reads a known byte from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known byte from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadByteTest()
-        => Assert.That(TestProcessMemory!.ReadByte(OuterClassPointer + 0x49).GetValueOrDefault(), Is.EqualTo(0xAC));
-    
+    {
+        var address = OuterClassPointer + 0x49;
+        Assert.That(TestProcessMemory!.Read<byte>(address).GetValueOrDefault(), Is.EqualTo(0xAC));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<byte>(address).GetValueOrDefault(), Is.EqualTo(0xDC));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadShort(UIntPtr)"/>.
-    /// Reads a known short from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known short from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadShortTest() => Assert.That(
-        TestProcessMemory!.ReadShort(OuterClassPointer + 0x44).GetValueOrDefault(), Is.EqualTo(-7777));
-    
+    public void ReadShortTest()
+    {
+        var address = OuterClassPointer + 0x44;
+        Assert.That(TestProcessMemory!.Read<short>(address).GetValueOrDefault(), Is.EqualTo(-7777));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<short>(address).GetValueOrDefault(), Is.EqualTo(-8888));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUShort(UIntPtr)"/>.
-    /// Reads a known unsigned short from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned short from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadUShortTest() => Assert.That(
-        TestProcessMemory!.ReadUShort(OuterClassPointer + 0x46).GetValueOrDefault(), Is.EqualTo(8888));
-    
+    public void ReadUShortTest()
+    {
+        var address = OuterClassPointer + 0x46;
+        Assert.That(TestProcessMemory!.Read<ushort>(address).GetValueOrDefault(), Is.EqualTo(8888));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<ushort>(address).GetValueOrDefault(), Is.EqualTo(9999));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadInt(UIntPtr)"/>.
-    /// Reads a known integer from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known integer from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadIntTest()
-        => Assert.That(TestProcessMemory!.ReadInt(OuterClassPointer + 0x38).GetValueOrDefault(), Is.EqualTo(-7651));
-    
+    {
+        var address = OuterClassPointer + 0x38;
+        Assert.That(TestProcessMemory!.Read<int>(address).GetValueOrDefault(), Is.EqualTo(-7651));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<int>(address).GetValueOrDefault(), Is.EqualTo(987411));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUInt(UIntPtr)"/>.
-    /// Reads a known unsigned integer from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned integer from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadUIntTest() => Assert.That(
-        TestProcessMemory!.ReadUInt(OuterClassPointer + 0x3C).GetValueOrDefault(), Is.EqualTo(6781631));
-    
+    public void ReadUIntTest()
+    {
+        var address = OuterClassPointer + 0x3C;
+        Assert.That(TestProcessMemory!.Read<uint>(address).GetValueOrDefault(), Is.EqualTo(6781631));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<uint>(address).GetValueOrDefault(), Is.EqualTo(444763));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadLong(UIntPtr)"/>.
-    /// Reads a known long from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known long from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadLongTest() => Assert.That(
-        TestProcessMemory!.ReadLong(OuterClassPointer + 0x20).GetValueOrDefault(), Is.EqualTo(-65746876815103L));
-    
+    public void ReadLongTest()
+    {
+        var address = OuterClassPointer + 0x20;
+        Assert.That(TestProcessMemory!.Read<long>(address).GetValueOrDefault(), Is.EqualTo(-65746876815103L));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<long>(address).GetValueOrDefault(), Is.EqualTo(-777654646516513L));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadULong(UIntPtr)"/>.
-    /// Reads a known unsigned long from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned long from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadULongTest() => Assert.That(
-        TestProcessMemory!.ReadULong(OuterClassPointer + 0x28).GetValueOrDefault(), Is.EqualTo(76354111324644L));
-    
+    public void ReadULongTest()
+    {
+        var address = OuterClassPointer + 0x28;
+        Assert.That(TestProcessMemory!.Read<ulong>(address).GetValueOrDefault(), Is.EqualTo(76354111324644L));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<ulong>(address).GetValueOrDefault(), Is.EqualTo(34411111111164L));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadFloat(UIntPtr)"/>.
-    /// Reads a known float from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known float from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadFloatTest() => Assert.That(
-        TestProcessMemory!.ReadFloat(OuterClassPointer + 0x40).GetValueOrDefault(), Is.EqualTo(3456765.323f));
-    
+    public void ReadFloatTest()
+    {
+        var address = OuterClassPointer + 0x40;
+        Assert.That(TestProcessMemory!.Read<float>(address).GetValueOrDefault(), Is.EqualTo(3456765.323f));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<float>(address).GetValueOrDefault(), Is.EqualTo(-123444.147f));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadDouble(UIntPtr)"/>.
-    /// Reads a known double from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known double from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadDoubleTest() => Assert.That(
-        TestProcessMemory!.ReadDouble(OuterClassPointer + 0x30).GetValueOrDefault(), Is.EqualTo(79879131651.33345));
+    public void ReadDoubleTest()
+    {
+        var address = OuterClassPointer + 0x30;
+        Assert.That(TestProcessMemory!.Read<double>(address).GetValueOrDefault(), Is.EqualTo(79879131651.33345));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<double>(address).GetValueOrDefault(), Is.EqualTo(-99879416311.4478));
+    }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/>.
-    /// Reads a known byte array from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads a known struct from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadBytesTest() => Assert.That(
-        TestProcessMemory!.ReadBytes($"{OuterClassPointer:X}+18,10", 4).GetValueOrDefault(),
-        Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
+    public void ReadStructureTest()
+    {
+        var pointerPath = new PointerPath($"{OuterClassPointer:X}+30");
+        Assert.That(TestProcessMemory!.Read<TestStruct>(pointerPath).Value,
+            Is.EqualTo(new TestStruct(79879131651.33345, -7651)));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<TestStruct>(pointerPath).Value,
+            Is.EqualTo(new TestStruct(-99879416311.4478, 987411)));
+    }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadLong(PointerPath)"/>.
-    /// Reads a known long from the target process after initialization.
+    /// Tests <see cref="ProcessMemory.Read(Type, PointerPath)"/>.
+    /// Reads a known struct from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadStructureAsObjectTest()
+    {
+        var pointerPath = new PointerPath($"{OuterClassPointer:X}+30");
+        Assert.That(TestProcessMemory!.Read(typeof(TestStruct), pointerPath).Value,
+            Is.EqualTo(new TestStruct(79879131651.33345, -7651)));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read(typeof(TestStruct), pointerPath).Value,
+            Is.EqualTo(new TestStruct(-99879416311.4478, 987411)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/>.
+    /// Reads a known byte array from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadBytesTest()
+    {
+        PointerPath pointerPath = $"{OuterClassPointer:X}+18,10";
+        Assert.That(TestProcessMemory!.ReadBytes(pointerPath, 4).GetValueOrDefault(),
+            Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.ReadBytes(pointerPath, 4).GetValueOrDefault(),
+            Is.EqualTo(new byte[] { 0x55, 0x66, 0x77, 0x88 }));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads a known long from the target process before and after the process changes their value.
     /// This method uses a <see cref="PointerPath"/> and reads a value that is nested in the known instance.
-    /// It should be equal to its known value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadNestedLongTest() => Assert.That(
-        TestProcessMemory!.ReadLong($"{OuterClassPointer:X}+10,8").GetValueOrDefault(), Is.EqualTo(999999999999L));
+        TestProcessMemory!.Read<long>($"{OuterClassPointer:X}+10,8").GetValueOrDefault(), Is.EqualTo(999999999999L));
 
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadIntPtr(PointerPath)"/>.
-    /// Reads an ulong with the max value from the target process after initialization.
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads an ulong with the max value from the target process before and after the process changes their value.
     /// This method uses a <see cref="PointerPath"/> and reads a value that is nested in the known instance.
     /// Reading this value as a pointer should yield a valid pointer. This test validates that there is no arithmetic
     /// overflow caused by signed pointer usage.
@@ -162,25 +253,26 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     [Test]
     public void ReadUIntPtrMaxValueTest()
     {
-        var ptr = TestProcessMemory!.ReadIntPtr($"{OuterClassPointer:X}+10,10").GetValueOrDefault();
+        var ptr = TestProcessMemory!.Read<UIntPtr>($"{OuterClassPointer:X}+10,10").GetValueOrDefault();
         Assert.That(ptr.ToUInt64(), Is.EqualTo(ulong.MaxValue));
     }
 
     /// <summary>
     /// Tests an edge case where the pointer path given to a read operation points to the last possible byte in memory
     /// (the maximum value of a UIntPtr).
-    /// The read operation is expected to fail (this memory region is not valid).
+    /// The read operation is expected to fail with a <see cref="ReadFailureOnSystemRead"/> (this memory region is not
+    /// readable).
     /// </summary>
     [Test]
     public void ReadAtMaxPointerValueTest()
     {
-        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,0");
+        var result = TestProcessMemory!.Read<byte>($"{OuterClassPointer:X}+10,10,0");
         Assert.That(result.IsSuccess, Is.False);
         var error = result.Error;
         Assert.That(error, Is.TypeOf(typeof(ReadFailureOnSystemRead)));
         var systemError = ((ReadFailureOnSystemRead)error).SystemReadFailure;
         Assert.That(systemError, Is.TypeOf(typeof(OperatingSystemCallFailure)));
-        var osError = ((OperatingSystemCallFailure)systemError);
+        var osError = (OperatingSystemCallFailure)systemError;
         Assert.That(osError.ErrorCode, Is.GreaterThan(0));
         Assert.That(osError.ErrorMessage, Is.Not.Empty);
     }
@@ -193,7 +285,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     [Test]
     public void ReadOverMaxPointerValueTest()
     {
-        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,1");
+        var result = TestProcessMemory!.Read<byte>($"{OuterClassPointer:X}+10,10,1");
         Assert.That(result.IsSuccess, Is.False);
         var error = result.Error;
         Assert.That(error, Is.TypeOf(typeof(ReadFailureOnPointerPathEvaluation)));
@@ -204,13 +296,41 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         Assert.That(outOfRangeError.PreviousAddress, Is.Not.Null);
         Assert.That(outOfRangeError.PreviousAddress, Is.Not.EqualTo(UIntPtr.Zero));
     }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type, UIntPtr)"/> method with a reference type.
+    /// It should fail with a <see cref="ReadFailureOnUnsupportedType"/>.
+    /// </summary>
+    [Test]
+    public void ReadIncompatibleTypeTest()
+    {
+        var result = TestProcessMemory!.Read(typeof(string), OuterClassPointer + 0x38);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnUnsupportedType)));
+    }
+
+    /// <summary>Structure used to test reading a structure with references.</summary>
+    private record struct TestStructWithReferences(int A, string B);
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a structure type that contains reference
+    /// types.
+    /// It should fail with a <see cref="ReadFailureOnConversionFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStructureWithReferencesTest()
+    {
+        var result = TestProcessMemory!.Read<TestStructWithReferences>(OuterClassPointer + 0x38);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnConversionFailure)));
+    }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
     /// Reads a known string from the target process after initialization, without using any parameter beyond the
     /// pointer path.
     /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// It should be equal to its known value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadStringWithNoParametersTest()
