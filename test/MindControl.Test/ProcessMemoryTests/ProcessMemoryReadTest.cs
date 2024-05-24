@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Text;
+﻿using System.Text;
 using MindControl.Results;
 using NUnit.Framework;
 
@@ -292,9 +291,8 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         var pathError = ((ReadFailureOnPointerPathEvaluation)error).PathEvaluationFailure;
         Assert.That(pathError, Is.TypeOf(typeof(PathEvaluationFailureOnPointerOutOfRange)));
         var outOfRangeError = (PathEvaluationFailureOnPointerOutOfRange)pathError;
-        Assert.That(outOfRangeError.Address, Is.EqualTo(new BigInteger(ulong.MaxValue) + 1));
-        Assert.That(outOfRangeError.PreviousAddress, Is.Not.Null);
-        Assert.That(outOfRangeError.PreviousAddress, Is.Not.EqualTo(UIntPtr.Zero));
+        Assert.That(outOfRangeError.Offset, Is.EqualTo(new PointerOffset(1, false)));
+        Assert.That(outOfRangeError.PreviousAddress, Is.EqualTo(UIntPtr.MaxValue));
     }
 
     /// <summary>

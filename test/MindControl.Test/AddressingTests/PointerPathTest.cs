@@ -13,8 +13,8 @@ public class PointerPathTest
         public string Expression { get; init; }
         public bool ShouldBeValid { get; init; }
         public string? ExpectedModuleName { get; init; }
-        public BigInteger ExpectedModuleOffset { get; init; }
-        public BigInteger[]? ExpectedPointerOffsets { get; init; }
+        public PointerOffset ExpectedModuleOffset { get; init; }
+        public PointerOffset[]? ExpectedPointerOffsets { get; init; }
         public bool Expect64BitOnly { get; init; }
         public string Explanation { get; init; }
         public override string ToString() => Expression;
@@ -31,8 +31,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe+1F016644,13,A0,0",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0x1F016644,
-            ExpectedPointerOffsets = new BigInteger[] { 0x13, 0xA0, 0 },
+            ExpectedModuleOffset = new(0x1F016644, false),
+            ExpectedPointerOffsets = new[] { new(0x13, false), new(0xA0, false), PointerOffset.Zero },
             Explanation = "Expressions must support a base module name, static offsets (+/-) and pointer offsets (,)."
         },
         new ExpressionTestCase
@@ -40,8 +40,8 @@ public class PointerPathTest
             Expression = "  mymoduleName.exe  +  1F016644 ,  13   ,A0 ,0   ",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0x1F016644,
-            ExpectedPointerOffsets = new BigInteger[] { 0x13, 0xA0, 0 },
+            ExpectedModuleOffset = new(0x1F016644, false),
+            ExpectedPointerOffsets = new[] { new(0x13, false), new(0xA0, false), PointerOffset.Zero },
             Explanation = "Arbitrary whitespaces before and after any subexpression must be supported."
         },
         new ExpressionTestCase
@@ -49,8 +49,8 @@ public class PointerPathTest
             Expression = "\"mymoduleName.exe\"+1F01664D",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0x1F01664D,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x1F01664D, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names with double-quotes must be supported, and interpreted without double-quotes."
         },
         new ExpressionTestCase
@@ -58,8 +58,8 @@ public class PointerPathTest
             Expression = "mymoduleName.anything+1F01664D",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.anything",
-            ExpectedModuleOffset = 0x1F01664D,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x1F01664D, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names with any extension must be supported."
         },
         new ExpressionTestCase
@@ -67,8 +67,8 @@ public class PointerPathTest
             Expression = "mymoduleName+1F01664D",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName",
-            ExpectedModuleOffset = 0x1F01664D,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x1F01664D, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names without an extension must be supported."
         },
         new ExpressionTestCase
@@ -76,8 +76,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe,0F",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0,
-            ExpectedPointerOffsets = new BigInteger[] { 0x0F },
+            ExpectedModuleOffset = PointerOffset.Zero,
+            ExpectedPointerOffsets = new PointerOffset[] { new(0x0F, false) },
             Explanation = "Module names with no static offsets must be supported."
         },
         new ExpressionTestCase
@@ -85,8 +85,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe-0F",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = -0x0F,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x0F, true),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names with a negative static offset must be supported."
         },
         new ExpressionTestCase
@@ -94,8 +94,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = PointerOffset.Zero,
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names on their own must be supported."
         },
         new ExpressionTestCase
@@ -103,8 +103,8 @@ public class PointerPathTest
             Expression = "my1FmoduleName.exe+1F",
             ShouldBeValid = true,
             ExpectedModuleName = "my1FmoduleName.exe",
-            ExpectedModuleOffset = 0x1F,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x1F, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names containing numerals must be supported."
         },
         new ExpressionTestCase
@@ -112,8 +112,8 @@ public class PointerPathTest
             Expression = "1FmymoduleName.exe+1F",
             ShouldBeValid = true,
             ExpectedModuleName = "1FmymoduleName.exe",
-            ExpectedModuleOffset = 0x1F,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x1F, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Module names starting with numerals must be supported."
         },
         new ExpressionTestCase
@@ -121,8 +121,9 @@ public class PointerPathTest
             Expression = "1F016644,13,A0,0",
             ShouldBeValid = true,
             ExpectedModuleName = null,
-            ExpectedModuleOffset = 0,
-            ExpectedPointerOffsets = new BigInteger[] { 0x1F016644, 0x13, 0xA0, 0x0 },
+            ExpectedModuleOffset = PointerOffset.Zero,
+            ExpectedPointerOffsets = new[] { new(0x1F016644, false), new(0x13, false),
+                new(0xA0, false), PointerOffset.Zero },
             Explanation = "Expressions without a module name must be supported."
         },
         new ExpressionTestCase
@@ -130,8 +131,8 @@ public class PointerPathTest
             Expression = "AF016644",
             ShouldBeValid = true,
             ExpectedModuleName = null,
-            ExpectedModuleOffset = 0,
-            ExpectedPointerOffsets = new BigInteger[] { 0xAF016644 },
+            ExpectedModuleOffset = PointerOffset.Zero,
+            ExpectedPointerOffsets = new PointerOffset[] { new(0xAF016644, false) },
             Explanation = "A static address by itself must be supported."
         },
         new ExpressionTestCase
@@ -139,8 +140,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe+4,-2F",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 4,
-            ExpectedPointerOffsets = new BigInteger[] { -0x2F },
+            ExpectedModuleOffset = new(0x4, false),
+            ExpectedPointerOffsets = new PointerOffset[] { new(0x2F, true) },
             Explanation = "Negative pointer offsets must be supported."
         },
         new ExpressionTestCase
@@ -148,8 +149,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe+6A-2C+8",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0x46,
-            ExpectedPointerOffsets = Array.Empty<BigInteger>(),
+            ExpectedModuleOffset = new(0x46, false),
+            ExpectedPointerOffsets = Array.Empty<PointerOffset>(),
             Explanation = "Several static offsets added together must be supported."
         },
         new ExpressionTestCase
@@ -157,8 +158,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe,6A-2C+8",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0,
-            ExpectedPointerOffsets = new BigInteger[] { 0x46 },
+            ExpectedModuleOffset = PointerOffset.Zero,
+            ExpectedPointerOffsets = new PointerOffset[] { new(0x46, false) },
             Explanation = "Static offsets added together within a pointer offset must be supported."
         },
         new ExpressionTestCase
@@ -166,8 +167,8 @@ public class PointerPathTest
             Expression = "mymoduleName.exe+FFFFFFFF,FFFFFFFF",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0xFFFFFFFF,
-            ExpectedPointerOffsets = new BigInteger[] { 0xFFFFFFFF },
+            ExpectedModuleOffset = new(0xFFFFFFFF, false),
+            ExpectedPointerOffsets = new PointerOffset[] { new(0xFFFFFFFF, false) },
             Expect64BitOnly = false,
             Explanation = "Offsets within the 32-bit addressing boundaries must be supported in all cases."
         },
@@ -176,24 +177,19 @@ public class PointerPathTest
             Expression = "mymoduleName.exe+FFFFFFFFFFFFFFFF,FFFFFFFFFFFFFFFF",
             ShouldBeValid = true,
             ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0xFFFFFFFFFFFFFFFF,
-            ExpectedPointerOffsets = new BigInteger[] { 0xFFFFFFFFFFFFFFFF },
+            ExpectedModuleOffset = new(0xFFFFFFFFFFFFFFFF, false),
+            ExpectedPointerOffsets = new PointerOffset[] { new(0xFFFFFFFFFFFFFFFF, false) },
             Expect64BitOnly = true,
             Explanation = "Offsets within the 64-bit addressing boundaries must be supported in 64-bit only mode."
         },
+        
+        // Non valid expression cases
         new ExpressionTestCase
         {
             Expression = "mymoduleName.exe+FFFFFFFFFFFFFFFF+1-1,FFFFFFFFFFFFFFFF+1-1",
-            ShouldBeValid = true,
-            ExpectedModuleName = "mymoduleName.exe",
-            ExpectedModuleOffset = 0xFFFFFFFFFFFFFFFF,
-            ExpectedPointerOffsets = new BigInteger[] { 0xFFFFFFFFFFFFFFFF },
-            Expect64BitOnly = true,
-            Explanation =
-                "Offset boundaries must apply only after all computations are done. Only the final value must respect the boundaries."
+            ShouldBeValid = false,
+            Explanation = "Offsets sub-summing up to over the 64-bit addressing boundaries must be invalid, even if the sum as a whole is within the boundaries."
         },
-
-        // Non valid expression cases
         new ExpressionTestCase
         {
             Expression = "mymoduleName.exe++1F016644",

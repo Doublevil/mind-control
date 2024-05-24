@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace MindControl.Results;
+﻿namespace MindControl.Results;
 
 /// <summary>
 /// Represents a reason for a path evaluation operation to fail.
@@ -67,17 +65,16 @@ public record PathEvaluationFailureOnBaseModuleNotFound(string ModuleName)
 /// Represents a failure in a path evaluation operation when a pointer in the path is out of the target process
 /// address space.
 /// </summary>
-/// <param name="PreviousAddress">Address where the value causing the issue was read. May be null if the first address
+/// <param name="PreviousAddress">Address that triggered the failure after the offset. May be null if the first address
 /// in the path caused the failure.</param>
-/// <param name="Address">Address that caused the failure. The address is a BigInteger because it may be beyond the
-/// range of a UIntPtr.</param>
-public record PathEvaluationFailureOnPointerOutOfRange(UIntPtr? PreviousAddress, BigInteger Address)
+/// <param name="Offset">Offset that caused the failure.</param>
+public record PathEvaluationFailureOnPointerOutOfRange(UIntPtr? PreviousAddress, PointerOffset Offset)
     : PathEvaluationFailure(PathEvaluationFailureReason.PointerOutOfRange)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"The pointer path evaluated a pointer to an address that is out of the target process address space range: {Address}.";
+        => "The pointer path evaluated a pointer to an address that is out of the target process address space range.";
 }
 
 /// <summary>

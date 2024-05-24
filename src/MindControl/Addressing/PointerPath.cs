@@ -1,8 +1,4 @@
-﻿using System.Globalization;
-using System.Numerics;
-using System.Text.RegularExpressions;
-
-namespace MindControl;
+﻿namespace MindControl;
 
 /// <summary>
 /// Holds a string expression consisting in a base address followed by a sequence of pointer offsets.
@@ -15,7 +11,7 @@ public class PointerPath
     /// <summary>
     /// Stores data parsed and computed internally from a pointer path expression.
     /// </summary>
-    private struct ExpressionParsedData
+    private readonly struct ExpressionParsedData
     {
         /// <summary>
         /// Gets the base module name.
@@ -29,22 +25,19 @@ public class PointerPath
         /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets 0x1F4680.
         /// For expressions without a module offset, like "01F4684-4,18" or "myprocess.exe", gets 0.
         /// </summary>
-        public BigInteger BaseModuleOffset { get; init; }
+        public PointerOffset BaseModuleOffset { get; init; }
         
         /// <summary>
         /// Gets the collection of pointer offsets to follow sequentially in order to evaluate the memory address.
         /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets [0x1C, 0xC].
         /// </summary>
-        public BigInteger[] PointerOffsets { get; init; }
+        public PointerOffset[] PointerOffsets { get; init; }
         
         /// <summary>
-        /// Gets a boolean indicating if the address is a 64-bit only address, or if it can also be used in a 32-bits
+        /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bits
         /// process.
-        /// For example, for the expression "app.dll+0000F04AA1218410", this boolean would be True.
-        /// For the expression "app.dll+00000000F04AA121", this boolean would be False.
-        /// Note that evaluating a 32-bit-compatible address may still end up overflowing.
         /// </summary>
-        public bool IsStrictly64Bits { get; init; }
+        public bool IsStrictly64Bits => BaseModuleOffset.Is64Bits || PointerOffsets.Any(offset => offset.Is64Bits);
     }
     
     /// <summary>
@@ -67,16 +60,16 @@ public class PointerPath
     /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets 0x1F4680.
     /// For expressions without a module offset, like "01F4684-4,18" or "myprocess.exe", gets 0.
     /// </summary>
-    public BigInteger BaseModuleOffset => _parsedData.BaseModuleOffset;
+    public PointerOffset BaseModuleOffset => _parsedData.BaseModuleOffset;
 
     /// <summary>
     /// Gets the collection of pointer offsets to follow sequentially in order to evaluate the memory address.
     /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets [0x1C, 0xC].
     /// </summary>
-    public BigInteger[] PointerOffsets => _parsedData.PointerOffsets;
+    public PointerOffset[] PointerOffsets => _parsedData.PointerOffsets;
 
     /// <summary>
-    /// Gets a boolean indicating if the address is a 64-bit only address, or if it can also be used in a 32-bits
+    /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bits
     /// process.
     /// For example, for the expression "app.dll+0000F04AA1218410", this boolean would be True.
     /// For the expression "app.dll+00000000F04AA121", this boolean would be False.
@@ -142,7 +135,7 @@ public class PointerPath
         return parsedData == null || allowOnly32Bits && parsedData.Value.IsStrictly64Bits ?
             null : new PointerPath(expression, parsedData);
     }
-
+    
     /// <summary>
     /// Attempts to parse the given expression. Returns the parsed data container when successful, or null if the
     /// expression is not valid.
@@ -151,199 +144,251 @@ public class PointerPath
     /// <returns>the parsed data container when successful, or null if the expression is not valid.</returns>
     private static ExpressionParsedData? Parse(string expression)
     {
-        if (string.IsNullOrWhiteSpace(expression))
+        // A note about the parsing code:
+        // It is designed to be fast and to allocate the strict minimum amount of memory.
+        // This means we cannot use regular expressions, splits, trims, lists, etc.
+        // That makes the code significantly harder to read and maintain, but this is a potential hot path and so it is
+        // worth the compromise.
+        
+        // Quick checks to avoid parsing the expression if it is obviously invalid
+        // The expression must not be empty, and must not end with a comma or an operator
+        if (expression.Length == 0 || expression[^1] is ',' or '+' or '-')
             return null;
+        
+        // Try to read a module name from the expression
+        // If the value is null, the expression is invalid and we can straight up return null
+        // If there is no module name, the value will be an empty string
+        string? baseModuleName = ParseModuleName(expression, out int readCount);
+        if (baseModuleName == null)
+            return null;
+        bool hasModule = baseModuleName.Length > 0;
 
-        var baseModuleName = ParseBaseModuleName(expression);
-        var pointerOffsets = ParsePointerOffsets(expression, baseModuleName != null);
-        
-        // If pointer offsets cannot be parsed, it means the expression is not valid and so we cannot parse.
-        if (pointerOffsets == null)
-            return null;
-        
-        // If there is no base module name, the base address cannot be negative (e.g. "-1F,4").
-        if (baseModuleName == null && pointerOffsets.Length > 0 && pointerOffsets[0] < 0)
-            return null;
-        
-        var moduleOffset = baseModuleName != null ? ParseFirstStaticOffset(expression) : 0;
-        // If the base module offset expression is invalid, we cannot parse the expression.
-        if (moduleOffset == null)
-            return null;
-        
-        bool is64Bits = pointerOffsets.Append(moduleOffset.Value).Any(o => BigInteger.Abs(o) > uint.MaxValue);
+        // If the whole expression was the module name, we can return the parsed data
+        if (hasModule && readCount == expression.Length)
+        {
+            return new ExpressionParsedData
+            {
+                BaseModuleName = baseModuleName,
+                BaseModuleOffset = PointerOffset.Zero,
+                PointerOffsets = Array.Empty<PointerOffset>()
+            };
+        }
 
+        // Now we need to know if the module name has an offset (e.g. the "+4" in "myprocess.exe+4,2B")
+        // If the next character after the module name is a comma, it doesn't have an offset
+        bool hasModuleOffset = hasModule && expression[readCount] != ',';
+        if (hasModule && !hasModuleOffset)
+            readCount++;
+
+        // Then, we determine how many offsets there are in the expression
+        // This is done by counting the number of commas in the expression
+        // The reason we need to know in advance is to allocate the array of offsets, to avoid the cost of a List
+        int offsetCount = hasModuleOffset ? 0 : 1;
+        for (int i = readCount; i < expression.Length; i++)
+        {
+            if (expression[i] == ',')
+                offsetCount++;
+        }
+
+        var offsets = new PointerOffset[offsetCount];
+        var index = readCount;
+        PointerOffset? baseModuleOffset = null;
+        int offsetIndex = 0;
+        while (index < expression.Length)
+        {
+            var offset = ParsePointerOffsetExpression(expression, index, out readCount);
+            
+            // If there is no base module, the first offset cannot be negative (we cannot start at a negative address)
+            if (offset == null || !hasModule && offsetIndex == 0 && offset.Value.IsNegative)
+                return null;
+
+            // If there is a base module offset, the first offset is the base module offset
+            if (hasModuleOffset && baseModuleOffset == null)
+                baseModuleOffset = offset;
+            else
+                offsets[offsetIndex++] = offset.Value;
+            
+            // Advance to the next expression
+            index += readCount;
+        }
+        
         return new ExpressionParsedData
         {
-            BaseModuleName = baseModuleName,
-            BaseModuleOffset = moduleOffset.Value,
-            PointerOffsets = pointerOffsets,
-            IsStrictly64Bits = is64Bits
+            BaseModuleName = hasModule ? baseModuleName : null,
+            BaseModuleOffset = baseModuleOffset ?? PointerOffset.Zero,
+            PointerOffsets = offsets
         };
     }
 
     /// <summary>
-    /// Attempts to parse a base module name from the given expression.
-    /// For example, in "myapp.exe+1D,28", get "myapp.exe".
-    /// If the expression does not contain a base module name (e.g. "1F+6"), returns a null value.
-    /// Note that the definition of a base module name is very loose. All characters, including special characters and
-    /// numbers, are valid, with the exception of symbols used for other purposes in the pointer path syntax (,+-). 
-    /// </summary>
-    /// <param name="expression">Target expression to parse.</param>
-    /// <returns>The base module name found in the input expression, or null if the expression does not contain a
-    /// module name.</returns>
-    private static string? ParseBaseModuleName(string expression)
-    {
-        // No module name in an empty expression.
-        if (string.IsNullOrWhiteSpace(expression))
-            return null;
-
-        // Take the first part of the first offset by splitting on "," and then on "+" or "-".
-        // Some examples:
-        // - For "myapp.exe+1D,28", get "myapp.exe"
-        // - For "1F284604+1D-4,1D", get "1F284604"
-        // - For "-1F+6F044C", get "" (because it starts with a sign). It can't be a module name so it's fine.
-        string firstOffset = expression.Split(',').First();
-        string potentialModuleName = firstOffset.Split('-', '+').First();
-
-        // If the potential module name is empty, return null.
-        if (string.IsNullOrWhiteSpace(potentialModuleName))
-            return null;
-        
-        // Now we need to determine whether our potential module name is a real module name, or an offset/address.
-        // Attempt to parse it as a ulong. If it can't be parsed, it's a module name.
-        if (ulong.TryParse(potentialModuleName, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out _))
-            return null;
-        
-        // If we are here, we do have a module name. Format it and return it.
-        return potentialModuleName.Trim().Trim('"');
-    }
-    
-    /// <summary>
-    /// In the given expression, retrieves the static offset value to add up with the first part of the first pointer
-    /// offset. This method is intended to parse the static offset of a module name.
-    /// For example, for the expression "myprocess.exe+1C-4,1B", the result would be 0x18 (0x1C-0x4 = 0x18).
-    /// If the expression contains no offset after the first part, the result will be 0.
-    /// If the offset expression is not valid, returns null.
-    /// </summary>
-    private static BigInteger? ParseFirstStaticOffset(string expression)
-    {
-        var firstSignOperatorIndex = expression.IndexOfAny(new[] { '+', '-' }, 1);
-        var firstPointerOperatorIndex = expression.IndexOf(',');
-        
-        // If there are no pointer operators in the expression, adjust the index to the length of the expression
-        if (firstPointerOperatorIndex == -1)
-            firstPointerOperatorIndex = expression.Length;
-
-        // No sign operator: no offset
-        if (firstSignOperatorIndex < 0)
-            return 0;
-        
-        // First sign operator is after the first pointer operator (e.g. "myprocess.exe,1C+4"): no offset
-        if (firstSignOperatorIndex > firstPointerOperatorIndex)
-            return 0;
-        
-        // Parse whatever is between the first sign operator and the first pointer operator
-        string offsetExpression = expression.Substring(firstSignOperatorIndex,
-            firstPointerOperatorIndex - firstSignOperatorIndex);
-        return ParsePointerOffsetExpression(offsetExpression);
-    }
-    
-    /// <summary>
-    /// In the given expression, retrieves and evaluates all pointer expressions (sequences of offsets separated by a
-    /// comma). For example, "18+4,C" would yield [0x1C, 0xC].
+    /// Parses the module name from the given expression.
     /// </summary>
     /// <param name="expression">Expression to parse.</param>
-    /// <param name="hasModuleName">If True, the first pointer offset will be ignored because it contains a module name
-    /// and thus cannot be evaluated into a number. For example, "myapp.exe+8F,1C", would only return [0x1C].</param>
-    /// <returns>Pointer offsets evaluated as BigIntegers.</returns>
-    private static BigInteger[]? ParsePointerOffsets(string expression, bool hasModuleName)
+    /// <param name="readCount">Number of characters read from the expression.</param>
+    /// <returns>The module name, or null if the expression is invalid.</returns>
+    private static string? ParseModuleName(string expression, out int readCount)
     {
-        if (string.IsNullOrWhiteSpace(expression))
+        readCount = 0;
+        if (expression.Length == 0)
             return null;
-        
-        var offsetExpressions = expression.Split(',');
-        
-        var results = new List<BigInteger>();
-        // Skip the first split if the expression is known to have a module name.
-        foreach (var offsetExpression in offsetExpressions.Skip(hasModuleName ? 1 : 0))
-        {
-            // Parse each expression, and if any fails to parse, it means that the expression is not valid, and so
-            // we return null instead of the expected array.
-            var parsedOffset = ParsePointerOffsetExpression(offsetExpression);
-            if (parsedOffset == null)
-                return null;
 
-            results.Add(parsedOffset.Value);
+        int startIndex = 0;
+        // Skip all whitespaces at the start of the expression
+        while (startIndex < expression.Length && char.IsWhiteSpace(expression[startIndex]))
+            startIndex++;
+        
+        if (startIndex == expression.Length)
+            return null; // All whitespace
+
+        // Determine if the module name is quoted.
+        // The rule is that the module name can optionally be quoted with double-quotes.
+        // In this case, the returned module name will be the content inside the quotes.
+        if (expression[startIndex] == '"')
+        {
+            // After skipping spaces, the first character is a quote
+            // This means the module name is quoted. Advance the start index to the first character after the quote.
+            startIndex++;
+            int endQuoteIndex = expression.IndexOf('"', startIndex);
+            if (endQuoteIndex == -1 || endQuoteIndex == startIndex + 1)
+                return null; // No closing quote or nothing inside the quotes: the expression is invalid
+            
+            readCount = endQuoteIndex + 1;
+            return expression.Substring(startIndex, endQuoteIndex - startIndex);
         }
 
-        return results.ToArray();
-    }
+        // The module name is not quoted. If there is a module name, it will end either with a +/- operator, a ',', or
+        // the end of the string.
+        int endIndex = expression.IndexOfAny(new[] { '-', '+', ',' });
+        if (endIndex == -1)
+            endIndex = expression.Length;
 
-    /// <summary>
-    /// Tries to parse the given pointer offset expression and returns the resulting value.
-    /// Because valid results range between -FFFFFFFFFFFFFFFF and FFFFFFFFFFFFFFFF, the return value is a BigInteger.
-    /// If the expression is invalid or results in a number that is outside of the valid range, returns null.
-    /// </summary>
-    /// <param name="pointerOffsetExpression">Expression to parse. Example: "1F06+7C-4".</param>
-    /// <returns>A BigInteger between -FFFFFFFFFFFFFFFF and FFFFFFFFFFFFFFFF representing the offset computed
-    /// from the expression, or null when the expression is invalid or the result is out of range.</returns>
-    private static BigInteger? ParsePointerOffsetExpression(string pointerOffsetExpression)
-    {
-        // Use a regular expression to find all of the offset numbers to add up.
-        // The regex translates to:
-        // An optional + or - sign, followed by a hex number, optionally followed by any number of expressions comprised
-        // of a mandatory + or - sign followed by a hex number.
-        // The ^ and $ at the start and the end make sure that it won't match expressions that start or end with
-        // anything unexpected.
-        var offsetRegex = new Regex("^([+-]?[0-9a-f]{1,16})([+-][0-9a-f]{1,16})*$",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        // Remove all white spaces at the end of the module name
+        while (endIndex > startIndex && char.IsWhiteSpace(expression[endIndex - 1]))
+            endIndex--;
         
-        // Replace all whitespaces in the expression to support a variety of cases.
-        // Examples: "1F 06 + 7C - 8" would parse the same as "1F06+7C-8", which seems like a good idea.
-        var match = offsetRegex.Match(pointerOffsetExpression.Replace(" ", string.Empty));
-
-        // If the regex doesn't match, the expression is invalid.
-        if (!match.Success)
-            return null;
-
-        var offsets = match.Groups[2].Captures.Select(c => c.Value).Append(match.Groups[1].Value);
+        // If the endIndex was reduced to the startIndex, there is no module name
+        if (endIndex == startIndex)
+            return string.Empty;
         
-        // Add up all the parts using BigIntegers.
-        // The regex has a 16-length limit for individual offsets, but we don't really care to check out of bounds
-        // values until everything is added up. For instance, we could have FFFFFFFFFFFFFFFF+1-1, which would be
-        // valid and result in a final value of FFFFFFFFFFFFFFFF.
-        BigInteger sum = 0;
-        foreach (var offset in offsets)
+        int length = endIndex - startIndex;
+        
+        // We have to check if the module can be a valid hexadecimal address.
+        // If it is, what we read is an address and not a module, so we must return string.Empty.
+        PointerOffset? currentValue = PointerOffset.Zero;
+        for (int i = startIndex; i < endIndex; i++)
         {
-            // An empty offset means the whole pointer offset expression is invalid.
-            if (string.IsNullOrWhiteSpace(offset))
-                return null;
+            char c = expression[i];
+            if (char.IsWhiteSpace(c))
+                continue;
 
-            // Negative hex numbers cannot be parsed natively in .net, so we need to handle them manually
-            bool isNegative = offset[0] == '-';
-            string parsableOffset = isNegative || offset[0] == '+' ? offset[1..] : offset;
-            
-            if (!ulong.TryParse(parsableOffset, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
-                    out var offsetValue))
+            byte hexadecimalValue = CharToValue(c);
+            if (hexadecimalValue == 255)
             {
-                // The offset cannot be parsed, therefore the whole pointer offset is invalid.
-                return null;
+                // Non-hexadecimal character
+                readCount = endIndex;
+                return expression.Substring(startIndex, length);
+            }
+            
+            currentValue = currentValue.Value.ShiftAndAdd(hexadecimalValue);
+            if (currentValue == null)
+            {
+                // Larger than the largest possible address
+                readCount = endIndex;
+                return expression.Substring(startIndex, length);
+            }
+        }
+
+        return string.Empty; // The module name is a valid hexadecimal address
+    }
+    
+    /// <summary>
+    /// Parses a pointer offset expression (a sub-section that comes in-between ',' characters) from the given
+    /// expression.
+    /// </summary>
+    /// <param name="expression">Full expression to parse.</param>
+    /// <param name="startIndex">Index to start parsing from.</param>
+    /// <param name="readCount">Number of characters read from the expression.</param>
+    /// <returns>The parsed pointer offset, or null if the expression is invalid.</returns>
+    private static PointerOffset? ParsePointerOffsetExpression(string expression, int startIndex,
+        out int readCount)
+    {
+        readCount = 0;
+        
+        PointerOffset? sum = PointerOffset.Zero;
+        PointerOffset? currentNumber = PointerOffset.Zero;
+        bool lastCharWasOperator = false;
+        bool hasMeaningfulCharacters = false;
+        
+        for (int i = startIndex; i < expression.Length; i++)
+        {
+            readCount++;
+            
+            char c = expression[i];
+            
+            // Ignore all spaces everywhere in the expression
+            if (char.IsWhiteSpace(c))
+                continue;
+
+            if (c is '+' or '-')
+            {
+                if (lastCharWasOperator)
+                    return null; // Two operators in a row is invalid
+
+                // We just finished reading a number, or start reading a new one.
+                // We must add the current number to the sum, and reset the current number.
+                sum = sum.Value.Plus(currentNumber.Value);
+                if (sum == null)
+                    return null; // Overflow or underflow
+                currentNumber = new PointerOffset(0, IsNegative: c == '-');
+                
+                // Set the operator for the next number
+                lastCharWasOperator = true;
+                continue;
             }
 
-            sum = isNegative ? sum - offsetValue : sum + offsetValue;
+            if (c is ',')
+                break; // The sub-expression parsed by this method stops here
+            
+            // From here on, we are reading a non-operator character.
+            // This could be a number or an invalid character.
+            lastCharWasOperator = false;
+            byte value = CharToValue(c);
+            if (value == 255)
+                return null; // Invalid character
+            
+            hasMeaningfulCharacters = true;
+            currentNumber = currentNumber.Value.ShiftAndAdd(value);
+            if (currentNumber == null)
+                return null; // Overflow or underflow
         }
 
-        // With the final sum, check if the result is in the valid range for 64-bit addresses, positive or negative.
-        if (sum > ulong.MaxValue || sum < BigInteger.Negate(ulong.MaxValue))
+        // We are done parsing the sub-expression.
+        // If it didn't contain any meaningful character, or ended with an operator, it is invalid.
+        if (lastCharWasOperator || !hasMeaningfulCharacters)
             return null;
         
-        return sum;
+        // Return the final sum. If it overflows or underflows, this will return null, as the expression is invalid.
+        return sum.Value.Plus(currentNumber.Value);
+    }
+    
+    /// <summary>
+    /// Converts a character to its hexadecimal value.
+    /// </summary>
+    /// <param name="c">Character to convert.</param>
+    /// <returns>Hexadecimal value of the character, or 255 if the character is not a valid hexadecimal
+    /// character.</returns>
+    private static byte CharToValue(char c)
+    {
+        return c switch
+        {
+            >= '0' and <= '9' => (byte)(c - '0'),
+            >= 'A' and <= 'F' => (byte)(c - 'A' + 10),
+            >= 'a' and <= 'f' => (byte)(c - 'a' + 10),
+            _ => 255
+        };
     }
 
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-    {
-        return Expression;
-    }
+    public override string ToString() => Expression;
 }

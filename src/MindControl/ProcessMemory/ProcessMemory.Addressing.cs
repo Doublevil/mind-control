@@ -26,25 +26,25 @@ public partial class ProcessMemory
         }
         else
         {
-            var bigIntAddress = pointerPath.PointerOffsets.FirstOrDefault(); 
-            baseAddress = bigIntAddress.ToUIntPtr();
+            var firstOffset = pointerPath.PointerOffsets.FirstOrDefault();
+            baseAddress = firstOffset.AsAddress();
             if (baseAddress == null)
-                return new PathEvaluationFailureOnPointerOutOfRange(null, bigIntAddress);
+                return new PathEvaluationFailureOnPointerOutOfRange(null, firstOffset);
         }
 
         // Apply the base offset if there is one
-        if (pointerPath.BaseModuleOffset > 0)
+        if (pointerPath.BaseModuleOffset.Offset > 0)
         {
-            var bigIntAddress = baseAddress.Value.ToUInt64() + pointerPath.BaseModuleOffset; 
-            baseAddress = bigIntAddress.ToUIntPtr();
+            var baseAddressWithOffset = pointerPath.BaseModuleOffset.OffsetAddress(baseAddress.Value);
+            if (baseAddressWithOffset == null)
+                return new PathEvaluationFailureOnPointerOutOfRange(baseAddress, pointerPath.BaseModuleOffset);
             
-            if (baseAddress == null)
-                return new PathEvaluationFailureOnPointerOutOfRange(null, bigIntAddress);
+            baseAddress = baseAddressWithOffset.Value;
         }
 
         // Check if the base address is valid
         if (baseAddress == UIntPtr.Zero)
-            return new PathEvaluationFailureOnPointerOutOfRange(null, 0);
+            return new PathEvaluationFailureOnPointerOutOfRange(UIntPtr.Zero, PointerOffset.Zero);
         
         // Follow the pointer path offset by offset
         var currentAddress = baseAddress.Value;
@@ -60,16 +60,13 @@ public partial class ProcessMemory
 
             // Apply the offset to the value we just read and check the result
             var offset = pointerPath.PointerOffsets[i];
-            var nextValueBigInt = nextAddress.ToUInt64() + offset; 
-            var nextValue = nextValueBigInt.ToUIntPtr();
+            var nextValue = offset.OffsetAddress(nextAddress);
             
             // Check for invalid address values
-            if (nextValue == null)
-                return new PathEvaluationFailureOnPointerOutOfRange(currentAddress, nextValueBigInt);
-            if (nextValue == UIntPtr.Zero)
-                return new PathEvaluationFailureOnPointerOutOfRange(currentAddress, 0);
+            if (nextValue == null || nextValue.Value == UIntPtr.Zero)
+                return new PathEvaluationFailureOnPointerOutOfRange(nextAddress, offset);
             if (!IsBitnessCompatible(nextValue.Value))
-                return new PathEvaluationFailureOnIncompatibleBitness(currentAddress);
+                return new PathEvaluationFailureOnIncompatibleBitness(nextAddress);
             
             // The next value has been vetted. Keep going with it as the current address
             currentAddress = nextValue.Value;

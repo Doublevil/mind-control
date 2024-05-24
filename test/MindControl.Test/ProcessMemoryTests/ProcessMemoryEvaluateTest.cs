@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using MindControl.Results;
+﻿using MindControl.Results;
 using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
@@ -42,8 +41,8 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
         var error = result.Error;
         Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerOutOfRange>());
         var pathError = (PathEvaluationFailureOnPointerOutOfRange)error;
-        Assert.That(pathError.Address, Is.EqualTo(new BigInteger(ulong.MaxValue) + 1));
-        Assert.That(pathError.PreviousAddress, Is.EqualTo(expectedPreviousAddress));
+        Assert.That(pathError.Offset, Is.EqualTo(new PointerOffset(1, false)));
+        Assert.That(pathError.PreviousAddress, Is.EqualTo(UIntPtr.MaxValue));
     }
     
     /// <summary>
@@ -82,8 +81,8 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
         var error = result.Error;
         Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerOutOfRange>());
         var pathError = (PathEvaluationFailureOnPointerOutOfRange)error;
-        Assert.That(pathError.Address, Is.EqualTo(new BigInteger(0)));
-        Assert.That(pathError.PreviousAddress, Is.Null);
+        Assert.That(pathError.Offset, Is.EqualTo(PointerOffset.Zero));
+        Assert.That(pathError.PreviousAddress, Is.EqualTo(UIntPtr.Zero));
     }
     
     /// <summary>

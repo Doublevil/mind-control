@@ -43,8 +43,16 @@ public partial class ProcessMemory
             return new ReadFailureOnIncompatibleBitness(address);
         
         // Get the size of the target type
-        int size = Marshal.SizeOf<T>();
-        
+        int size;
+        try
+        {
+            size = Marshal.SizeOf<T>();
+        }
+        catch (ArgumentException)
+        {
+            return new ReadFailureOnConversionFailure();
+        }
+
         // Read the bytes from the process memory
         var readResult = _osService.ReadProcessMemory(_processHandle, address, (ulong)size);
         if (readResult.IsFailure)
