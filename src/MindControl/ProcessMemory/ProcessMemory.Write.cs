@@ -68,7 +68,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBool(PointerPath path, bool value,
+    private Result<WriteFailure> WriteBool(PointerPath path, bool value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -85,7 +85,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBool(UIntPtr address, bool value,
+    private Result<WriteFailure> WriteBool(UIntPtr address, bool value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { (byte)(value ? 1 : 0) }, memoryProtectionStrategy);
 
@@ -97,7 +97,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteByte(PointerPath path, byte value,
+    private Result<WriteFailure> WriteByte(PointerPath path, byte value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -113,7 +113,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteByte(UIntPtr address, byte value,
+    private Result<WriteFailure> WriteByte(UIntPtr address, byte value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { value }, memoryProtectionStrategy);
 
@@ -125,7 +125,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteShort(PointerPath path, short value,
+    private Result<WriteFailure> WriteShort(PointerPath path, short value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -141,7 +141,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteShort(UIntPtr address, short value,
+    private Result<WriteFailure> WriteShort(UIntPtr address, short value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -153,7 +153,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteUShort(PointerPath path, ushort value,
+    private Result<WriteFailure> WriteUShort(PointerPath path, ushort value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -169,7 +169,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteUShort(UIntPtr address, ushort value,
+    private Result<WriteFailure> WriteUShort(UIntPtr address, ushort value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -181,7 +181,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteInt(PointerPath path, int value,
+    private Result<WriteFailure> WriteInt(PointerPath path, int value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -197,7 +197,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteInt(UIntPtr address, int value,
+    private Result<WriteFailure> WriteInt(UIntPtr address, int value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -209,7 +209,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteUInt(PointerPath path, uint value,
+    private Result<WriteFailure> WriteUInt(PointerPath path, uint value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -225,7 +225,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteUInt(UIntPtr address, uint value,
+    private Result<WriteFailure> WriteUInt(UIntPtr address, uint value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -237,7 +237,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteIntPtr(PointerPath path, IntPtr value,
+    private Result<WriteFailure> WriteIntPtr(PointerPath path, IntPtr value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -253,7 +253,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteIntPtr(UIntPtr address, IntPtr value,
+    private Result<WriteFailure> WriteIntPtr(UIntPtr address, IntPtr value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, value.ToBytes(_is64Bits), memoryProtectionStrategy);
 
@@ -265,7 +265,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteFloat(PointerPath path, float value,
+    private Result<WriteFailure> WriteFloat(PointerPath path, float value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -281,7 +281,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteFloat(UIntPtr address, float value,
+    private Result<WriteFailure> WriteFloat(UIntPtr address, float value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -293,7 +293,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteLong(PointerPath path, long value,
+    private Result<WriteFailure> WriteLong(PointerPath path, long value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -309,7 +309,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteLong(UIntPtr address, long value,
+    private Result<WriteFailure> WriteLong(UIntPtr address, long value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -321,7 +321,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteULong(PointerPath path, ulong value,
+    private Result<WriteFailure> WriteULong(PointerPath path, ulong value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -337,7 +337,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteULong(UIntPtr address, ulong value,
+    private Result<WriteFailure> WriteULong(UIntPtr address, ulong value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
@@ -349,7 +349,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteDouble(PointerPath path, double value,
+    private Result<WriteFailure> WriteDouble(PointerPath path, double value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         var addressResult = EvaluateMemoryAddress(path);
@@ -365,7 +365,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteDouble(UIntPtr address, double value,
+    private Result<WriteFailure> WriteDouble(UIntPtr address, double value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
 
