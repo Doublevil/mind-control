@@ -12,6 +12,11 @@ public class MemoryReservation
     /// Gets the memory range of this reservation.
     /// </summary>
     public MemoryRange Range { get; }
+
+    /// <summary>
+    /// Gets the starting address of the reservation.
+    /// </summary>
+    public UIntPtr Address => Range.Start;
     
     /// <summary>
     /// Gets the allocation that handles this reservation.

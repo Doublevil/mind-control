@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace MindControl.Internal;
 
@@ -17,10 +17,20 @@ internal static class ConversionExtensions
     /// <param name="bytes">Bytes to read.</param>
     /// <returns></returns>
     /// <exception cref="ArgumentException">Thrown when the array's length is more than 8.</exception>
-    public static ulong ReadUnsignedNumber(this byte[] bytes)
+    public static ulong ReadUnsignedNumber(this byte[] bytes) => ReadUnsignedNumber(bytes.AsSpan());
+    
+    /// <summary>
+    /// Reads an unsigned number from the byte span.
+    /// The byte span can be of any length comprised between 0 and 8 included.
+    /// The number returned will be an unsigned long in all cases.
+    /// </summary>
+    /// <param name="bytes">Bytes to read.</param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">Thrown when the span is too large.</exception>
+    public static ulong ReadUnsignedNumber(this Span<byte> bytes)
     {
         if (bytes.Length > 8)
-            throw new ArgumentException("The byte array cannot be read as a ulong because it is longer than 8 bytes.",
+            throw new ArgumentException("The bytes cannot be read as a ulong because there are more than 8 bytes.",
                 nameof(bytes));
         
         ulong result = 0;
@@ -108,5 +118,24 @@ internal static class ConversionExtensions
             throw new ArgumentException($"The value must be a value type. {value.GetType().Name}", nameof(value));
         
         return StructToBytes(value);
+    }
+    
+    /// <summary>Caches the null terminator byte sequences for each encoding. Used in <see cref="GetNullTerminator"/>.
+    /// </summary>
+    private static readonly Dictionary<Encoding, byte[]> StringNullTerminatorsCache = new();
+    
+    /// <summary>
+    /// Gets the null terminator byte sequence for this encoding.
+    /// </summary>
+    /// <param name="encoding">Target encoding.</param>
+    /// <returns>The null terminator byte sequence.</returns>
+    public static byte[] GetNullTerminator(this Encoding encoding)
+    {
+        if (StringNullTerminatorsCache.TryGetValue(encoding, out byte[]? terminator))
+            return terminator;
+
+        terminator = encoding.GetBytes("\0");
+        StringNullTerminatorsCache.TryAdd(encoding, terminator);
+        return terminator;
     }
 }

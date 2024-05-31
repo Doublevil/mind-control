@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 using MindControl.Internal;
 using MindControl.Results;
 
@@ -8,7 +8,67 @@ namespace MindControl;
 // This partial class implements the memory reading features of ProcessMemory.
 public partial class ProcessMemory
 {
-    #region Public methods
+    /// <summary>
+    /// Gets or sets the default maximum length of strings to read when the length is not specified.
+    /// The default value is a completely arbitrary 100.
+    /// </summary>
+    public int DefaultMaxStringLength { get; set; } = 100;
+    
+    #region Bytes reading
+    
+    /// <summary>
+    /// Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.
+    /// </summary>
+    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
+    /// <param name="length">Number of bytes to read.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, long length)
+        => ReadBytes(pointerPath, (ulong)length);
+
+    /// <summary>
+    /// Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.
+    /// </summary>
+    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
+    /// <param name="length">Number of bytes to read.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, ulong length)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadBytes(addressResult.Value, length)
+            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+    }
+
+    /// <summary>
+    /// Reads a sequence of bytes from the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="length">Number of bytes to read.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, long length)
+        => ReadBytes(address, (ulong)length);
+    
+    /// <summary>
+    /// Reads a sequence of bytes from the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="length">Number of bytes to read.</param>
+    /// <returns>The value read from the process memory, or a read failure.</returns>
+    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, ulong length)
+    {
+        if (address == UIntPtr.Zero)
+            return new ReadFailureOnZeroPointer();
+
+        if (!IsBitnessCompatible(address))
+            return new ReadFailureOnIncompatibleBitness(address);
+        
+        var readResult = _osService.ReadProcessMemory(_processHandle, address, length);
+        return readResult.IsSuccess ? readResult.Value
+            : new ReadFailureOnSystemRead(readResult.Error);
+    }
+    
+    #endregion
+    
+    #region Primitive types reading
     
     /// <summary>
     /// Reads a specific type of data from the address referred by the given pointer path, in the process memory.
@@ -141,181 +201,257 @@ public partial class ProcessMemory
         }
     }
 
-    /// <summary>
-    /// Reads a string from the address referred by the given pointer path, in the process memory.
-    /// Optionally uses the given string settings and restricts the string to the specified max size.
-    /// If no max size is specified, a default 256 bytes value is used.
-    /// If no settings are specified, an attempt to guess the right settings will be made.
-    /// If you are getting corrupt characters in your strings, try different string settings preset or a custom string
-    /// settings instance. See the documentation for more information on reading strings.
+    #endregion
+    
+    #region FindStringSettings
+
+    /// <summary>Encodings to use when trying to find the encoding of a string, in order of priority.</summary>
+    /// <remarks>This list does not include ASCII, as there is no way to tell if a valid ASCII string is ASCII or UTF-8,
+    /// and we choose to prioritize UTF-8.</remarks>
+    private static readonly Encoding[] FindStringEncodings = { Encoding.UTF8, Encoding.Latin1, Encoding.Unicode };
+    
+    /// <summary>Length prefix sizes to try when trying to find the length prefix of a string, in order of priority.
     /// </summary>
-    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <param name="maxSizeInBytes">Maximal number of bytes to read as a string in memory. This value will be used as
-    /// a fixed size when the string settings define no null terminator and no length prefix, but will restrict the
-    /// number of bytes read in all cases. If not specified, a default value of 256 will be used.</param>
-    /// <param name="stringSettings">Settings to use when attempting to read the string. Defines how the string is
-    /// arranged in memory (encoding, null terminators and length prefix). If you are not sure, leaving this parameter
-    /// to its default null value will cause an attempt to guess the right settings. If the guess does not seem to work,
-    /// you can try one of the presets (e.g. <see cref="StringSettings.DefaultUtf8"/>), or try to figure out the details
-    /// and provide your own string settings. It is recommended to at least use a preset, for performance and accuracy
-    /// reasons.</param>
-    /// <returns>The string read from memory, or a read failure.</returns>
-    public Result<string, ReadFailure> ReadString(PointerPath pointerPath, int maxSizeInBytes = 256,
-        StringSettings? stringSettings = null)
+    private static readonly int[] FindStringLengthPrefixSizes = { 0, 4, 2, 1, 8 };
+    
+    /// <summary>Length prefix sizes to try when trying to find the type prefix of a string, in order of priority.
+    /// </summary>
+    private static readonly int[] FindStringTypePrefixSizes = { 0, 4, 8, 16 };
+
+    /// <summary>Length prefix units to try when trying to find the length prefix of a string, in order of priority.
+    /// </summary>
+    private static readonly StringLengthPrefixUnit[] FindStringLengthPrefixUnits =
+        { StringLengthPrefixUnit.Bytes, StringLengthPrefixUnit.Characters };
+    
+    /// <summary>Null-termination settings to try when trying to find the null-termination of a string, in order of
+    /// priority.</summary>
+    private static readonly bool[] FindStringNullTerminated = { true, false };
+
+    /// <summary>
+    /// Attempts to find appropriate settings to read and write strings at the pointer referred by the given path,
+    /// pointing to a known string.
+    /// As this is based on guesses, the settings may not be determined correctly for every possible case, but they
+    /// should be accurate most of the time. 
+    /// </summary>
+    /// <param name="pointerPath">Path to a pointer that points to a known string.</param>
+    /// <param name="expectedString">Known string that the pointer points to. Very short strings consisting of only a
+    /// few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
+    /// better results.</param>
+    /// <returns>A result holding the potential string settings if they were successfully determined, or a read failure
+    /// otherwise.</returns>
+    public Result<StringSettings, FindStringSettingsFailure> FindStringSettings(PointerPath pointerPath,
+        string expectedString)
     {
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? ReadString(addressResult.Value, maxSizeInBytes, stringSettings)
+        return addressResult.IsSuccess ? FindStringSettings(addressResult.Value, expectedString)
+            : new FindStringSettingsFailureOnPointerPathEvaluation(addressResult.Error);
+    }
+    
+    /// <summary>
+    /// Attempts to find appropriate settings to read and write strings at the given address pointing to a known string.
+    /// As this is based on guesses, the settings may not be determined correctly for every possible case, but they
+    /// should be accurate most of the time. 
+    /// </summary>
+    /// <param name="stringPointerAddress">Address to a pointer that points to a known string.</param>
+    /// <param name="expectedString">Known string that the pointer points to. Very short strings consisting of only a
+    /// few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
+    /// better results.</param>
+    /// <returns>A result holding the potential string settings if they were successfully determined, or a read failure
+    /// otherwise.</returns>
+    public Result<StringSettings, FindStringSettingsFailure> FindStringSettings(UIntPtr stringPointerAddress,
+        string expectedString)
+    {
+        if (string.IsNullOrWhiteSpace(expectedString))
+            return new FindStringSettingsFailureOnNoSettingsFound();
+        
+        // We have to determine 4 parameters:
+        // - The encoding of the string
+        // - The length prefix settings (an optional prefix that holds the length of the string)
+        // - The type prefix (an optional prefix that comes before the string bytes, usually a type pointer)
+        // - Whether the string is null-terminated
+        
+        // We can attempt to pinpoint all these through trial and error, because we know the expected string.
+        // We will try to read the string with different setting combinations in a specific order until we read the
+        // expected string.
+
+        // Read the address of the actual string from the pointer
+        var pointerResult = Read<UIntPtr>(stringPointerAddress);
+        if (pointerResult.IsFailure)
+            return new FindStringSettingsFailureOnPointerReadFailure(pointerResult.Error);
+        
+        var pointerValue = pointerResult.Value;
+        if (pointerValue == UIntPtr.Zero)
+            return new FindStringSettingsFailureOnZeroPointer();
+        
+        // Read the max amount of bytes we might need to read the string from
+        // This is computed from the sum of the longest considered type prefix, the longest considered length prefix,
+        // the max byte count of the most complex encoding considered, and the longest considered null terminator.
+        int maxBytesFromRawString = FindStringEncodings.Max(e => e.GetMaxByteCount(expectedString.Length));
+        int maxBytesFromLengthPrefix = FindStringLengthPrefixSizes.Max();
+        int maxBytesFromTypePrefix = FindStringTypePrefixSizes.Max();
+        int maxBytesFromNullTerminator = FindStringEncodings.Max(e => e.GetNullTerminator().Length);
+        int maxBytesTotal = maxBytesFromRawString + maxBytesFromLengthPrefix + maxBytesFromTypePrefix
+            + maxBytesFromNullTerminator;
+        
+        var bytesResult = ReadBytes(pointerValue, (ulong)maxBytesTotal);
+        if (bytesResult.IsFailure)
+            return new FindStringSettingsFailureOnStringReadFailure(bytesResult.Error);
+        byte[] bytes = bytesResult.Value;
+        
+        // Iterate through all possible setting combinations from the considered setting values
+        // Note that the order of the loops is important, as it determines the priority of the settings.
+        // The order of values in the arrays is also important, as it determines the priority of the values.
+        // This is important not only for performance, but also for accuracy (to return the most probable match first,
+        // even when multiple combinations work).
+        // For instance, the type prefix loop comes first, and should have a value of 0 at first, in order to prevent
+        // false positives where the type prefix wrongly contains the length prefix.
+        foreach (int typePrefixSize in FindStringTypePrefixSizes)
+        {
+            foreach (var encoding in FindStringEncodings)
+            {
+                foreach (int lengthPrefixSize in FindStringLengthPrefixSizes)
+                {
+                    foreach (var lengthPrefixUnit in FindStringLengthPrefixUnits)
+                    {
+                        // Avoid going multiple times through the same length prefix settings
+                        if (lengthPrefixSize == 0 && lengthPrefixUnit != FindStringLengthPrefixUnits.First())
+                            break;
+                        
+                        foreach (bool isNullTerminated in FindStringNullTerminated)
+                        {
+                            // Skip the case where the string is null-terminated but has no length prefix, as this is
+                            // not a valid setting.
+                            if (!isNullTerminated && lengthPrefixSize == 0)
+                                continue;
+                            
+                            // Build a settings instance with the current combination
+                            var settings = new StringSettings(encoding)
+                            {
+                                IsNullTerminated = isNullTerminated,
+                                LengthPrefix = lengthPrefixSize > 0 ? new StringLengthPrefix(lengthPrefixSize,
+                                    lengthPrefixUnit) : null,
+                                TypePrefix = typePrefixSize > 0 ? bytes.Take(typePrefixSize).ToArray() : null
+                            };
+                            
+                            // Try to read the string with the current settings
+                            string? result = settings.GetString(bytes);
+                            
+                            // We have a match if the result matches the expected string.
+                            // Otherwise, we continue with the next settings.
+                            if (result == expectedString)
+                                return settings;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // If we reach this point, we could not find any settings that would allow us to read the expected string.
+        return new FindStringSettingsFailureOnNoSettingsFound();
+    }
+    
+    #endregion
+    
+    #region String reading
+
+    /// <summary>
+    /// Reads a string from the address referred by the given pointer path, in the process memory.
+    /// The address must point to the start of the actual string bytes. Consider <see cref="ReadStringPointer"/> to
+    /// read strings from pointers and with added capabilities.
+    /// Read the documentation for more information.
+    /// </summary>
+    /// <param name="pointerPath">Path to the first byte of the raw string in the process memory.</param>
+    /// <param name="encoding">Encoding of the string to use when decoding. Try changing this parameter if you get
+    /// garbage characters or empty strings. Common values include <see cref="Encoding.UTF8"/> and
+    /// <see cref="Encoding.Unicode"/>.
+    /// </param>
+    /// <param name="maxLength">Maximum length of the string to read, in characters. If left null (default), the
+    /// <see cref="DefaultMaxStringLength"/> will be used.</param>
+    /// <param name="isNullTerminated">Boolean indicating if the string is null-terminated. If true, the string will be
+    /// read until the first null character. If false, the string will be read up to the maximum length specified.
+    /// </param>
+    /// <returns>The string read from the process memory, or a read failure.</returns>
+    public Result<string, ReadFailure> ReadRawString(PointerPath pointerPath, Encoding encoding,
+        int? maxLength = null, bool isNullTerminated = true)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        return addressResult.IsSuccess ? ReadRawString(addressResult.Value, encoding, maxLength, isNullTerminated)
             : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
     }
 
     /// <summary>
     /// Reads a string from the given address in the process memory.
-    /// Optionally uses the given string settings and restricts the string to the specified max size.
-    /// If no max size is specified, a default 256 bytes value is used.
-    /// If no settings are specified, an attempt to guess the right settings will be made.
-    /// If you are getting corrupt characters in your strings, try different string settings preset or a custom string
-    /// settings instance. See the documentation for more information on reading strings.
+    /// The address must point to the start of the actual string bytes. Consider <see cref="ReadStringPointer"/> to
+    /// read strings from pointers and with added capabilities.
+    /// Read the documentation for more information.
     /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <param name="maxSizeInBytes">Maximal number of bytes to read as a string in memory. This value will be used as
-    /// a fixed size when the string settings define no null terminator and no length prefix, but will restrict the
-    /// number of bytes read in all cases. If not specified, a default value of 256 will be used.</param>
-    /// <param name="stringSettings">Settings to use when attempting to read the string. Defines how the string is
-    /// arranged in memory (encoding, null terminators and length prefix). If you are not sure, leaving this parameter
-    /// to its default null value will cause an attempt to guess the right settings. If the guess does not seem to work,
-    /// you can try one of the presets (e.g. <see cref="StringSettings.DefaultUtf8"/>), or try to figure out the details
-    /// and provide your own string settings. It is recommended to at least use a preset, for performance and accuracy
-    /// reasons.</param>
-    /// <returns>The string read from memory, or a read failure.</returns>
-    public Result<string, ReadFailure> ReadString(UIntPtr address, int maxSizeInBytes = 256,
-        StringSettings? stringSettings = null)
+    /// <param name="address">Address of the first byte of the raw string in the process memory.</param>
+    /// <param name="encoding">Encoding of the string to use when decoding. Try changing this parameter if you get
+    /// garbage characters or empty strings. Common values include <see cref="Encoding.UTF8"/> and
+    /// <see cref="Encoding.Unicode"/>.
+    /// </param>
+    /// <param name="maxLength">Maximum length of the string to read, in characters. If left null (default), the
+    /// <see cref="DefaultMaxStringLength"/> will be used.</param>
+    /// <param name="isNullTerminated">Boolean indicating if the string is null-terminated. If true, the string will be
+    /// read until the first null character. If false, the string will be read up to the maximum length specified.
+    /// </param>
+    /// <returns>The string read from the process memory, or a read failure.</returns>
+    public Result<string, ReadFailure> ReadRawString(UIntPtr address, Encoding encoding,
+        int? maxLength = null, bool isNullTerminated = true)
     {
-        var actualStringSettings = stringSettings ?? GuessStringSettings();
-        var lengthToRead = (ulong)maxSizeInBytes;
-
-        if (actualStringSettings.PrefixSettings != null)
-        {
-            var lengthPrefixBytesResult = ReadBytes(address, actualStringSettings.PrefixSettings.PrefixSize);
-            
-            if (lengthPrefixBytesResult.IsFailure)
-                return lengthPrefixBytesResult.Error;
-
-            byte[] lengthPrefixBytes = lengthPrefixBytesResult.Value;
-            
-            // Automatically determine the length unit if not provided:
-            // Should be the minimal number of bytes supported by the encoding for a single character.
-            // To get that, we make the encoding output the bytes for the string "a" and count the bytes.
-            var lengthUnit = actualStringSettings.PrefixSettings.LengthUnit
-                             ?? actualStringSettings.Encoding.GetBytes("a").Length;
-            ulong lengthPrefixValue = lengthPrefixBytes.ReadUnsignedNumber() * (ulong)lengthUnit;
-            
-            lengthToRead = Math.Min(lengthToRead, lengthPrefixValue);
-            address += actualStringSettings.PrefixSettings.PrefixSize;
-        }
-
-        // Read the actual bytes on the full length
-        var stringBytesResult = ReadBytes(address, lengthToRead);
-        if (!stringBytesResult.IsSuccess)
-            return stringBytesResult.Error;
-        byte[] bytes = stringBytesResult.Value;
+        if (maxLength is < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxLength), "The maximum length cannot be negative.");
         
-        // Convert the whole byte array to a string
-        string fullString = actualStringSettings.Encoding.GetString(bytes);
+        // We don't know how many bytes the string will take, because encodings can have variable byte sizes.
+        // So we read the maximum amount of bytes that the string could take, and then cut it to the max length.
         
-        // Cut it to the first null terminator if the settings allow it
-        return actualStringSettings.IsNullTerminated ? fullString.Split('\0')[0] : fullString;
+        // Calculate the maximum byte size to read
+        maxLength = maxLength ?? DefaultMaxStringLength;
+        int byteSizeToRead = encoding.GetMaxByteCount(maxLength.Value)
+            + (isNullTerminated ? encoding.GetNullTerminator().Length : 0);
+        
+        // Read the bytes
+        //todo: Use a read method that handles cases where bytes are only partially read, because we don't want the
+        //operation to fail if we read a string that's at the end of a region and the next region is not readable.
+        var readResult = ReadBytes(address, (ulong)byteSizeToRead);
+        if (readResult.IsFailure)
+            return readResult.Error;
+        
+        // Convert the bytes to a string
+        byte[] bytes = readResult.Value;
+        string? result = new StringSettings(encoding, isNullTerminated).GetString(bytes);
+        
+        // Cut the string to the max length if needed
+        if (result?.Length > maxLength)
+            result = result[..maxLength.Value];
+        
+        return result ?? string.Empty;
     }
 
     /// <summary>
-    /// Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.
+    /// Reads the string pointed by the pointer at the given address from the process memory.
+    /// This method uses a <see cref="StringSettings"/> instance to determine how to read the string.
     /// </summary>
-    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, long length)
-        => ReadBytes(pointerPath, (ulong)length);
-
-    /// <summary>
-    /// Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.
-    /// </summary>
-    /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
-    /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, ulong length)
+    /// <param name="address">Address of the pointer to the string in the process memory.</param>
+    /// <param name="settings">Settings that define how to read the string. If you cannot figure out what settings to
+    /// use, try <see cref="FindStringSettings(UIntPtr,string)"/> to automatically determine the right settings for a
+    /// known string pointer. See the documentation for more information.</param>
+    /// <returns>The string read from the process memory, or a read failure.</returns>
+    public Result<string, ReadFailure> ReadStringPointer(UIntPtr address, StringSettings settings)
     {
-        var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? ReadBytes(addressResult.Value, length)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
-    }
+        // The string settings will either have a null terminator or a length prefix.
+        // The reading strategy depends on which of these two we have.
+        
+        // If we have a null terminator, read small chunks of bytes until we find a null terminator.
+        // For this, we may need to make an alternative way to read bytes that returns a custom stream. The stream
+        // would end whenever we reach unreadable memory.
+        // In this method, we would read from the stream until we find a null terminator.
+        // Multi-bytes null terminators could be handled this way too, because if we get a sequence of 2 null bytes,
+        // we know that the null terminator is either at the start of the sequence, or the start of the sequence + 1.
+        
+        // If we have a length prefix, read the length prefix and then read the string bytes at once.
 
-    /// <summary>
-    /// Reads a sequence of bytes from the given address in the process memory.
-    /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, long length)
-        => ReadBytes(address, (ulong)length);
-    
-    /// <summary>
-    /// Reads a sequence of bytes from the given address in the process memory.
-    /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, ulong length)
-    {
-        if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
-
-        if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
-        
-        var readResult = _osService.ReadProcessMemory(_processHandle, address, length);
-        return readResult.IsSuccess ? readResult.Value
-            : new ReadFailureOnSystemRead(readResult.Error);
-    }
-    
-    #endregion
-    
-    #region Utility
-    
-    /// <summary>
-    /// Attempts to guess what string settings to use to read from or write into this process.
-    /// </summary>
-    private StringSettings GuessStringSettings()
-    {
-        // The idea is to try and find out what language/framework the process was compiled from, by looking for
-        // specific markers of that language/framework.
-        // If we can figure that out, we can pick the string setting preset that seems more likely.
-        // For instance, in .net programs, strings will be UTF-16, with a prefixed length and null terminator.
-        // If we can't figure anything out, we'll just return the default string settings.
-        // This method is intended to provide a rough "guesstimation" that should work in as many cases as possible, as
-        // an attempt to simplify things for hacking beginners who might not be able to figure out what their string
-        // settings should be. It is designed to only be called when the user doesn't provide a string setting.
-        
-        var moduleNames = _process.Modules
-            .Cast<ProcessModule>()
-            .Select(m => m.ModuleName?.ToLowerInvariant())
-            .Where(m => m != null)
-            .Cast<string>()
-            .ToHashSet();
-        
-        if (moduleNames.Contains("java.exe"))
-            return StringSettings.Java;
-        
-        if (moduleNames.Contains("clrjit.dll")
-            || moduleNames.Contains("unityplayer.dll")
-            || moduleNames.Any(m => m.StartsWith("mono-")))
-            return StringSettings.DotNet;
-
-        // Any additional language/framework detection can be added here.
-        // Be aware that this method might be called frequently. Mind the performance cost.
-        // Implementing a cache might be a good idea if we need to analyze symbols or costly stuff like that.
-        
-        // If we're not in any of the specifically identified cases, return the catch-all default settings.
-        // This setting might very well not work at all with the process, but we've done our best!
-        return StringSettings.Default;
+        throw new NotImplementedException();
     }
     
     #endregion

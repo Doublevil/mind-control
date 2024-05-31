@@ -81,12 +81,12 @@ public record PathEvaluationFailureOnPointerOutOfRange(UIntPtr? PreviousAddress,
 /// Represents a failure in a path evaluation operation when invoking the system API to read an address.
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
-/// <param name="Failure">Details about the failure.</param>
-public record PathEvaluationFailureOnPointerReadFailure(UIntPtr Address, ReadFailure Failure)
+/// <param name="Details">Details about the failure.</param>
+public record PathEvaluationFailureOnPointerReadFailure(UIntPtr Address, ReadFailure Details)
     : PathEvaluationFailure(PathEvaluationFailureReason.PointerReadFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to read a pointer at the address {Address}: {Failure}";
+        => $"Failed to read a pointer at the address {Address}: {Details}";
 }

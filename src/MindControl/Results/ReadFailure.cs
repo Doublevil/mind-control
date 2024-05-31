@@ -45,14 +45,14 @@ public abstract record ReadFailure(ReadFailureReason Reason);
 /// <summary>
 /// Represents a failure in a memory read operation when evaluating the pointer path to the target memory.
 /// </summary>
-/// <param name="PathEvaluationFailure">Details about the failure.</param>
-public record ReadFailureOnPointerPathEvaluation(PathEvaluationFailure PathEvaluationFailure)
+/// <param name="Details">Details about the failure.</param>
+public record ReadFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
     : ReadFailure(ReadFailureReason.PointerPathEvaluationFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to evaluate the specified pointer path: {PathEvaluationFailure}";
+        => $"Failed to evaluate the specified pointer path: {Details}";
 }
 
 /// <summary>
@@ -84,14 +84,14 @@ public record ReadFailureOnZeroPointer()
 /// <summary>
 /// Represents a failure in a memory read operation when invoking the system API to read the target memory.
 /// </summary>
-/// <param name="SystemReadFailure">Details about the failure.</param>
-public record ReadFailureOnSystemRead(SystemFailure SystemReadFailure)
+/// <param name="Details">Details about the failure.</param>
+public record ReadFailureOnSystemRead(SystemFailure Details)
     : ReadFailure(ReadFailureReason.SystemReadFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to read at the target address: {SystemReadFailure}";
+        => $"Failed to read at the target address: {Details}";
 }
 
 /// <summary>

@@ -32,9 +32,6 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
     [Test]
     public void EvaluateOverMaxPointerValueTest()
     {
-        var expectedPreviousAddress = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10")
-            .GetValueOrDefault();
-        
         var result = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10,1");
         
         Assert.That(result.IsSuccess, Is.False);
@@ -60,10 +57,10 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
         Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerReadFailure>());
         var pathError = (PathEvaluationFailureOnPointerReadFailure)error;
         Assert.That(pathError.Address, Is.EqualTo((UIntPtr)ulong.MaxValue));
-        Assert.That(pathError.Failure, Is.TypeOf<ReadFailureOnSystemRead>());
-        var readFailure = (ReadFailureOnSystemRead)pathError.Failure;
-        Assert.That(readFailure.SystemReadFailure, Is.TypeOf<OperatingSystemCallFailure>());
-        var osFailure = (OperatingSystemCallFailure)readFailure.SystemReadFailure;
+        Assert.That(pathError.Details, Is.TypeOf<ReadFailureOnSystemRead>());
+        var readFailure = (ReadFailureOnSystemRead)pathError.Details;
+        Assert.That(readFailure.Details, Is.TypeOf<OperatingSystemCallFailure>());
+        var osFailure = (OperatingSystemCallFailure)readFailure.Details;
         Assert.That(osFailure.ErrorCode, Is.GreaterThan(0));
         Assert.That(osFailure.ErrorMessage, Is.Not.Empty);
     }

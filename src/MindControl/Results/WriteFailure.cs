@@ -51,14 +51,14 @@ public abstract record WriteFailure(WriteFailureReason Reason);
 /// <summary>
 /// Represents a failure in a memory write operation when evaluating the pointer path to the target memory.
 /// </summary>
-/// <param name="PathEvaluationFailure">Details about the failure.</param>
-public record WriteFailureOnPointerPathEvaluation(PathEvaluationFailure PathEvaluationFailure)
+/// <param name="Details">Details about the failure.</param>
+public record WriteFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
     : WriteFailure(WriteFailureReason.PointerPathEvaluationFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to evaluate the specified pointer path: {PathEvaluationFailure}";
+        => $"Failed to evaluate the specified pointer path: {Details}";
 }
 
 /// <summary>
@@ -91,14 +91,14 @@ public record WriteFailureOnZeroPointer()
 /// the target memory space fails.
 /// </summary>
 /// <param name="Address">Address where the operation failed.</param>
-/// <param name="Failure">Details about the failure.</param>
-public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailure Failure)
+/// <param name="Details">Details about the failure.</param>
+public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailure Details)
     : WriteFailure(WriteFailureReason.SystemProtectionRemovalFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to remove the protection of the memory at address {Address}: {Failure}.{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Ignore)} to prevent memory protection removal. As protection removal is the first step when writing a value, it may simply be that the provided target address does not point to valid memory.";
+        => $"Failed to remove the protection of the memory at address {Address}: {Details}.{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Ignore)} to prevent memory protection removal. As protection removal is the first step when writing a value, it may simply be that the provided target address does not point to valid memory.";
 }
 
 /// <summary>
@@ -106,26 +106,26 @@ public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailu
 /// the target memory space after writing fails.
 /// </summary>
 /// <param name="Address">Address where the operation failed.</param>
-/// <param name="Failure">Details about the failure.</param>
-public record WriteFailureOnSystemProtectionRestoration(UIntPtr Address, SystemFailure Failure)
+/// <param name="Details">Details about the failure.</param>
+public record WriteFailureOnSystemProtectionRestoration(UIntPtr Address, SystemFailure Details)
     : WriteFailure(WriteFailureReason.SystemProtectionRestorationFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"The value was written successfully, but the protection of the memory at address {Address} could not be restored to its original value: {Failure}.{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Remove)} to prevent memory protection restoration.";
+        => $"The value was written successfully, but the protection of the memory at address {Address} could not be restored to its original value: {Details}.{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Remove)} to prevent memory protection restoration.";
 }
 
 /// <summary>
 /// Represents a failure in a memory write operation when the system API call to write bytes in memory fails.
 /// </summary>
 /// <param name="Address">Address where the write operation failed.</param>
-/// <param name="Failure">Details about the failure.</param>
-public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Failure)
+/// <param name="Details">Details about the failure.</param>
+public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Details)
     : WriteFailure(WriteFailureReason.SystemWriteFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to write at the address {Address}: {Failure}";
+        => $"Failed to write at the address {Address}: {Details}";
 }
