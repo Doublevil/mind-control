@@ -8,8 +8,6 @@ namespace MindControl.Test.ProcessMemoryTests;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryFindBytesTest : ProcessMemoryTest
 {
-    private const string MainModuleName = "MindControl.Test.TargetApp.dll";
-    
     /// <summary>
     /// Tests the <see cref="ProcessMemory.FindBytes"/> method with a known fixed bytes pattern.
     /// The search is performed in the main module of the target process, with default search options.

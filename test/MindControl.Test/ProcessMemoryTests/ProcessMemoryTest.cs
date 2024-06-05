@@ -13,6 +13,8 @@ namespace MindControl.Test.ProcessMemoryTests;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryTest
 {
+    protected const string MainModuleName = "MindControl.Test.TargetApp.dll";
+    
     protected Process? _targetProcess;
     protected ProcessMemory? TestProcessMemory;
     protected UIntPtr OuterClassPointer;

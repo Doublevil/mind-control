@@ -58,8 +58,17 @@ public class Result<TError>
     public void ThrowOnError()
     {
         if (IsFailure)
-            throw new ResultFailureException<TError>(Error);
+            throw ToException();
     }
+    
+    /// <summary>
+    /// Converts the result to an exception if it represents a failure.
+    /// </summary>
+    /// <returns>A new <see cref="ResultFailureException{TError}"/> instance if the operation was a failure.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the operation was successful and thus cannot be
+    /// converted to an exception.</exception>
+    public ResultFailureException<TError> ToException() => IsFailure ? new ResultFailureException<TError>(Error)
+        : throw new InvalidOperationException("Cannot convert a successful result to an exception.");
     
     /// <summary>
     /// Creates a new failed <see cref="Result{TError}"/> instance.

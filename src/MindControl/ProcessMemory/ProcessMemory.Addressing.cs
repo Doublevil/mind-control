@@ -74,6 +74,33 @@ public partial class ProcessMemory
 
         return currentAddress;
     }
+
+    /// <summary>
+    /// Creates and returns a new <see cref="ProcessMemoryStream"/> instance that starts at the address pointed by the
+    /// given path.
+    /// The stream can be used to read or write into the process memory. It is owned by the caller and must be disposed
+    /// when no longer needed.
+    /// </summary>
+    /// <param name="pointerPath">Pointer path to the starting address of the stream.</param>
+    /// <returns>A result holding either the created process memory stream, or a path evaluation failure.</returns>
+    public Result<ProcessMemoryStream, PathEvaluationFailure> GetMemoryStream(PointerPath pointerPath)
+    {
+        var addressResult = EvaluateMemoryAddress(pointerPath);
+        if (addressResult.IsFailure)
+            return addressResult.Error;
+
+        return GetMemoryStream(addressResult.Value);
+    }
+    
+    /// <summary>
+    /// Creates and returns a new <see cref="ProcessMemoryStream"/> instance that starts at the given address.
+    /// The stream can be used to read or write into the process memory. It is owned by the caller and must be disposed
+    /// when no longer needed.
+    /// </summary>
+    /// <param name="startAddress">Starting address of the stream.</param>
+    /// <returns>The created process memory stream.</returns>
+    public ProcessMemoryStream GetMemoryStream(UIntPtr startAddress)
+        => new ProcessMemoryStream(_osService, _processHandle, startAddress);
     
     /// <summary>
     /// Gets the process module with the given name.

@@ -408,7 +408,27 @@ public partial class Win32Service
     /// If the function fails, the return value is 0.</returns>
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern int ReadProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, [Out] byte[] lpBuffer,
-        ulong nSize, out ulong lpNumberOfBytesRead);
+        ulong nSize, out UIntPtr lpNumberOfBytesRead);
+    
+    /// <summary>
+    /// Reads memory in the given process. This variant uses a pointer for the buffer, which allows callers to
+    /// avoid unnecessary memory allocations in certain cases.
+    /// </summary>
+    /// <param name="hProcess">A handle to the process with memory that is being read. The handle must have
+    /// PROCESS_VM_READ access to the process.</param>
+    /// <param name="lpBaseAddress">A pointer to the base address in the specified process from which to read. Before
+    /// any data transfer occurs, the system verifies that all data in the base address and memory of the specified size
+    /// is accessible for read access, and if it is not accessible the function fails.</param>
+    /// <param name="lpBuffer">A pointer to a buffer that receives the contents from the address space of the specified
+    /// process.</param>
+    /// <param name="nSize">The number of bytes to be read from the specified process.</param>
+    /// <param name="lpNumberOfBytesRead">A pointer to a variable that receives the number of bytes transferred into the
+    /// specified buffer.</param>
+    /// <returns>If the function succeeds, the return value is nonzero.
+    /// If the function fails, the return value is 0.</returns>
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern int ReadProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, UIntPtr lpBuffer,
+        ulong nSize, out UIntPtr lpNumberOfBytesRead);
     
     /// <summary>
     /// Changes the protection on a region of committed pages in the virtual address space of a specified process.
@@ -444,5 +464,25 @@ public partial class Win32Service
     /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool WriteProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr nSize,
-        IntPtr lpNumberOfBytesWritten);
+        out UIntPtr lpNumberOfBytesWritten);
+    
+    /// <summary>
+    /// Writes data to an area of memory in a specified process. The entire area to be written to must be accessible
+    /// or the operation fails. This variant uses a pointer for the buffer, which allows callers to avoid unnecessary
+    /// memory allocations in certain cases.
+    /// </summary>
+    /// <param name="hProcess">A handle to the process memory to be modified. The handle must have PROCESS_VM_WRITE and
+    /// PROCESS_VM_OPERATION access to the process.</param>
+    /// <param name="lpBaseAddress">A pointer to the base address in the specified process to which data is written.
+    /// Before data transfer occurs, the system verifies that all data in the base address and memory of the specified
+    /// size is accessible for write access, and if it is not accessible, the function fails.</param>
+    /// <param name="lpBuffer">A pointer to the buffer that contains data to be written in the address space of the
+    /// specified process.</param>
+    /// <param name="nSize">The number of bytes to be written to the specified process.</param>
+    /// <param name="lpNumberOfBytesWritten">A pointer to a variable that receives the number of bytes transferred into
+    /// the specified process. This parameter is optional. If null, it will be ignored.</param>
+    /// <returns>If the function succeeds, the return value is true. Otherwise, it will be false.</returns>
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool WriteProcessMemory(IntPtr hProcess, UIntPtr lpBaseAddress, UIntPtr lpBuffer,
+        UIntPtr nSize, out UIntPtr lpNumberOfBytesWritten);
 }
