@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Text;
+using MindControl.Results;
+using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
 
@@ -64,7 +66,7 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
     /// Stores a byte array in an allocated range and verifies that the value has been stored properly.
     /// </summary>
     [Test]
-    public void StoreWithRangeTest()
+    public void StoreWithAllocationTest()
     {
         var value = new byte[] { 1, 2, 3, 4 };
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
@@ -156,5 +158,118 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
         // We should have two allocated ranges now, because there is no room left in the first range.
         Assert.That(secondStoreResult.IsSuccess, Is.True);
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(2));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method.
+    /// Stores a string with specific settings and read them back using the same settings.
+    /// When read back, the string should be the same as the original string.
+    /// </summary>
+    [Test]
+    public void StoreStringWithoutAllocationTest()
+    {
+        var stringToStore = "Hello 世界!";
+        var reservationResult = TestProcessMemory!.StoreString(stringToStore, DotNetStringSettings);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+
+        var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;
+        var stringReadBack = DotNetStringSettings.GetString(bytesReadBack);
+        
+        // The store method should have allocated a new range.
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+        Assert.That(reservation.IsDisposed, Is.False);
+        
+        // When we read back our string, we should get the same value we stored.
+        Assert.That(stringReadBack, Is.EqualTo(stringToStore));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method.
+    /// Stores a string in a pre-allocated range with specific settings and read them back using the same settings.
+    /// When read back, the string should be the same as the original string.
+    /// </summary>
+    [Test]
+    public void StoreStringWithAllocationTest()
+    {
+        var stringToStore = "Hello 世界!";
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
+        
+        var reservationResult = TestProcessMemory.StoreString(stringToStore, DotNetStringSettings, allocation);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        
+        var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;
+        var stringReadBack = DotNetStringSettings.GetString(bytesReadBack);
+        
+        Assert.That(reservation.IsDisposed, Is.False);
+        // The resulting range should be a range reserved from our original range.
+        Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+        // When we read over the range, we should get the same value we stored.
+        Assert.That(stringReadBack, Is.EqualTo(stringToStore));
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method.
+    /// Specify invalid settings. The result is expected to be an <see cref="AllocationFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void StoreStringWithoutAllocationWithInvalidSettingsTest()
+    {
+        var invalidSettings = new StringSettings(Encoding.UTF8, isNullTerminated: false, lengthPrefix: null);
+        var result = TestProcessMemory!.StoreString("Hello world", invalidSettings);
+
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method.
+    /// Specify valid settings, but with a length prefix that is too short to store the provided string. The result is
+    /// expected to be an <see cref="AllocationFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void StoreStringWithoutAllocationWithIncompatibleSettingsTest()
+    {
+        var settingsThatCanOnlyStoreUpTo255Chars = new StringSettings(Encoding.UTF8, isNullTerminated: false,
+            new StringLengthPrefix(1, StringLengthUnit.Characters));
+        var result = TestProcessMemory!.StoreString(new string('a', 256), settingsThatCanOnlyStoreUpTo255Chars);
+
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method.
+    /// Specify invalid settings. The result is expected to be an <see cref="ReservationFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void StoreStringWithAllocationWithInvalidSettingsTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var invalidSettings = new StringSettings(Encoding.UTF8, isNullTerminated: false, lengthPrefix: null);
+        var result = TestProcessMemory!.StoreString("Hello world", invalidSettings, allocation);
+
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<ReservationFailureOnInvalidArguments>());
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method.
+    /// Specify valid settings, but with a length prefix that is too short to store the provided string. The result is
+    /// expected to be an <see cref="ReservationFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void StoreStringWithAllocationWithIncompatibleSettingsTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var settingsThatCanOnlyStoreUpTo255Chars = new StringSettings(Encoding.UTF8, isNullTerminated: false,
+            new StringLengthPrefix(1, StringLengthUnit.Characters));
+        var result = TestProcessMemory!.StoreString(new string('a', 256), settingsThatCanOnlyStoreUpTo255Chars,
+            allocation);
+
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<ReservationFailureOnInvalidArguments>());
     }
 }

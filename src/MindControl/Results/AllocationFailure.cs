@@ -6,6 +6,11 @@
 public enum AllocationFailureReason
 {
     /// <summary>
+    /// The arguments provided to the allocation operation are invalid.
+    /// </summary>
+    InvalidArguments,
+    
+    /// <summary>
     /// The provided limit range is not within the bounds of the target process applicative memory range.
     /// </summary>
     LimitRangeOutOfBounds,
@@ -22,6 +27,18 @@ public enum AllocationFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record AllocationFailure(AllocationFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory allocation operation when the provided arguments are invalid.
+/// </summary>
+/// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
+public record AllocationFailureOnInvalidArguments(string Message)
+    : AllocationFailure(AllocationFailureReason.InvalidArguments)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The arguments provided are invalid: {Message}";
+}
 
 /// <summary>
 /// Represents a failure in a memory allocation operation when the provided limit range is not within the bounds of the

@@ -6,6 +6,11 @@
 public enum ReservationFailureReason
 {
     /// <summary>
+    /// The arguments provided to the reservation operation are invalid.
+    /// </summary>
+    InvalidArguments,
+    
+    /// <summary>
     /// No space is available within the allocated memory range to reserve the specified size.
     /// </summary>
     NoSpaceAvailable
@@ -16,6 +21,18 @@ public enum ReservationFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record ReservationFailure(ReservationFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory reservation operation when the provided arguments are invalid.
+/// </summary>
+/// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
+public record ReservationFailureOnInvalidArguments(string Message)
+    : ReservationFailure(ReservationFailureReason.InvalidArguments)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The arguments provided are invalid: {Message}";
+}
 
 /// <summary>
 /// Represents a failure in a memory reservation operation when no space is available within the allocated memory range

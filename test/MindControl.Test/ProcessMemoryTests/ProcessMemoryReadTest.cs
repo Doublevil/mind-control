@@ -543,10 +543,6 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     
     #region String reading
     
-    /// <summary>Settings expected for our target .net process.</summary>
-    private static readonly StringSettings ExpectedDotNetStringSettings = new(Encoding.Unicode, true,
-        new StringLengthPrefix(4, StringLengthUnit.Characters), new byte[8]);
-    
     /// <summary>Test case for tests using string settings.</summary>
     public record StringSettingsTestCase(Encoding Encoding, string String, bool IsNullTerminated,
         StringLengthPrefix? LengthPrefix, byte[]? TypePrefix);
@@ -631,13 +627,13 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         var pointerPath = new PointerPath($"{OuterClassPointer:X}+8");
         var result = TestProcessMemory!.FindStringSettings(pointerPath, "ThisIsÄString");
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value.Encoding, Is.EqualTo(ExpectedDotNetStringSettings.Encoding));
-        Assert.That(result.Value.IsNullTerminated, Is.EqualTo(ExpectedDotNetStringSettings.IsNullTerminated));
+        Assert.That(result.Value.Encoding, Is.EqualTo(DotNetStringSettings.Encoding));
+        Assert.That(result.Value.IsNullTerminated, Is.EqualTo(DotNetStringSettings.IsNullTerminated));
         Assert.That(result.Value.LengthPrefix?.Size,
-            Is.EqualTo(ExpectedDotNetStringSettings.LengthPrefix?.Size));
-        Assert.That(result.Value.LengthPrefix?.Unit, Is.EqualTo(ExpectedDotNetStringSettings.LengthPrefix?.Unit));
+            Is.EqualTo(DotNetStringSettings.LengthPrefix?.Size));
+        Assert.That(result.Value.LengthPrefix?.Unit, Is.EqualTo(DotNetStringSettings.LengthPrefix?.Unit));
         // For the type prefix, we only check the length, because the actual value is dynamic.
-        Assert.That(result.Value.TypePrefix?.Length, Is.EqualTo(ExpectedDotNetStringSettings.TypePrefix?.Length));
+        Assert.That(result.Value.TypePrefix?.Length, Is.EqualTo(DotNetStringSettings.TypePrefix?.Length));
     }
     
     /// <summary>
@@ -903,9 +899,9 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadStringPointerOnKnownStringTest()
     {
         var path = $"{OuterClassPointer:X}+8";
-        var firstResult = TestProcessMemory!.ReadStringPointer(path, ExpectedDotNetStringSettings);
+        var firstResult = TestProcessMemory!.ReadStringPointer(path, DotNetStringSettings);
         ProceedToNextStep();
-        var secondResult = TestProcessMemory.ReadStringPointer(path, ExpectedDotNetStringSettings);
+        var secondResult = TestProcessMemory.ReadStringPointer(path, DotNetStringSettings);
         
         Assert.That(firstResult.IsSuccess, Is.True);
         Assert.That(firstResult.Value, Is.EqualTo("ThisIsÄString"));
@@ -921,7 +917,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     [Test]
     public void ReadStringPointerWithZeroPointerTest()
     {
-        var result = TestProcessMemory!.ReadStringPointer(UIntPtr.Zero, ExpectedDotNetStringSettings);
+        var result = TestProcessMemory!.ReadStringPointer(UIntPtr.Zero, DotNetStringSettings);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnZeroPointer)));
     }
@@ -936,7 +932,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
         // Arrange a space in memory that points to 0.
         var allocatedSpace = TestProcessMemory!.Allocate(8, false).Value.ReserveRange(8).Value;
         
-        var result = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, ExpectedDotNetStringSettings);
+        var result = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, DotNetStringSettings);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnZeroPointer)));
     }
@@ -948,7 +944,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     [Test]
     public void ReadStringPointerWithUnreadablePointerTest()
     {
-        var result = TestProcessMemory!.ReadStringPointer(UIntPtr.MaxValue, ExpectedDotNetStringSettings);
+        var result = TestProcessMemory!.ReadStringPointer(UIntPtr.MaxValue, DotNetStringSettings);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnPointerReadFailure)));
         var failure = (StringReadFailureOnPointerReadFailure)result.Error;
@@ -964,7 +960,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadStringPointerWithPointerToUnreadableMemoryTest()
     {
         var result = TestProcessMemory!.ReadStringPointer($"{OuterClassPointer:X}+10,10",
-            ExpectedDotNetStringSettings);
+            DotNetStringSettings);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnStringBytesReadFailure)));
         var failure = (StringReadFailureOnStringBytesReadFailure)result.Error;
@@ -994,7 +990,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadStringPointerWithBadPointerPathTest()
     {
         var result = TestProcessMemory!.ReadStringPointer($"{OuterClassPointer:X}+10,10,0,0",
-            ExpectedDotNetStringSettings);
+            DotNetStringSettings);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnPointerPathEvaluation)));
         var failure = (StringReadFailureOnPointerPathEvaluation)result.Error;

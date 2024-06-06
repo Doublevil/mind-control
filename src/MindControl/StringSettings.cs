@@ -10,6 +10,18 @@ namespace MindControl;
 public class StringSettings
 {
     /// <summary>
+    /// Failure message to be returned by string-related methods when the provided settings are invalid.
+    /// </summary>
+    internal const string InvalidSettingsMessage =
+        "The settings are not valid. Either a length prefix or null terminator is required.";
+
+    /// <summary>
+    /// Failure message to be returned by string-related methods when <see cref="GetBytes"/> returns a null value. 
+    /// </summary>
+    internal const string GetBytesFailureMessage =
+        "The string settings are not valid for the specified string. The string might be too long for the length prefix to store it properly.";
+    
+    /// <summary>
     /// Default value for <see cref="MaxLength"/>.
     /// </summary>
     public const int DefaultMaxLength = 1024;
@@ -236,13 +248,15 @@ public class StringSettings
         if (LengthPrefix is { Size: > 0, Unit: StringLengthUnit.Characters })
         {
             ulong characterLength = bytes.Slice(typePrefixSize, lengthPrefixSize).ReadUnsignedNumber();
-            if (IsNullTerminated)
-                characterLength++;
             
             if (characterLength == (ulong)resultingString.Length)
                 return resultingString;
             if (characterLength > (ulong)resultingString.Length)
                 return null;
+            
+            if (IsNullTerminated)
+                characterLength++;
+            
             resultingString = resultingString[..(int)characterLength];
         }
 

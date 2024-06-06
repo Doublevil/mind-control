@@ -195,8 +195,8 @@ public partial class ProcessMemory
     /// <summary>
     /// Stores the given data in the specified allocated range. Returns the reservation that holds the data.
     /// In most situations, you should use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
-    /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically, unless you need to
-    /// manage them manually.
+    /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically. Use this signature
+    /// if you need to manage allocations and reservations manually.
     /// </summary>
     /// <param name="data">Data to store.</param>
     /// <param name="allocation">Allocated memory to store the data.</param>
@@ -227,8 +227,8 @@ public partial class ProcessMemory
     /// Stores the given value or structure in the specified range of memory. Returns the reservation that holds the
     /// data.
     /// In most situations, you should use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
-    /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically, unless you need to
-    /// manage them manually.
+    /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically. Use this signature
+    /// if you need to manage allocations and reservations manually.
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
     /// <param name="allocation">Range of memory to store the data in.</param>
@@ -236,6 +236,48 @@ public partial class ProcessMemory
     /// <returns>The reservation holding the data.</returns>
     public Result<MemoryReservation, ReservationFailure> Store<T>(T value, MemoryAllocation allocation) where T: struct
         => Store(value.ToBytes(), allocation);
+    
+    /// <summary>
+    /// Stores the given string in the process memory. If needed, memory is allocated to store the string.
+    /// Returns the reservation that holds the string.
+    /// </summary>
+    /// <param name="value">String to store.</param>
+    /// <param name="settings">String settings to use to write the string.</param>
+    /// <returns>The reservation holding the string.</returns>
+    public Result<MemoryReservation, AllocationFailure> StoreString(string value, StringSettings settings)
+    {
+        if (!settings.IsValid)
+            return new AllocationFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+        
+        var bytes = settings.GetBytes(value);
+        if (bytes == null)
+            return new AllocationFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+        
+        return Store(bytes, isCode: false);
+    }
 
+    /// <summary>
+    /// Stores the given string in the specified range of memory. Returns the reservation that holds the string.
+    /// In most situations, you should use the <see cref="StoreString(string,StringSettings)"/> signature instead, to
+    /// have the <see cref="ProcessMemory"/> instance handle allocations automatically. Use this signature if you need
+    /// to manage allocations and reservations manually.
+    /// </summary>
+    /// <param name="value">String to store.</param>
+    /// <param name="settings">String settings to use to write the string.</param>
+    /// <param name="allocation">Range of memory to store the string in.</param>
+    /// <returns>The reservation holding the string.</returns>
+    public Result<MemoryReservation, ReservationFailure> StoreString(string value, StringSettings settings,
+        MemoryAllocation allocation)
+    {
+        if (!settings.IsValid)
+            return new ReservationFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+        
+        var bytes = settings.GetBytes(value);
+        if (bytes == null)
+            return new ReservationFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+        
+        return Store(bytes, allocation);
+    }
+    
     #endregion
 }

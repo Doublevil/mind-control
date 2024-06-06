@@ -13,9 +13,16 @@ namespace MindControl.Test.ProcessMemoryTests;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryTest
 {
+    /// <summary>Name of the main module of the target app.</summary>
     protected const string MainModuleName = "MindControl.Test.TargetApp.dll";
     
-    protected Process? _targetProcess;
+    /// <summary>Settings that apply to strings used in our target .net process.</summary>
+    /// <remarks>The type prefix is dynamic in reality. Here, we use a stub array with only 0, which is enough to serve
+    /// our purposes for the tests.</remarks>
+    protected static readonly StringSettings DotNetStringSettings = new(Encoding.Unicode, true,
+        new StringLengthPrefix(4, StringLengthUnit.Characters), new byte[8]);
+    
+    private Process? _targetProcess;
     protected ProcessMemory? TestProcessMemory;
     protected UIntPtr OuterClassPointer;
     
