@@ -7,6 +7,72 @@ namespace MindControl;
 // This partial class implements the memory writing features of ProcessMemory.
 public partial class ProcessMemory
 {
+    #region Bytes writing
+    
+    /// <summary>
+    /// Writes a sequence of bytes to the address referred by the given pointer path in the process memory.
+    /// </summary>
+    /// <param name="path">Optimized, reusable path to the target address.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
+    /// <returns>A successful result, or a write failure</returns>
+    public Result<WriteFailure> WriteBytes(PointerPath path, byte[] value,
+        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    {
+        var addressResult = EvaluateMemoryAddress(path);
+        return addressResult.IsSuccess ? WriteBytes(addressResult.Value, value, memoryProtectionStrategy)
+                : new WriteFailureOnPointerPathEvaluation(addressResult.Error);
+    }
+    
+    /// <summary>
+    /// Writes a sequence of bytes to the given address in the process memory.
+    /// </summary>
+    /// <param name="address">Target address in the process memory.</param>
+    /// <param name="value">Value to write.</param>
+    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
+    /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
+    /// <returns>A successful result, or a write failure</returns>
+    public Result<WriteFailure> WriteBytes(UIntPtr address, byte[] value,
+        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    {
+        // Remove protection if needed
+        memoryProtectionStrategy ??= DefaultWriteStrategy;
+        MemoryProtection? previousProtection = null;
+        if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
+        {
+            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
+                address, MemoryProtection.ExecuteReadWrite);
+            
+            if (protectionRemovalResult.IsFailure)
+                return new WriteFailureOnSystemProtectionRemoval(address, protectionRemovalResult.Error);
+
+            previousProtection = protectionRemovalResult.Value;
+        }
+        
+        // Write memory
+        var writeResult = _osService.WriteProcessMemory(_processHandle, address, value);
+        if (writeResult.IsFailure)
+            return new WriteFailureOnSystemWrite(address, writeResult.Error);
+        
+        // Restore protection if needed
+        if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
+            && previousProtection != MemoryProtection.ExecuteReadWrite)
+        {
+            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
+                address, previousProtection!.Value);
+            
+            if (protectionRestorationResult.IsFailure)
+                return new WriteFailureOnSystemProtectionRestoration(address, protectionRestorationResult.Error);
+        }
+        
+        return Result<WriteFailure>.Success;
+    }
+    
+    #endregion
+    
+    #region Primitive types writing
+    
     /// <summary>
     /// Writes a value to the address referred by the given pointer path in the process memory.
     /// </summary>
@@ -191,64 +257,6 @@ public partial class ProcessMemory
     private Result<WriteFailure> WriteDouble(UIntPtr address, double value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
-
-    /// <summary>
-    /// Writes a sequence of bytes to the address referred by the given pointer path in the process memory.
-    /// </summary>
-    /// <param name="path">Optimized, reusable path to the target address.</param>
-    /// <param name="value">Value to write.</param>
-    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
-    /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBytes(PointerPath path, byte[] value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
-    {
-        var addressResult = EvaluateMemoryAddress(path);
-        return addressResult.IsSuccess ? WriteBytes(addressResult.Value, value, memoryProtectionStrategy)
-                : new WriteFailureOnPointerPathEvaluation(addressResult.Error);
-    }
     
-    /// <summary>
-    /// Writes a sequence of bytes to the given address in the process memory.
-    /// </summary>
-    /// <param name="address">Target address in the process memory.</param>
-    /// <param name="value">Value to write.</param>
-    /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
-    /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBytes(UIntPtr address, byte[] value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
-    {
-        // Remove protection if needed
-        memoryProtectionStrategy ??= DefaultWriteStrategy;
-        MemoryProtection? previousProtection = null;
-        if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
-        {
-            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
-                address, MemoryProtection.ExecuteReadWrite);
-            
-            if (protectionRemovalResult.IsFailure)
-                return new WriteFailureOnSystemProtectionRemoval(address, protectionRemovalResult.Error);
-
-            previousProtection = protectionRemovalResult.Value;
-        }
-        
-        // Write memory
-        var writeResult = _osService.WriteProcessMemory(_processHandle, address, value);
-        if (writeResult.IsFailure)
-            return new WriteFailureOnSystemWrite(address, writeResult.Error);
-        
-        // Restore protection if needed
-        if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
-            && previousProtection != MemoryProtection.ExecuteReadWrite)
-        {
-            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
-                address, previousProtection!.Value);
-            
-            if (protectionRestorationResult.IsFailure)
-                return new WriteFailureOnSystemProtectionRestoration(address, protectionRestorationResult.Error);
-        }
-        
-        return Result<WriteFailure>.Success;
-    }
+    #endregion
 }
