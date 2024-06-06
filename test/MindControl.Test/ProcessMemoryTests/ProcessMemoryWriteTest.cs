@@ -98,4 +98,29 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
         Assert.That(readBackResult.IsSuccess, Is.True);
         Assert.That(readBackResult.Value, Is.EqualTo(structInstance));
     }
+
+    /// <summary>
+    /// This tests a combination of methods that can be used to overwrite a string pointer in the target app memory.
+    /// The protocol is: read the string settings from the target string pointer (because we know the initial value),
+    /// store the new string in memory, and then replace the pointer value with the address of the new string.
+    /// We then assert that the final output of the target app reflects the change.
+    /// </summary>
+    /// <remarks>There is no shortcut method that does all of this at once, by design, to make sure users understand
+    /// that they are performing an allocation or reservation operation when they write a string.</remarks>
+    [Test]
+    public void WriteStringPointerTest()
+    {
+        var pointerAddress = OuterClassPointer + 8;
+        var stringSettings = TestProcessMemory!.FindStringSettings(pointerAddress, "ThisIsÄString").Value;
+        ProceedToNextStep(); // Make sure we make the test program change the string pointer before we overwrite it
+        
+        var newString = "ThisStringIsCompletelyOriginalAndAlsoLongerThanTheOriginalOne";
+        var newStringReservation = TestProcessMemory.StoreString(newString, stringSettings).Value;
+        TestProcessMemory.Write(pointerAddress, newStringReservation.Address);
+        
+        ProceedToNextStep(); // Makes the test program output the final results
+        
+        // Test that the program actually used (wrote to the console) the string that we hacked in
+        Assert.That(FinalResults[4], Is.EqualTo(newString));
+    }
 }
