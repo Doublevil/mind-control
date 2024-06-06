@@ -6,7 +6,12 @@
 public enum ReadFailureReason
 {
     /// <summary>
-    /// Failure when evaluating the pointer path to the target memory.
+    /// The arguments provided to the memory read operation are invalid.
+    /// </summary>
+    InvalidArguments,
+    
+    /// <summary>
+    /// Failure when evaluating the pointer path to the target address.
     /// </summary>
     PointerPathEvaluationFailure,
     
@@ -41,6 +46,18 @@ public enum ReadFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record ReadFailure(ReadFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory read operation when the arguments provided are invalid.
+/// </summary>
+/// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
+public record ReadFailureOnInvalidArguments(string Message)
+    : ReadFailure(ReadFailureReason.InvalidArguments)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The arguments provided are invalid: {Message}";
+}
 
 /// <summary>
 /// Represents a failure in a memory read operation when evaluating the pointer path to the target memory.

@@ -10,6 +10,21 @@ namespace MindControl;
 public class StringSettings
 {
     /// <summary>
+    /// Default value for <see cref="MaxLength"/>.
+    /// </summary>
+    public const int DefaultMaxLength = 1024;
+
+    /// <summary>
+    /// Gets or sets the maximum length of the strings that can be read with this instance.
+    /// When reading strings, if the length of the string is evaluated to a value exceeding the maximum, the read
+    /// operation will be aborted and fail to prevent reading unexpected data.
+    /// The unit of this value depends on the <see cref="LengthPrefix"/> settings. If no length prefix is used, the unit
+    /// used is the number of characters in the string.
+    /// The default value is defined by the <see cref="DefaultMaxLength"/> constant.
+    /// </summary>
+    public int MaxLength { get; set; } = DefaultMaxLength;
+    
+    /// <summary>
     /// Gets or sets an optional prefix that comes before the string bytes. This is useful for type pointers in
     /// frameworks that use them. If the string also has a length prefix, the type prefix comes first, before the
     /// length.
@@ -39,8 +54,9 @@ public class StringSettings
     
     /// <summary>
     /// Builds settings with the given properties.
-    /// If you are unsure what settings to use, consider using <see cref="ProcessMemory.FindStringSettings"/> to
-    /// automatically determine the appropriate settings for a known string pointer.
+    /// If you are unsure what settings to use, consider using
+    /// <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> if possible to automatically determine the
+    /// appropriate settings for a known string pointer.
     /// </summary>
     /// <param name="encoding">Encoding of the strings.</param>
     /// <param name="isNullTerminated">Boolean indicating if strings should have a \0 delimitation character at the end.
@@ -81,7 +97,7 @@ public class StringSettings
         ThrowIfInvalid();
         
         return Encoding.GetMaxByteCount(maxStringLength)
-            + (LengthPrefix?.PrefixSize ?? 0)
+            + (LengthPrefix?.Size ?? 0)
             + (TypePrefix?.Length ?? 0)
             + (IsNullTerminated ? Encoding.GetNullTerminator().Length : 0);
     }
@@ -108,11 +124,11 @@ public class StringSettings
         {
             lengthToWrite = LengthPrefix.Unit switch
             {
-                StringLengthPrefixUnit.Characters => value.Length,
+                StringLengthUnit.Characters => value.Length,
                 _ => byteCount
             };
 
-            switch (LengthPrefix.PrefixSize)
+            switch (LengthPrefix.Size)
             {
                 case 1 when lengthToWrite > byte.MaxValue:
                 case 2 when lengthToWrite > short.MaxValue:
@@ -133,16 +149,16 @@ public class StringSettings
         {
             // Write the length into the byte array, after the type prefix if any
             var span = bytes.AsSpan(currentIndex);
-            if (LengthPrefix!.PrefixSize == 1)
+            if (LengthPrefix!.Size == 1)
                 span[0] = (byte)lengthToWrite.Value;
-            else if (LengthPrefix.PrefixSize == 2)
+            else if (LengthPrefix.Size == 2)
                 BinaryPrimitives.WriteInt16LittleEndian(span, (short)lengthToWrite.Value);
-            else if (LengthPrefix.PrefixSize == 4)
+            else if (LengthPrefix.Size == 4)
                 BinaryPrimitives.WriteInt32LittleEndian(span, lengthToWrite.Value);
             else
                 BinaryPrimitives.WriteInt64LittleEndian(span, lengthToWrite.Value);
 
-            currentIndex += LengthPrefix.PrefixSize;
+            currentIndex += LengthPrefix.Size;
         }
         
         // Write the string bytes. Encoder.Convert is used to avoid unnecessary allocations.
@@ -166,7 +182,7 @@ public class StringSettings
         ThrowIfInvalid();
         
         return (TypePrefix?.Length ?? 0)
-            + (LengthPrefix?.PrefixSize ?? 0)
+            + (LengthPrefix?.Size ?? 0)
             + Encoding.GetByteCount(value)
             + (IsNullTerminated ? Encoding.GetNullTerminator().Length : 0);
     }
@@ -176,10 +192,12 @@ public class StringSettings
     /// </summary>
     /// <param name="bytes">Bytes to read the string from.</param>
     /// <returns>The string read from the bytes, or null if the string could not be read.</returns>
-    public string? GetString(byte[] bytes)
+    /// <remarks>This method ignores the <see cref="MaxLength"/> constraint, because the full span of bytes is already
+    /// provided as a parameter.</remarks>
+    public string? GetString(Span<byte> bytes)
     {
         // Figure out the start index of the actual string bytes, after the prefixes (if any)
-        int lengthPrefixSize = LengthPrefix?.PrefixSize ?? 0;
+        int lengthPrefixSize = LengthPrefix?.Size ?? 0;
         int typePrefixSize = TypePrefix?.Length ?? 0;
         int startIndex = lengthPrefixSize + typePrefixSize;
         
@@ -192,9 +210,9 @@ public class StringSettings
         // If the length prefix is in bytes, read the length prefix and use it as the length to read.
         // If we have a null terminator, we also have to read it, so add its length to the length to read.
         // Otherwise, read the remaining bytes.
-        bool hasBytesLengthPrefix = LengthPrefix is { PrefixSize: > 0, Unit: StringLengthPrefixUnit.Bytes };
+        bool hasBytesLengthPrefix = LengthPrefix is { Size: > 0, Unit: StringLengthUnit.Bytes };
         ulong lengthToRead = hasBytesLengthPrefix ?
-            bytes.AsSpan(typePrefixSize, lengthPrefixSize).ReadUnsignedNumber()
+            bytes.Slice(typePrefixSize, lengthPrefixSize).ReadUnsignedNumber()
                 + (ulong)(IsNullTerminated ? Encoding.GetNullTerminator().Length : 0)
             : (ulong)remainingBytes;
         
@@ -209,15 +227,15 @@ public class StringSettings
             return string.Empty;
         
         // Read the string bytes using the encoding in the settings
-        var stringBytes = bytes.AsSpan(startIndex, (int)lengthToRead);
+        var stringBytes = bytes.Slice(startIndex, (int)lengthToRead);
         if (stringBytes.Length == 0)
             return null;
         string resultingString = Encoding.GetString(stringBytes);
 
         // If we have a length prefix in characters, we have to cut the string to the correct length
-        if (LengthPrefix is { PrefixSize: > 0, Unit: StringLengthPrefixUnit.Characters })
+        if (LengthPrefix is { Size: > 0, Unit: StringLengthUnit.Characters })
         {
-            ulong characterLength = bytes.AsSpan(typePrefixSize, lengthPrefixSize).ReadUnsignedNumber();
+            ulong characterLength = bytes.Slice(typePrefixSize, lengthPrefixSize).ReadUnsignedNumber();
             if (IsNullTerminated)
                 characterLength++;
             
@@ -229,12 +247,11 @@ public class StringSettings
         }
 
         // If the string is null-terminated, we have to cut the string at the null-terminator
-        // If there is no null-terminator, return null, as this means the string settings and byte array are not
-        // compatible.
         if (IsNullTerminated)
         {
             int nullTerminatorIndex = resultingString.IndexOf('\0');
-            return nullTerminatorIndex >= 0 ? resultingString[..nullTerminatorIndex] : null;
+            return nullTerminatorIndex >= 0 ? resultingString[..nullTerminatorIndex]
+                : resultingString; // If there is no null terminator, we choose to return the full string
         }
         
         // No length prefix, or length prefix in bytes. Return the full string.
@@ -245,7 +262,7 @@ public class StringSettings
 /// <summary>
 /// Defines what is counted by a string length prefix.
 /// </summary>
-public enum StringLengthPrefixUnit
+public enum StringLengthUnit
 {
     /// <summary>
     /// The length prefix is a count of characters.
@@ -266,24 +283,24 @@ public class StringLengthPrefix
     /// <summary>
     /// Gets or sets the number of bytes storing the length of the string.
     /// </summary>
-    public int PrefixSize { get; }
+    public int Size { get; }
     
     /// <summary>
     /// Gets or sets what the length prefix counts.
     /// </summary>
-    public StringLengthPrefixUnit Unit { get; }
+    public StringLengthUnit Unit { get; }
 
     /// <summary>
     /// Builds length prefix settings with the given properties.
     /// </summary>
-    /// <param name="prefixSize">Number of bytes storing the length of the string.</param>
+    /// <param name="size">Number of bytes storing the length of the string.</param>
     /// <param name="unit">What the length prefix counts.</param>
-    public StringLengthPrefix(int prefixSize, StringLengthPrefixUnit unit)
+    public StringLengthPrefix(int size, StringLengthUnit unit)
     {
-        if (prefixSize != 1 && prefixSize != 2 && prefixSize != 4 && prefixSize != 8)
-            throw new ArgumentOutOfRangeException(nameof(prefixSize), "Prefix size must be either 1, 2, 4 or 8.");
+        if (size != 1 && size != 2 && size != 4 && size != 8)
+            throw new ArgumentOutOfRangeException(nameof(size), "Prefix size must be either 1, 2, 4 or 8.");
         
-        PrefixSize = prefixSize;
+        Size = size;
         Unit = unit;
     }
 }
