@@ -1,7 +1,7 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
 
-namespace MindControl.Benchmark;
+namespace MindControl.Benchmark.Benchmarks;
 
 [MemoryDiagnoser]
 [MarkdownExporter]

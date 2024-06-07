@@ -409,7 +409,35 @@ public partial class ProcessMemory
     #endregion
     
     #region String reading
+    
+    /// <summary>
+    /// Maximum size of the stream buffer when reading strings.
+    /// Setting it too low may multiply the number of reads, which is inefficient.
+    /// Setting it too high will lead to very large, wasteful reads for bigger strings, and may also trigger reading
+    /// failures, with failure mitigation algorithms kicking in but taking resources that might not be needed.
+    /// </summary>
+    private const int StringReadingBufferMaxSize = 512;
 
+    /// <summary>
+    /// Size of the stream buffer when reading strings with an unknown length.
+    /// Setting it too low may multiply the number of reads, which is inefficient.
+    /// Setting it too high may lead to wasteful reads for smaller strings.
+    /// </summary>
+    /// <remarks>
+    /// This setting is related to <see cref="StringReadingBuilderDefaultSize"/>, the difference being that this one
+    /// measures the size in bytes, while the other measures the size in characters.
+    /// Setting this to 2 times the other allows for better performance with characters encoded on fewer bytes.
+    /// Setting this to 4 times the other allows for better performance with characters encoded on more bytes.
+    /// </remarks>
+    private const int StringReadingBufferDefaultSize = 128;
+    
+    /// <summary>
+    /// Initial size of the string builder when reading characters of a string that has an unknown length.
+    /// Setting this value too low may lead to multiple resizes of the string builder, which is inefficient.
+    /// Setting this value too high may lead to unnecessary memory usage.
+    /// </summary>
+    private const int StringReadingBuilderDefaultSize = 32;
+    
     /// <summary>
     /// Reads a string from the address referred by the given pointer path, in the process memory.
     /// The address must point to the start of the actual string bytes. Consider
@@ -618,23 +646,26 @@ public partial class ProcessMemory
         
         // Get a memory stream after the prefixes
         int stringBytesOffset = lengthPrefixOffset + settings.LengthPrefix.Size;
+        int bufferSize = Math.Min(settings.Encoding.GetMaxByteCount((int)expectedStringLength),
+            StringReadingBufferMaxSize);
         using var stream = GetMemoryStream(address + stringBytesOffset);
-        using var streamReader = new StreamReader(stream, settings.Encoding);
+        using var streamReader = new StreamReader(stream, settings.Encoding, false, bufferSize, false);
         
         // Read characters until we reach the expected length
-        var stringBuilder = new StringBuilder((int)expectedStringLength);
+        // Using a char array here is a very small optimization over using a string builder
+        var characters = new char[expectedStringLength];
         for (ulong i = 0; i < expectedStringLength; i++)
         {
             int nextChar = streamReader.Read();
             
             // If we reach the end of the stream, return the string we have so far
             if (nextChar == -1)
-                return stringBuilder.ToString();
-            
-            stringBuilder.Append((char)nextChar);
+                return new string(characters, 0, (int)i);
+
+            characters[i] = (char)nextChar;
         }
-        
-        return stringBuilder.ToString();
+
+        return new string(characters);
     }
     
     /// <summary>
@@ -650,13 +681,19 @@ public partial class ProcessMemory
         // Get a stream that reads bytes from the process memory, and use a stream reader to read characters until we
         // find a null terminator.
         
+        // Performance note: Because we cannot know in advance how long the string is going to be, we have to use
+        // default values for buffer size and string builder size.
+        // This can result in wasteful memory usage, or multiple read operations, depending on the size of the string.
+        // But there is no way around this.
+        
         // Get a memory stream after the prefixes
         int stringBytesOffset = (settings.TypePrefix?.Length ?? 0) + (settings.LengthPrefix?.Size ?? 0);
         using var stream = GetMemoryStream(address + stringBytesOffset);
-        using var streamReader = new StreamReader(stream, settings.Encoding);
+        using var streamReader = new StreamReader(stream, settings.Encoding, false, StringReadingBufferDefaultSize,
+            false);
         
         // Read characters until we reach a null terminator (0) or the end of the stream (-1)
-        var stringBuilder = new StringBuilder(16); // Arbitrary initial size because we don't know the string length
+        var stringBuilder = new StringBuilder(StringReadingBuilderDefaultSize);
         for (var nextChar = streamReader.Read(); nextChar != -1 && nextChar != 0; nextChar = streamReader.Read())
         {
             stringBuilder.Append((char)nextChar);
