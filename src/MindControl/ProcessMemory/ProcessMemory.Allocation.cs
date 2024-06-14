@@ -17,21 +17,22 @@ public partial class ProcessMemory
 
     /// <summary>
     /// Attempts to allocate a memory range of the given size within the process. Use this method only when automatic
-    /// allocation management through the Store methods is not appropriate.
+    /// allocation management through the Store methods or <see cref="Reserve"/> method are not appropriate.
     /// </summary>
     /// <param name="size">Size of the memory range to allocate.</param>
     /// <param name="forExecutableCode">Determines if the memory range can be used to store executable code.</param>
     /// <param name="limitRange">Specify this parameter to limit the allocation to a specific range of memory.</param>
+    /// <param name="nearAddress">If specified, try to allocate as close as possible to this address.</param>
     /// <returns>A result holding either the allocated memory range, or an allocation failure.</returns>
     public Result<MemoryAllocation, AllocationFailure> Allocate(ulong size, bool forExecutableCode,
-        MemoryRange? limitRange = null)
+        MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         if (size == 0)
-            throw new ArgumentException("The size of the memory range to allocate must be greater than zero.",
-                nameof(size));
+            return new AllocationFailureOnInvalidArguments(
+                "The size of the memory range to allocate must be greater than zero.");
         
         // Find a free memory range that satisfies the size needed
-        var rangeResult = FindAndAllocateFreeMemory(size, forExecutableCode, limitRange);
+        var rangeResult = FindAndAllocateFreeMemory(size, forExecutableCode, limitRange, nearAddress);
         if (rangeResult.IsFailure)
             return rangeResult.Error;
         
@@ -53,7 +54,7 @@ public partial class ProcessMemory
             return;
         
         _allocations.Remove(allocation);
-        _osService.ReleaseMemory(_processHandle, allocation.Range.Start);
+        _osService.ReleaseMemory(ProcessHandle, allocation.Range.Start);
     }
 
     /// <summary>
@@ -63,11 +64,12 @@ public partial class ProcessMemory
     /// <param name="forExecutableCode">Set to true to allocate a memory block with execute permissions.</param>
     /// <param name="limitRange">Specify this parameter to limit the search to a specific range of memory.
     /// If left null (default), the entire process memory will be searched.</param>
+    /// <param name="nearAddress">If specified, try to allocate as close as possible to this address.</param>
     /// <returns>A result holding either the memory range found, or an allocation failure.</returns>
     /// <remarks>The reason why the method performs the allocation itself is because we cannot know if the range can
     /// actually be allocated without performing the allocation.</remarks>
     private Result<MemoryRange, AllocationFailure> FindAndAllocateFreeMemory(ulong sizeNeeded,
-        bool forExecutableCode, MemoryRange? limitRange = null)
+        bool forExecutableCode, MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         var maxRange = _osService.GetFullMemoryRange();
         var actualRange = limitRange == null ? maxRange : maxRange.Intersect(limitRange.Value);
@@ -83,28 +85,59 @@ public partial class ProcessMemory
         uint minFittingPageSize = (uint)(sizeNeeded / pageSize + (isDirectMultiple ? (ulong)0 : 1)) * pageSize;
         
         // Browse through regions in the memory range to find the first one that satisfies the size needed
-        var nextAddress = actualRange.Value.Start;
+        // If a near address is specified, start there. Otherwise, start at the beginning of the memory range.
+        // For near address search, we are going to search back and forth around the address, which complicates the
+        // process a bit. It means we have to keep track of both the next lowest address and next highest address.
+        var nextAddress = nearAddress ?? actualRange.Value.Start;
+        var nextAddressForward = nextAddress;
+        var nextAddressBackwards = nextAddress;
+        bool goingForward = true;
+        
         MemoryRange? freeRange = null;
         MemoryRangeMetadata currentMetadata;
-        while (nextAddress.ToUInt64() < actualRange.Value.End.ToUInt64()
-            && (currentMetadata = _osService.GetRegionMetadata(_processHandle, nextAddress, _is64Bits)
+        while ((nextAddressForward.ToUInt64() < actualRange.Value.End.ToUInt64()
+                || nextAddressBackwards.ToUInt64() > actualRange.Value.Start.ToUInt64())
+            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress, Is64Bits)
                 .GetValueOrDefault()).Size.ToUInt64() > 0)
         {
-            nextAddress = (UIntPtr)(nextAddress.ToUInt64() + currentMetadata.Size.ToUInt64());
-
+            nextAddressForward = (UIntPtr)Math.Max(nextAddressForward.ToUInt64(),
+                nextAddress.ToUInt64() + currentMetadata.Size.ToUInt64());
+            nextAddressBackwards = (UIntPtr)Math.Min(nextAddressBackwards.ToUInt64(),
+                currentMetadata.StartAddress.ToUInt64() - 1);
+            
+            nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+            
             // If the current region cannot be used, reinitialize the current free range and keep iterating
             if (!currentMetadata.IsFree)
             {
                 freeRange = null;
+
+                // In a near address search, we may change direction there depending on which next address is closest.
+                if (nearAddress != null)
+                {
+                    var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
+                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
+                    goingForward = forwardDistance <= backwardDistance;
+                    nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+                }
+                
                 continue;
             }
-
-            // Build a range with the current region
-            // Start from the start of the current free range if it's not null, so that we can have ranges that span
-            // across multiple regions.
-            freeRange = new MemoryRange(freeRange?.Start ?? currentMetadata.StartAddress,
-                (UIntPtr)(currentMetadata.StartAddress.ToUInt64() + currentMetadata.Size.ToUInt64()));
             
+            // Build a range with the current region
+            // Extend the free range if it's not null, so that we can have ranges that span across multiple regions.
+            if (goingForward)
+            {
+                freeRange = new MemoryRange(freeRange?.Start ?? currentMetadata.StartAddress,
+                    (UIntPtr)(currentMetadata.StartAddress.ToUInt64() + currentMetadata.Size.ToUInt64()));
+            }
+            else
+            {
+                freeRange = new MemoryRange(currentMetadata.StartAddress,
+                    (UIntPtr)(freeRange?.End.ToUInt64() ?? currentMetadata.StartAddress.ToUInt64()
+                        + currentMetadata.Size.ToUInt64()));
+            }
+
             if (freeRange.Value.GetSize() >= sizeNeeded)
             {
                 // The free range is large enough.
@@ -115,7 +148,7 @@ public partial class ProcessMemory
                 
                 // Even if they are free, some regions cannot be allocated.
                 // The only way to know if a region can be allocated is to try to allocate it.
-                var allocateResult = _osService.AllocateMemory(_processHandle, finalRange.Start,
+                var allocateResult = _osService.AllocateMemory(ProcessHandle, finalRange.Start,
                     (int)finalRange.GetSize(), MemoryAllocationType.Commit | MemoryAllocationType.Reserve,
                     forExecutableCode ? MemoryProtection.ExecuteReadWrite : MemoryProtection.ReadWrite);
                 
@@ -125,6 +158,16 @@ public partial class ProcessMemory
                 
                 // The allocation failed. Reset the current range and keep iterating.
                 freeRange = null;
+                
+                // In a near address search, we may change direction there depending on which next address is closest.
+                if (nearAddress != null)
+                {
+                    var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
+                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
+                    goingForward = forwardDistance <= backwardDistance;
+                    nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+                }
+                
                 continue;
             }
         }
@@ -140,13 +183,32 @@ public partial class ProcessMemory
     /// a new range is allocated, and a reservation is made on it.
     /// </summary>
     /// <param name="size">Size of the memory range to reserve.</param>
-    /// <param name="requireExecutable">Set to true if the memory range must be executable.</param>
+    /// <param name="requireExecutable">Set to true if the memory range must be executable (to store code).</param>
+    /// <param name="limitRange">Specify this parameter to limit the reservation to allocations within a specific range
+    /// of memory. If left null (default), any allocation can be used. Otherwise, only allocations within the specified
+    /// range will be considered, and if none are available, a new allocation will be attempted within that range.
+    /// </param>
+    /// <param name="nearAddress">If specified, prioritize allocations by their proximity to this address. If no
+    /// matching allocation is found, a new allocation as close as possible to this address will be attempted.</param>
     /// <returns>A result holding either the resulting reservation, or an allocation failure.</returns>
-    private Result<MemoryReservation, AllocationFailure> FindOrMakeReservation(ulong size, bool requireExecutable)
+    public Result<MemoryReservation, AllocationFailure> Reserve(ulong size, bool requireExecutable,
+        MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
-        uint alignment = _is64Bits ? (uint)8 : 4;
-        var reservationInExistingAllocation = _allocations
-            .Where(a => !requireExecutable || a.IsExecutable)
+        if (size == 0)
+            return new AllocationFailureOnInvalidArguments(
+                "The size of the memory range to reserve must be greater than zero.");
+        
+        uint alignment = Is64Bits ? (uint)8 : 4;
+        var existingAllocations = _allocations
+            .Where(a => (!requireExecutable || a.IsExecutable)
+                && (limitRange == null || limitRange.Value.Contains(a.Range.Start)));
+        
+        // If we have a near address, sort the allocations by their distance to that address
+        if (nearAddress != null)
+            existingAllocations = existingAllocations.OrderBy(a => a.Range.DistanceTo(nearAddress.Value));
+        
+        // Pick the first allocation that works
+        var reservationInExistingAllocation = existingAllocations
             .Select(r => r.ReserveRange(size, alignment))
             .FirstOrDefault(r => r.IsSuccess)
             ?.Value;
@@ -156,7 +218,7 @@ public partial class ProcessMemory
             return reservationInExistingAllocation;
         
         // No allocation could satisfy the reservation: allocate a new range
-        var allocationResult = Allocate(size, requireExecutable);
+        var allocationResult = Allocate(size, requireExecutable, limitRange, nearAddress);
         if (allocationResult.IsFailure)
             return allocationResult.Error;
         
@@ -183,7 +245,7 @@ public partial class ProcessMemory
     /// <returns>A result holding either the reserved memory range, or an allocation failure.</returns>
     public Result<MemoryReservation, AllocationFailure> Store(byte[] data, bool isCode = false)
     {
-        var reservedRangeResult = FindOrMakeReservation((ulong)data.Length, isCode);
+        var reservedRangeResult = Reserve((ulong)data.Length, isCode);
         if (reservedRangeResult.IsFailure)
             return reservedRangeResult.Error;
 
@@ -203,7 +265,7 @@ public partial class ProcessMemory
     /// <returns>A result holding either the reservation storing the data, or a reservation failure.</returns>
     public Result<MemoryReservation, ReservationFailure> Store(byte[] data, MemoryAllocation allocation)
     {
-        uint alignment = _is64Bits ? (uint)8 : 4;
+        uint alignment = Is64Bits ? (uint)8 : 4;
         var reservedRangeResult = allocation.ReserveRange((ulong)data.Length, alignment);
         if (reservedRangeResult.IsFailure)
             return reservedRangeResult.Error;

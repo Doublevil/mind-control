@@ -72,7 +72,7 @@ public partial class ProcessMemory
         if (!IsBitnessCompatible(address))
             return new ReadFailureOnIncompatibleBitness(address);
         
-        var readResult = _osService.ReadProcessMemory(_processHandle, address, length);
+        var readResult = _osService.ReadProcessMemory(ProcessHandle, address, length);
         return readResult.IsSuccess ? readResult.Value
             : new ReadFailureOnSystemRead(readResult.Error);
     }
@@ -117,7 +117,7 @@ public partial class ProcessMemory
         if (!IsBitnessCompatible(address))
             return new ReadFailureOnIncompatibleBitness(address);
         
-        var readResult = _osService.ReadProcessMemoryPartial(_processHandle, address, buffer, 0, maxLength);
+        var readResult = _osService.ReadProcessMemoryPartial(ProcessHandle, address, buffer, 0, maxLength);
         return readResult.IsSuccess ? readResult.Value
             : new ReadFailureOnSystemRead(readResult.Error);
     }
@@ -170,7 +170,7 @@ public partial class ProcessMemory
         }
 
         // Read the bytes from the process memory
-        var readResult = _osService.ReadProcessMemory(_processHandle, address, (ulong)size);
+        var readResult = _osService.ReadProcessMemory(ProcessHandle, address, (ulong)size);
         if (readResult.IsFailure)
             return new ReadFailureOnSystemRead(readResult.Error);
         byte[] bytes = readResult.Value;
@@ -226,7 +226,7 @@ public partial class ProcessMemory
         int size = Marshal.SizeOf(type);
         
         // Read the bytes from the process memory
-        var readResult = _osService.ReadProcessMemory(_processHandle, address, (ulong)size);
+        var readResult = _osService.ReadProcessMemory(ProcessHandle, address, (ulong)size);
         if (!readResult.IsSuccess)
             return new ReadFailureOnSystemRead(readResult.Error);
         
@@ -648,7 +648,7 @@ public partial class ProcessMemory
         int stringBytesOffset = lengthPrefixOffset + settings.LengthPrefix.Size;
         int bufferSize = Math.Min(settings.Encoding.GetMaxByteCount((int)expectedStringLength),
             StringReadingBufferMaxSize);
-        using var stream = GetMemoryStream(address + stringBytesOffset);
+        using var stream = GetMemoryStream(address + (UIntPtr)stringBytesOffset);
         using var streamReader = new StreamReader(stream, settings.Encoding, false, bufferSize, false);
         
         // Read characters until we reach the expected length
@@ -688,7 +688,7 @@ public partial class ProcessMemory
         
         // Get a memory stream after the prefixes
         int stringBytesOffset = (settings.TypePrefix?.Length ?? 0) + (settings.LengthPrefix?.Size ?? 0);
-        using var stream = GetMemoryStream(address + stringBytesOffset);
+        using var stream = GetMemoryStream(address + (UIntPtr)stringBytesOffset);
         using var streamReader = new StreamReader(stream, settings.Encoding, false, StringReadingBufferDefaultSize,
             false);
         

@@ -150,18 +150,14 @@ public class ProcessMemoryStream : Stream
             throw new ArgumentException("The buffer is too small to write the requested number of bytes.",
                 nameof(buffer));
 
-        var result = _osService.WriteProcessMemoryPartial(_processHandle, _position, buffer, offset, count);
+        var result = _osService.WriteProcessMemory(_processHandle, _position, buffer.AsSpan(offset, count));
         
-        // Unlike Read, we will throw an exception if the write operation failed.
-        // This is because write operations are expected to fully complete.
+        // Unlike Read, we will throw an exception if the write operation failed, because write operations are expected
+        // to fully complete.
         if (result.IsFailure)
             throw new IOException("Failed to write into the process memory.", result.ToException());
         
-        ulong written = result.Value;
-        if (written != (ulong)count)
-            throw new IOException($"Failed to write all bytes into the process memory. Only {written} bytes were written (expected {count}).");
-        
-        _position = (UIntPtr)(_position.ToUInt64() + written);
+        _position += (UIntPtr)count;
     }
 }
             

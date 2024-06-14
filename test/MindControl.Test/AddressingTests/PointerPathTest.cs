@@ -1,4 +1,3 @@
-using System.Numerics;
 using NUnit.Framework;
 
 namespace MindControl.Test.AddressingTests;
@@ -399,7 +398,7 @@ public class PointerPathTest
             Assert.That(result!.Expression, Is.EqualTo(testCase.Expression), testCase.Explanation);
             Assert.That(result.BaseModuleName, Is.EqualTo(testCase.ExpectedModuleName), testCase.Explanation);
             Assert.That(result.BaseModuleOffset, Is.EqualTo(testCase.ExpectedModuleOffset), testCase.Explanation);
-            Assert.That(result.PointerOffsets, Is.EquivalentTo(testCase.ExpectedPointerOffsets), testCase.Explanation);
+            Assert.That(result.PointerOffsets, Is.EquivalentTo(testCase.ExpectedPointerOffsets!), testCase.Explanation);
             Assert.That(result.IsStrictly64Bits, Is.EqualTo(testCase.Expect64BitOnly), testCase.Explanation);
         });
     }

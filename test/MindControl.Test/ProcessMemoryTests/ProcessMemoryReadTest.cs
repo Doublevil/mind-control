@@ -261,7 +261,7 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     public void ReadTwoStepGenericTest(Type targetType, int pointerOffset, object? expectedResultBeforeBreak,
         object? expectedResultAfterBreak)
     {
-        UIntPtr targetIntAddress = OuterClassPointer + pointerOffset;
+        UIntPtr targetIntAddress = OuterClassPointer + (UIntPtr)pointerOffset;
         object resultBefore = TestProcessMemory!.Read(targetType, targetIntAddress).Value;
         Assert.That(resultBefore, Is.EqualTo(expectedResultBeforeBreak));
         ProceedToNextStep();

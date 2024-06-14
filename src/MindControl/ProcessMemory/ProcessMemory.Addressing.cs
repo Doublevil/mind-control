@@ -14,7 +14,7 @@ public partial class ProcessMemory
     /// <returns>The memory address pointed by the pointer path.</returns>
     public Result<UIntPtr, PathEvaluationFailure> EvaluateMemoryAddress(PointerPath pointerPath)
     {
-        if (pointerPath.IsStrictly64Bits && (IntPtr.Size == 4 || !_is64Bits))
+        if (pointerPath.IsStrictly64Bits && (IntPtr.Size == 4 || !Is64Bits))
             return new PathEvaluationFailureOnIncompatibleBitness();
         
         UIntPtr? baseAddress;
@@ -100,7 +100,7 @@ public partial class ProcessMemory
     /// <param name="startAddress">Starting address of the stream.</param>
     /// <returns>The created process memory stream.</returns>
     public ProcessMemoryStream GetMemoryStream(UIntPtr startAddress)
-        => new ProcessMemoryStream(_osService, _processHandle, startAddress);
+        => new(_osService, ProcessHandle, startAddress);
     
     /// <summary>
     /// Gets the process module with the given name.

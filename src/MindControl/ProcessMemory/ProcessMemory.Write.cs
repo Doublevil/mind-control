@@ -33,7 +33,7 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBytes(UIntPtr address, byte[] value,
+    public Result<WriteFailure> WriteBytes(UIntPtr address, Span<byte> value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         // Remove protection if needed
@@ -41,7 +41,7 @@ public partial class ProcessMemory
         MemoryProtection? previousProtection = null;
         if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
         {
-            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
+            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bits,
                 address, MemoryProtection.ExecuteReadWrite);
             
             if (protectionRemovalResult.IsFailure)
@@ -51,7 +51,7 @@ public partial class ProcessMemory
         }
         
         // Write memory
-        var writeResult = _osService.WriteProcessMemory(_processHandle, address, value);
+        var writeResult = _osService.WriteProcessMemory(ProcessHandle, address, value);
         if (writeResult.IsFailure)
             return new WriteFailureOnSystemWrite(address, writeResult.Error);
         
@@ -59,7 +59,7 @@ public partial class ProcessMemory
         if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
             && previousProtection != MemoryProtection.ExecuteReadWrite)
         {
-            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(_processHandle, _is64Bits,
+            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bits,
                 address, previousProtection!.Value);
             
             if (protectionRestorationResult.IsFailure)
@@ -208,7 +208,7 @@ public partial class ProcessMemory
     /// <returns>A successful result, or a write failure</returns>
     private Result<WriteFailure> WriteIntPtr(UIntPtr address, IntPtr value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
-        => WriteBytes(address, value.ToBytes(_is64Bits), memoryProtectionStrategy);
+        => WriteBytes(address, value.ToBytes(Is64Bits), memoryProtectionStrategy);
     
     /// <summary>
     /// Writes a float to the given address in the process memory.

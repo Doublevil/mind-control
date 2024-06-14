@@ -136,7 +136,7 @@ public partial class ProcessMemory
     private IEnumerable<UIntPtr> ScanRangeForBytePattern(byte[] bytePattern, byte[] mask, MemoryRange range)
     {
         // Read the whole memory range and place it in a byte array.
-        byte[] rangeMemory = _osService.ReadProcessMemory(_processHandle, range.Start, range.GetSize())
+        byte[] rangeMemory = _osService.ReadProcessMemory(ProcessHandle, range.Start, range.GetSize())
             .GetValueOrDefault() ?? Array.Empty<byte>();
         
         int maxIndex = rangeMemory.Length - bytePattern.Length;
@@ -182,7 +182,7 @@ public partial class ProcessMemory
         UIntPtr currentAddress = range.Start;
         while (currentAddress.ToUInt64() <= rangeEnd)
         {
-            var getRegionResult = _osService.GetRegionMetadata(_processHandle, currentAddress, _is64Bits);
+            var getRegionResult = _osService.GetRegionMetadata(ProcessHandle, currentAddress, Is64Bits);
             if (getRegionResult.IsFailure)
             {
                 // If we failed to get the region metadata, we cannot continue because we don't know where the next

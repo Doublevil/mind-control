@@ -21,7 +21,7 @@ public class Result<TError>
     
     /// <summary>
     /// Gets the error that caused the operation to fail. Throws if the operation was successful.
-    /// Use this after checking <see cref="Result{TResult,TError}.IsFailure"/> to ensure the operation was not
+    /// Use this after checking <see cref="Result{TError}.IsFailure"/> to ensure the operation was not
     /// successful.
     /// </summary>
     public TError Error => IsFailure ? _error!
@@ -99,7 +99,7 @@ public sealed class Result<TResult, TError> : Result<TError>
 
     /// <summary>
     /// Gets the resulting value of the operation. Throws if the operation was not successful.
-    /// Use this after checking <see cref="Result{TResult,TError}.IsSuccess"/> to ensure the operation was successful.
+    /// Use this after checking <see cref="Result{TError}.IsSuccess"/> to ensure the operation was successful.
     /// </summary>
     public TResult Value => IsSuccess ? _value!
         : throw new InvalidOperationException("Cannot access the value of an unsuccessful result.",

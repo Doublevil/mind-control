@@ -87,7 +87,8 @@ public partial class Win32Service : IOperatingSystemService
     /// <summary>
     /// Reads a targeted range of the memory of a specified process into the given buffer. Supports partial reads, in
     /// case the full length failed to be read but at least one byte was successfully copied into the buffer.
-    /// Prefer <see cref="ReadProcessMemory"/> when you know the length of the data to read.
+    /// Prefer <see cref="Win32Service.ReadProcessMemory(IntPtr,UIntPtr,ulong)"/> when you know the length of the data
+    /// to read.
     /// </summary>
     /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_READ access.</param>
     /// <param name="baseAddress">Starting address of the memory range to read.</param>
@@ -255,12 +256,9 @@ public partial class Win32Service : IOperatingSystemService
     /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_WRITE and
     /// PROCESS_VM_OPERATION access.</param>
     /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
-    /// <param name="value">Byte array to write in the memory. It is assumed that the entire array will be
-    /// written, unless a size is specified.</param>
-    /// <param name="size">Specify this value if you only want to write part of the value array in memory.
-    /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
+    /// <param name="value">Bytes to write in the process memory.</param>
     /// <returns>A result indicating either a success or a system failure.</returns>
-    public Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value, int? size = null)
+    public Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, Span<byte> value)
     {
         if (processHandle == IntPtr.Zero)
             return new SystemFailureOnInvalidArgument(nameof(processHandle),
@@ -268,74 +266,11 @@ public partial class Win32Service : IOperatingSystemService
         if (targetAddress == UIntPtr.Zero)
             return new SystemFailureOnInvalidArgument(nameof(targetAddress),
                 "The target address cannot be a zero pointer.");
-        if (size != null && size.Value > value.Length)
-            return new SystemFailureOnInvalidArgument(nameof(size),
-                "The size cannot exceed the length of the value array.");
-
-        var result = WriteProcessMemory(processHandle, targetAddress, value, (UIntPtr)(size ?? value.Length),
-            out _);
-
+        
+        var result = WriteProcessMemory(processHandle, targetAddress, ref value.GetPinnableReference(),
+            (UIntPtr)value.Length, out _);
+        
         return result ? Result<SystemFailure>.Success : GetLastSystemError();
-    }
-
-    /// <summary>
-    /// Writes the given bytes into the memory of the specified process, at the target address. Supports partial reads,
-    /// in case the full length failed to be written but at least one byte was successfully written.
-    /// Prefer <see cref="IOperatingSystemService.WriteProcessMemory"/> in most cases.
-    /// </summary>
-    /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_WRITE and
-    /// PROCESS_VM_OPERATION access.</param>
-    /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
-    /// <param name="buffer">Byte array to write in the memory. Depending on the <paramref name="offset"/> and
-    /// <paramref name="size"/> parameters, only part of the buffer may be copied into the process memory.</param>
-    /// <param name="offset">Offset in the buffer where the data to write starts.</param>
-    /// <param name="size">Number of bytes to write from the buffer into the process memory, starting from the
-    /// <paramref name="offset"/>.</param>
-    /// <returns>A result holding either the number of bytes written, or a system failure when no bytes were written.
-    /// </returns>
-    public Result<ulong, SystemFailure> WriteProcessMemoryPartial(IntPtr processHandle, UIntPtr targetAddress,
-        byte[] buffer, int offset, int size)
-    {
-        if (processHandle == IntPtr.Zero)
-            return new SystemFailureOnInvalidArgument(nameof(processHandle),
-                "The process handle is invalid (zero pointer).");
-        if (buffer.Length < offset + size)
-            return new SystemFailureOnInvalidArgument(nameof(buffer),
-                "The buffer is too small to write the requested number of bytes.");
-        
-        // We need to take in account the offset, meaning we can only copy from the buffer from a certain position,
-        // defined as the "offset" parameter.
-        // This is a problem, because the Win32 API doesn't have that. It starts copying from the beginning of whatever
-        // buffer you pass in.
-        // But in fact, as with any array, the Win32 API sees the buffer as a pointer. This means we can use an
-        // alternative signature that uses a UIntPtr as the buffer instead of a byte array.
-        // Which, in turns, means that we can call it with the address of a specific element in the buffer, and the API
-        // will start copying from there.
-        
-        // To get the pointer to the right element in the buffer, we first have to pin the buffer in memory.
-        // This ensures that the garbage collector doesn't move the buffer around while we're working with it.
-        var bufferGcHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-        try
-        {
-            // Then we use a Marshal method to get a pointer to the element in the buffer at the given offset.
-            var bufferPtr = (UIntPtr)Marshal.UnsafeAddrOfPinnedArrayElement(buffer, offset).ToInt64();
-            
-            // Finally, we can call the Win32 API with the pointer to the right element in the buffer.
-            bool returnValue = WriteProcessMemory(processHandle, targetAddress, bufferPtr, (UIntPtr)size,
-                out var bytesWritten);
-
-            // Only return a failure when the function failed AND didn't write anything.
-            // This ensures that a non-error result is returned for a partial write.
-            if (bytesWritten == UIntPtr.Zero && !returnValue)
-                return GetLastSystemError();
-
-            return bytesWritten.ToUInt64();
-        }
-        finally
-        {
-            // After using the pinned buffer, we must free it, so that the garbage collector can handle it again.
-            bufferGcHandle.Free();
-        }
     }
 
     /// <summary>

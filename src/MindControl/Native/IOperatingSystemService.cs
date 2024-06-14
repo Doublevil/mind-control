@@ -69,31 +69,9 @@ public interface IOperatingSystemService
     /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_WRITE and
     /// PROCESS_VM_OPERATION access.</param>
     /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
-    /// <param name="value">Byte array to write in the memory. It is assumed that the entire array will be
-    /// written, unless a size is specified.</param>
-    /// <param name="size">Specify this value if you only want to write part of the value array in memory.
-    /// This parameter is useful when using buffer byte arrays. Leave it to null to use the entire array.</param>
+    /// <param name="value">Bytes to write in the process memory.</param>
     /// <returns>A result indicating either a success or a system failure.</returns>
-    Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, byte[] value,
-        int? size = null);
-    
-    /// <summary>
-    /// Writes the given bytes into the memory of the specified process, at the target address. Supports partial reads,
-    /// in case the full length failed to be written but at least one byte was successfully written.
-    /// Prefer <see cref="WriteProcessMemory"/> in most cases.
-    /// </summary>
-    /// <param name="processHandle">Handle of the target process. The handle must have PROCESS_VM_WRITE and
-    /// PROCESS_VM_OPERATION access.</param>
-    /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
-    /// <param name="buffer">Byte array to write in the memory. Depending on the <paramref name="offset"/> and
-    /// <paramref name="size"/> parameters, only part of the buffer may be copied into the process memory.</param>
-    /// <param name="offset">Offset in the buffer where the data to write starts.</param>
-    /// <param name="size">Number of bytes to write from the buffer into the process memory, starting from the
-    /// <paramref name="offset"/>.</param>
-    /// <returns>A result holding either the number of bytes written, or a system failure when no bytes were written.
-    /// </returns>
-    Result<ulong, SystemFailure> WriteProcessMemoryPartial(IntPtr processHandle, UIntPtr targetAddress, byte[] buffer,
-        int offset, int size);
+    Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, Span<byte> value);
     
     /// <summary>
     /// Allocates memory in the specified process. The address is determined automatically by the operating system.

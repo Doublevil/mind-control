@@ -35,14 +35,14 @@ public partial class ProcessMemory
         
         // Write the library path string into the process memory
         var libraryPathBytes = Encoding.Unicode.GetBytes(absoluteLibraryPath);
-        var allocateStringResult = _osService.AllocateMemory(_processHandle, libraryPathBytes.Length + 1,
+        var allocateStringResult = _osService.AllocateMemory(ProcessHandle, libraryPathBytes.Length + 1,
             MemoryAllocationType.Commit | MemoryAllocationType.Reserve, MemoryProtection.ReadWrite);
         if (allocateStringResult.IsFailure)
             return new InjectionFailureOnSystemFailure("Could not allocate memory to store the library file path.",
                 allocateStringResult.Error);
         var allocatedLibPathAddress = allocateStringResult.Value;
         
-        var writeStringResult = _osService.WriteProcessMemory(_processHandle, allocatedLibPathAddress,
+        var writeStringResult = _osService.WriteProcessMemory(ProcessHandle, allocatedLibPathAddress,
             libraryPathBytes);
         if (writeStringResult.IsFailure)
             return new InjectionFailureOnSystemFailure(
@@ -58,7 +58,7 @@ public partial class ProcessMemory
                 loadLibraryAddressResult.Error);
 
         var loadLibraryFunctionAddress = loadLibraryAddressResult.Value;
-        var threadHandleResult = _osService.CreateRemoteThread(_processHandle, loadLibraryFunctionAddress,
+        var threadHandleResult = _osService.CreateRemoteThread(ProcessHandle, loadLibraryFunctionAddress,
             allocatedLibPathAddress);
         if (threadHandleResult.IsFailure)
             return new InjectionFailureOnSystemFailure(
@@ -76,7 +76,7 @@ public partial class ProcessMemory
             return new InjectionFailureOnTimeout();
         
         // Free the memory used for the library path string
-        _osService.ReleaseMemory(_processHandle, allocatedLibPathAddress);
+        _osService.ReleaseMemory(ProcessHandle, allocatedLibPathAddress);
         
         // Close the thread handle
         _osService.CloseHandle(threadHandle);

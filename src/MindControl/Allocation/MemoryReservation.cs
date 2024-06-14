@@ -27,7 +27,13 @@ public class MemoryReservation
     /// Gets a boolean indicating if the reservation has been disposed.
     /// </summary>
     public bool IsDisposed { get; private set; }
-    
+
+    /// <summary>
+    /// Gets the size of the reservation in bytes. This is a shortcut for calling <see cref="MemoryRange.GetSize"/> on
+    /// the <see cref="Range"/>.
+    /// </summary>
+    public ulong Size => Range.GetSize();
+
     /// <summary>
     /// Builds a new <see cref="MemoryReservation"/> instance.
     /// </summary>

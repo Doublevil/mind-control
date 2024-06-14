@@ -52,15 +52,210 @@ public class ProcessMemoryAllocationTest : ProcessMemoryTest
         Assert.That(allocation.IsExecutable, Is.True);
         Assert.That(TestProcessMemory!.Allocations, Has.Member(allocation));
     }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Allocate"/> method.
+    /// Performs two allocations: one with a range and one without a range.
+    /// The range starts after the expected range of the rangeless allocation.
+    /// Expect the rangeless allocation to be outside of the range, and the ranged allocation to be within the range.
+    /// </summary>
+    [Test]
+    public void AllocateWithinRangeTest()
+    {
+        var range = new MemoryRange(new UIntPtr(0x120000), UIntPtr.MaxValue);
+        var allocationWithoutRangeResult = TestProcessMemory!.Allocate(0x1000, false);
+        var allocationWithRangeResult = TestProcessMemory!.Allocate(0x1000, false, range);
+        Assert.That(allocationWithoutRangeResult.IsSuccess, Is.True);
+        Assert.That(allocationWithRangeResult.IsSuccess, Is.True);
+        Assert.That(range.Contains(allocationWithoutRangeResult.Value.Range), Is.False);
+        Assert.That(range.Contains(allocationWithRangeResult.Value.Range), Is.True);
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Allocate"/> method.
+    /// Performs two allocations: one with a specific "nearAddress", the other one with default parameters.
+    /// The one with a specific "nearAddress" should be allocated closer to the specified address than the other one.
+    /// </summary>
+    [Test]
+    public void AllocateNearAddressTest()
+    {
+        var nearAddress = new UIntPtr(0x400000000000);
+        var allocationWithNearAddressResult = TestProcessMemory!.Allocate(0x1000, false, nearAddress: nearAddress);
+        var allocationWithoutNearAddressResult = TestProcessMemory!.Allocate(0x1000, false);
+        Assert.That(allocationWithoutNearAddressResult.IsSuccess, Is.True);
+        Assert.That(allocationWithNearAddressResult.IsSuccess, Is.True);
+        
+        Assert.That(allocationWithNearAddressResult.Value.Range.DistanceTo(nearAddress),
+            Is.LessThan(allocationWithoutNearAddressResult.Value.Range.DistanceTo(nearAddress)));
+    }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Allocate"/> method with a zero size.
-    /// This should throw an exception.
+    /// This should return an <see cref="AllocationFailureOnInvalidArguments"/>.
     /// </summary>
     [Test]
     public void AllocateZeroTest()
-        => Assert.Throws<ArgumentException>(() => TestProcessMemory!.Allocate(0, false));
+    {
+        var allocateResult = TestProcessMemory!.Allocate(0, false);
+        Assert.That(allocateResult.IsSuccess, Is.False);
+        Assert.That(allocateResult.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs an allocation, and then calls the tested method with a size that fits the previously allocated range.
+    /// This should perform a reservation on the existing allocation.
+    /// </summary>
+    [Test]
+    public void ReserveWithAvailableAllocationTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, false);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.Range.GetSize(), Is.EqualTo(0x1000));
+        Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+    }
     
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Calls the tested method without any existing allocation.
+    /// This should perform a new allocation and a reservation on it.
+    /// </summary>
+    [Test]
+    public void ReserveWithoutAvailableAllocationTest()
+    {
+        var reservationResult = TestProcessMemory!.Reserve(0x1000, false);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+        Assert.That(reservationResult.Value.Range.GetSize(), Is.EqualTo(0x1000));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs a code allocation, and then calls the tested method with a size that fits the previously allocated
+    /// range, but for data, not code.
+    /// This should still perform a reservation on the existing allocation, because code allocations can be used for
+    /// data.
+    /// </summary>
+    [Test]
+    public void ReserveForDataWithAvailableCodeAllocationTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, false);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs a data allocation, and then calls the tested method with a size that fits the previously allocated
+    /// range, but for executable code, not data.
+    /// This should perform a new allocation with executable permissions (because data allocations cannot be used for
+    /// code), and a reservation on it.
+    /// </summary>
+    [Test]
+    public void ReserveForCodeWithAvailableDataAllocationTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, true);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
+        Assert.That(reservation.ParentAllocation.IsExecutable, Is.True);
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs a code allocation, and then calls the tested method with a size that fits the previously allocated
+    /// range, and for code.
+    /// This should perform a reservation on the existing allocation.
+    /// </summary>
+    [Test]
+    public void ReserveForCodeWithAvailableCodeAllocationTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, true);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs an allocation of 0x1000 bytes, and then calls the tested method with a size of 0x2000 bytes.
+    /// This should perform a new allocation and a reservation on it.
+    /// </summary>
+    [Test]
+    public void ReserveTooLargeForAvailableAllocationsTest()
+    {
+        var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x2000, true);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs an allocation, and then calls the tested method with a size that fits the previously allocated range,
+    /// but with a limit range that is outside of the existing allocated range.
+    /// This should perform a new allocation and a reservation on it.
+    /// </summary>
+    [Test]
+    public void ReserveWithLimitRangeTest()
+    {
+        var range = new MemoryRange(unchecked((UIntPtr)0x400000000000), UIntPtr.MaxValue); 
+        var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, true, range);
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
+        Assert.That(range.Contains(reservation.Address));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method.
+    /// Performs 3 allocations at various ranges, and then calls the tested method with a size that fits all previously
+    /// allocated ranges, but with a near address that is closer to the second allocation.
+    /// This should perform a reservation on the second allocation.
+    /// </summary>
+    [Test]
+    public void ReserveWithNearAddressTest()
+    {
+        TestProcessMemory!.Allocate(0x1000, true,
+            new MemoryRange(unchecked((UIntPtr)0x400000000000), UIntPtr.MaxValue));
+        var allocation2 = TestProcessMemory!.Allocate(0x1000, true,
+            new MemoryRange(unchecked((UIntPtr)0x200000000000), UIntPtr.MaxValue)).Value;
+        TestProcessMemory!.Allocate(0x1000, true,
+            new MemoryRange(unchecked((UIntPtr)0x4B0000000000), UIntPtr.MaxValue));
+        
+        var reservationResult = TestProcessMemory.Reserve(0x1000, true, nearAddress:unchecked((UIntPtr)0x2000051C0000));
+        Assert.That(reservationResult.IsSuccess, Is.True);
+        var reservation = reservationResult.Value;
+        Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation2));
+        Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(3));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Reserve"/> method with a size of zero.
+    /// Expects the result to be an <see cref="AllocationFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void ReserveZeroTest()
+    {
+        var reserveResult = TestProcessMemory!.Reserve(0, false);
+        Assert.That(reserveResult.IsSuccess, Is.False);
+        Assert.That(reserveResult.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+    }
+
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Store(byte[],MemoryAllocation)"/> method.
     /// Stores a byte array in an allocated range and verifies that the value has been stored properly.

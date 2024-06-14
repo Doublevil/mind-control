@@ -18,14 +18,23 @@ public partial class ProcessMemory : IDisposable
     
     private readonly Process _process;
     private readonly IOperatingSystemService _osService;
-    private IntPtr _processHandle;
-    private bool _is64Bits;
     private readonly bool _ownsProcessInstance;
     
     /// <summary>
     /// Gets a value indicating if the process is currently attached or not.
     /// </summary>
     public bool IsAttached { get; private set; }
+    
+    /// <summary>
+    /// Gets a boolean indicating if the process is 64-bits.
+    /// </summary>
+    public bool Is64Bits { get; private set; }
+    
+    /// <summary>
+    /// Gets the handle of the attached process.
+    /// Use this if you need to manually call Win32 API functions.
+    /// </summary>
+    public IntPtr ProcessHandle { get; private set; }
 
     /// <summary>
     /// Gets or sets the default way this instance deals with memory protection.
@@ -130,16 +139,16 @@ public partial class ProcessMemory : IDisposable
     {
         try
         {
-            _is64Bits = _osService.IsProcess64Bits(_process.Id).GetValueOrDefault(defaultValue: true);
+            Is64Bits = _osService.IsProcess64Bits(_process.Id).GetValueOrDefault(defaultValue: true);
             
-            if (_is64Bits && !Environment.Is64BitOperatingSystem)
+            if (Is64Bits && !Environment.Is64BitOperatingSystem)
                 throw new ProcessException(_process.Id, "A 32-bit program cannot attach to a 64-bit process.");
             
             _process.EnableRaisingEvents = true;
             _process.Exited += OnProcessExited;
             var openResult = _osService.OpenProcess(_process.Id);
             openResult.ThrowOnError();
-            _processHandle = openResult.Value;
+            ProcessHandle = openResult.Value;
 
             IsAttached = true;
         }
@@ -155,7 +164,7 @@ public partial class ProcessMemory : IDisposable
     /// In other words, returns false if the pointer is a 64-bit address but the target process is 32-bit. 
     /// </summary>
     /// <param name="pointer">Pointer to test.</param>
-    private bool IsBitnessCompatible(UIntPtr pointer) => _is64Bits || pointer.ToUInt64() <= uint.MaxValue;
+    private bool IsBitnessCompatible(UIntPtr pointer) => Is64Bits || pointer.ToUInt64() <= uint.MaxValue;
 
     /// <summary>
     /// Gets a new instance of <see cref="Process"/> representing the attached process.
@@ -173,19 +182,6 @@ public partial class ProcessMemory : IDisposable
         if (IsAttached)
         {
             IsAttached = false;
-            for (int i = _allocations.Count - 1; i >= 0; i--)
-            {
-                try
-                {
-                    _allocations[i].Dispose();
-                }
-                catch (Exception)
-                {
-                    // Just skip. We probably lost the process and thus cannot do anything with it anymore.
-                    _allocations.RemoveAt(i);
-                }
-            }
-
             _process.Exited -= OnProcessExited;
             ProcessDetached?.Invoke(this, EventArgs.Empty);
         }

@@ -10,7 +10,12 @@ public readonly record struct MemoryRange
 
     /// <summary>End address of the range.</summary>
     public UIntPtr End { get; init; }
-    
+
+    /// <summary>Instance representing the full 32-bits address space.</summary>
+    /// <remarks>There is no 64-bits equivalent because, if the system is 32-bits, such a range cannot be represented.
+    /// </remarks>
+    public static readonly MemoryRange Full32BitsRange = new(UIntPtr.Zero, (UIntPtr)int.MaxValue);
+
     /// <summary>
     /// Builds a <see cref="MemoryRange"/>.
     /// </summary>
@@ -43,7 +48,7 @@ public readonly record struct MemoryRange
     /// </summary>
     /// <param name="address">Address to check.</param>
     /// <returns>True if the address is within the memory range, false otherwise.</returns>
-    public bool IsInRange(UIntPtr address)
+    public bool Contains(UIntPtr address)
         => address.ToUInt64() >= Start.ToUInt64() && address.ToUInt64() <= End.ToUInt64();
 
     /// <summary>
@@ -53,6 +58,27 @@ public readonly record struct MemoryRange
     /// <returns>True if the range is entirely contained within this range, false otherwise.</returns>
     public bool Contains(MemoryRange range)
         => range.Start.ToUInt64() >= Start.ToUInt64() && range.End.ToUInt64() <= End.ToUInt64();
+    
+    /// <summary>
+    /// Determines the shortest distance between the specified address and any address within the range.
+    /// </summary>
+    /// <param name="address">Target address.</param>
+    /// <returns>The distance between the address and the range.</returns>
+    public ulong DistanceTo(UIntPtr address)
+    {
+        ulong addressValue = address.ToUInt64();
+        ulong startValue = Start.ToUInt64();
+
+        if (addressValue < startValue)
+            return startValue - addressValue;
+
+        ulong endValue = End.ToUInt64();
+        if (addressValue > endValue)
+            return addressValue - endValue;
+        
+        // Address is within the range
+        return 0;
+    }
     
     /// <summary>
     /// Determines if the specified range overlaps with this range.

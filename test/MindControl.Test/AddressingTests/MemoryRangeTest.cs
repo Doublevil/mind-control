@@ -77,10 +77,10 @@ public class MemoryRangeTest
     
     #endregion
     
-    #region IsInRange
+    #region Contains(UIntPtr)
 
     /// <summary>
-    /// Tests the <see cref="MemoryRange.IsInRange"/> method with specified addresses and ranges.
+    /// Tests the <see cref="MemoryRange.Contains(UIntPtr)"/> method with specified addresses and ranges.
     /// It should return the specified expected value.
     /// </summary>
     [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x1000, ExpectedResult = true)]
@@ -91,15 +91,15 @@ public class MemoryRangeTest
     public bool IsInRangeTest(ulong start, ulong end, ulong address)
     {
         var range = new MemoryRange(new UIntPtr(start), new UIntPtr(end));
-        return range.IsInRange(new UIntPtr(address));
+        return range.Contains(new UIntPtr(address));
     }
     
     #endregion
     
-    #region Contains
+    #region Contains(MemoryRange)
     
     /// <summary>
-    /// Tests the <see cref="MemoryRange.Contains"/> method with specified ranges.
+    /// Tests the <see cref="MemoryRange.Contains(MemoryRange)"/> method with specified ranges.
     /// It should return the specified expected value.
     /// </summary>
     [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x1001, (ulong)0x1FFE, ExpectedResult = true)]
@@ -115,6 +115,27 @@ public class MemoryRangeTest
         var range = new MemoryRange(new UIntPtr(start), new UIntPtr(end));
         var otherRange = new MemoryRange(new UIntPtr(otherStart), new UIntPtr(otherEnd));
         return range.Contains(otherRange);
+    }
+    
+    #endregion
+    
+    #region DistanceTo
+
+    /// <summary>
+    /// Tests the <see cref="MemoryRange.DistanceTo"/> method with specified ranges and addresses.
+    /// It should return the specified expected value.
+    /// </summary>
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x1000, ExpectedResult = (ulong)0)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x1FFF, ExpectedResult = (ulong)0)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x14A2, ExpectedResult = (ulong)0)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x0000, ExpectedResult = (ulong)0x1000)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x0FFF, ExpectedResult = (ulong)1)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x2000, ExpectedResult = (ulong)1)]
+    [TestCase((ulong)0x1000, (ulong)0x1FFF, (ulong)0x3000, ExpectedResult = (ulong)0x1001)]
+    public ulong DistanceToTest(ulong start, ulong end, ulong address)
+    {
+        var range = new MemoryRange(new UIntPtr(start), new UIntPtr(end));
+        return range.DistanceTo(new UIntPtr(address));
     }
     
     #endregion

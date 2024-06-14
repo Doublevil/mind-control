@@ -21,7 +21,7 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
         var result = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10,0");
         
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.EqualTo((UIntPtr)ulong.MaxValue));
+        Assert.That(result.Value, Is.EqualTo(unchecked((UIntPtr)ulong.MaxValue)));
     }
     
     /// <summary>
@@ -56,7 +56,7 @@ public class ProcessMemoryEvaluateTest : ProcessMemoryTest
         var error = result.Error;
         Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerReadFailure>());
         var pathError = (PathEvaluationFailureOnPointerReadFailure)error;
-        Assert.That(pathError.Address, Is.EqualTo((UIntPtr)ulong.MaxValue));
+        Assert.That(pathError.Address, Is.EqualTo(unchecked((UIntPtr)ulong.MaxValue)));
         Assert.That(pathError.Details, Is.TypeOf<ReadFailureOnSystemRead>());
         var readFailure = (ReadFailureOnSystemRead)pathError.Details;
         Assert.That(readFailure.Details, Is.TypeOf<OperatingSystemCallFailure>());

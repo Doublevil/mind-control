@@ -28,7 +28,7 @@ public class ProcessMemoryFindBytesTest : ProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.IsInRange(results.Single()), Is.True);
+        Assert.That(range!.Value.Contains(results.Single()), Is.True);
     }
     
     /// <summary>
@@ -55,7 +55,7 @@ public class ProcessMemoryFindBytesTest : ProcessMemoryTest
         
         // Verify that the results are within the range of the main module
         foreach (var result in results)
-            Assert.That(range!.Value.IsInRange(result), Is.True);
+            Assert.That(range!.Value.Contains(result), Is.True);
     }
     
     /// <summary>
@@ -78,7 +78,7 @@ public class ProcessMemoryFindBytesTest : ProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.IsInRange(results.Single()), Is.True);
+        Assert.That(range!.Value.Contains(results.Single()), Is.True);
     }
     
     /// <summary>
@@ -102,6 +102,6 @@ public class ProcessMemoryFindBytesTest : ProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.IsInRange(results.Single()), Is.True);
+        Assert.That(range!.Value.Contains(results.Single()), Is.True);
     }
 }
