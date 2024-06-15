@@ -20,7 +20,7 @@ public static class ProcessMemoryCodeExtensions
     /// <param name="instructionCount">Number of consecutive instructions to replace. Default is 1.</param>
     /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a code writing
     /// failure.</returns>
-    public static Result<CodeChange, CodeWritingFailure> RemoveCodeAt(this ProcessMemory processMemory,
+    public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
         PointerPath pointerPath, int instructionCount = 1)
     {
         if (instructionCount < 1)
@@ -31,7 +31,7 @@ public static class ProcessMemoryCodeExtensions
         if (addressResult.IsFailure)
             return new CodeWritingFailureOnPathEvaluation(addressResult.Error);
         
-        return processMemory.RemoveCodeAt(addressResult.Value, instructionCount);
+        return processMemory.DisableCodeAt(addressResult.Value, instructionCount);
     }
     
     /// <summary>
@@ -43,9 +43,11 @@ public static class ProcessMemoryCodeExtensions
     /// <param name="instructionCount">Number of consecutive instructions to replace. Default is 1.</param>
     /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a code writing
     /// failure.</returns>
-    public static Result<CodeChange, CodeWritingFailure> RemoveCodeAt(this ProcessMemory processMemory,
+    public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
         UIntPtr address, int instructionCount = 1)
     {
+        if (address == UIntPtr.Zero)
+            return new CodeWritingFailureOnZeroPointer();
         if (instructionCount < 1)
             return new CodeWritingFailureOnInvalidArguments(
                 "The number of instructions to replace must be at least 1.");
@@ -63,7 +65,7 @@ public static class ProcessMemoryCodeExtensions
         {
             var instruction = decoder.Decode();
             if (instruction.IsInvalid)
-                return new CodeWritingFailureOnDecodingFailure(decoder.LastError);
+                return new CodeWritingFailureOnDecoding(decoder.LastError);
 
             fullLength += (ulong)instruction.Length;
         }

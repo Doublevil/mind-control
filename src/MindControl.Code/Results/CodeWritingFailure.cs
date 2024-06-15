@@ -95,7 +95,7 @@ public record CodeWritingFailureOnReadFailure(ReadFailure Details)
 /// Represents a failure that occurred while writing code to a target process when a disassembling operation failed.
 /// </summary>
 /// <param name="Error">Error code that describes the failure.</param>
-public record CodeWritingFailureOnDecodingFailure(DecoderError Error)
+public record CodeWritingFailureOnDecoding(DecoderError Error)
     : CodeWritingFailure(CodeWritingFailureReason.DecodingFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
