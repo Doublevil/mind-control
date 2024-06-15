@@ -39,8 +39,8 @@ public partial class Win32Service : IOperatingSystemService
     /// Returns a value indicating if the process with the given identifier is a 64-bit process or not.
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
-    /// <returns>A result holding either a boolean indicating if the process is 64-bits, or a system failure.</returns>
-    public Result<bool, SystemFailure> IsProcess64Bits(int pid)
+    /// <returns>A result holding either a boolean indicating if the process is 64-bit, or a system failure.</returns>
+    public Result<bool, SystemFailure> IsProcess64Bit(int pid)
     {
         try
         {
@@ -48,8 +48,8 @@ public partial class Win32Service : IOperatingSystemService
             if (!IsWow64Process(process.Handle, out bool isWow64))
                 return GetLastSystemError();
         
-            // Process is 64 bits if we are running a 64-bits system and the process is NOT in wow64.
-            return !isWow64 && IsSystem64Bits();
+            // Process is 64-bit if we are running a 64-bit system and the process is NOT in wow64.
+            return !isWow64 && IsSystem64Bit();
         }
         catch (Exception)
         {
@@ -59,10 +59,10 @@ public partial class Win32Service : IOperatingSystemService
     }
 
     /// <summary>
-    /// Returns a value indicating if the system is 64 bits or not.
+    /// Returns a value indicating if the system is 64-bit or not.
     /// </summary>
-    /// <returns>A boolean indicating if the system is 64 bits or not.</returns>
-    private bool IsSystem64Bits() => IntPtr.Size == 8;
+    /// <returns>A boolean indicating if the system is 64-bit or not.</returns>
+    private bool IsSystem64Bit() => IntPtr.Size == 8;
 
     /// <summary>
     /// Reads a targeted range of the memory of a specified process.
@@ -147,16 +147,16 @@ public partial class Win32Service : IOperatingSystemService
             if (length == 1)
                 return initialReadError;
 
-            // Determine if the process is 64 bits
+            // Determine if the process is 64-bit
             if (!IsWow64Process(processHandle, out bool isWow64))
                 return GetLastSystemError();
-            bool is64Bits = !isWow64 && IsSystem64Bits();
+            bool is64Bit = !isWow64 && IsSystem64Bit();
             
             // Build the memory range that spans across everything we attempted to read
             var range = MemoryRange.FromStartAndSize(baseAddress, length);
             
             // Determine the last readable address within the range
-            var lastReadableAddress = GetLastConsecutiveReadableAddressWithinRange(processHandle, is64Bits, range);
+            var lastReadableAddress = GetLastConsecutiveReadableAddressWithinRange(processHandle, is64Bit, range);
             
             // If we couldn't determine the last readable address, or it matches/exceeds the end of the range, there
             // is no point in trying to read again. Return the initial read error.
@@ -186,11 +186,11 @@ public partial class Win32Service : IOperatingSystemService
     /// the end address of the last consecutive readable region. If the start of the range is unreadable, returns null.
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <param name="range">Memory range to check for readable regions.</param>
     /// <returns>The end address of the last consecutive readable region within the range, or null if the start of the
     /// range is unreadable.</returns>
-    private UIntPtr? GetLastConsecutiveReadableAddressWithinRange(IntPtr processHandle, bool is64Bits,
+    private UIntPtr? GetLastConsecutiveReadableAddressWithinRange(IntPtr processHandle, bool is64Bit,
         MemoryRange range)
     {
         var applicationMemoryLimit = GetFullMemoryRange().End;
@@ -198,7 +198,7 @@ public partial class Win32Service : IOperatingSystemService
         UIntPtr currentAddress = range.Start;
         while (currentAddress.ToUInt64() <= rangeEnd)
         {
-            var getRegionResult = GetRegionMetadata(processHandle, currentAddress, is64Bits);
+            var getRegionResult = GetRegionMetadata(processHandle, currentAddress, is64Bit);
             
             // If we failed to get the region metadata, stop iterating.
             if (getRegionResult.IsFailure)
@@ -229,12 +229,12 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.
     /// The handle must have PROCESS_VM_OPERATION access.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <param name="targetAddress">An address in the target page.</param>
     /// <param name="newProtection">New protection value for the page.</param>
     /// <returns>A result holding either the memory protection value that was effective on the page before being
     /// changed, or a system failure.</returns>
-    public Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits,
+    public Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bit,
         UIntPtr targetAddress, MemoryProtection newProtection)
     {
         if (processHandle == IntPtr.Zero)
@@ -244,7 +244,7 @@ public partial class Win32Service : IOperatingSystemService
             return new SystemFailureOnInvalidArgument(nameof(targetAddress),
                 "The target address cannot be a zero pointer.");
 
-        var result = VirtualProtectEx(processHandle, targetAddress, (IntPtr)(is64Bits ? 8 : 4), newProtection,
+        var result = VirtualProtectEx(processHandle, targetAddress, is64Bit ? 8 : 4, newProtection,
             out var previousProtection);
 
         return result ? previousProtection : GetLastSystemError();
@@ -450,13 +450,13 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
     public Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress,
-        bool is64Bits)
+        bool is64Bit)
     {
         MemoryBasicInformation memoryBasicInformation;
-        if (is64Bits)
+        if (is64Bit)
         {
             // Use the 64-bit variant of the structure.
             var memInfo64 = new MemoryBasicInformation64();
@@ -470,7 +470,7 @@ public partial class Win32Service : IOperatingSystemService
         }
         else
         {
-            // Use the 32-bits variant of the structure.
+            // Use the 32-bit variant of the structure.
             var memInfo32 = new MemoryBasicInformation32();
             if (VirtualQueryEx(processHandle, baseAddress, out memInfo32,
                     (UIntPtr)Marshal.SizeOf(memInfo32)) == UIntPtr.Zero)

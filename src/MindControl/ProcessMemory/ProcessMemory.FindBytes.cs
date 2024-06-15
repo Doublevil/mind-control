@@ -182,7 +182,7 @@ public partial class ProcessMemory
         UIntPtr currentAddress = range.Start;
         while (currentAddress.ToUInt64() <= rangeEnd)
         {
-            var getRegionResult = _osService.GetRegionMetadata(ProcessHandle, currentAddress, Is64Bits);
+            var getRegionResult = _osService.GetRegionMetadata(ProcessHandle, currentAddress, Is64Bit);
             if (getRegionResult.IsFailure)
             {
                 // If we failed to get the region metadata, we cannot continue because we don't know where the next

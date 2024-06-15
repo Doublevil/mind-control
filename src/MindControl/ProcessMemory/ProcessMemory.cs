@@ -26,9 +26,9 @@ public partial class ProcessMemory : IDisposable
     public bool IsAttached { get; private set; }
     
     /// <summary>
-    /// Gets a boolean indicating if the process is 64-bits.
+    /// Gets a boolean indicating if the process is 64-bit.
     /// </summary>
-    public bool Is64Bits { get; private set; }
+    public bool Is64Bit { get; private set; }
     
     /// <summary>
     /// Gets the handle of the attached process.
@@ -139,9 +139,9 @@ public partial class ProcessMemory : IDisposable
     {
         try
         {
-            Is64Bits = _osService.IsProcess64Bits(_process.Id).GetValueOrDefault(defaultValue: true);
+            Is64Bit = _osService.IsProcess64Bit(_process.Id).GetValueOrDefault(defaultValue: true);
             
-            if (Is64Bits && !Environment.Is64BitOperatingSystem)
+            if (Is64Bit && !Environment.Is64BitOperatingSystem)
                 throw new ProcessException(_process.Id, "A 32-bit program cannot attach to a 64-bit process.");
             
             _process.EnableRaisingEvents = true;
@@ -164,7 +164,7 @@ public partial class ProcessMemory : IDisposable
     /// In other words, returns false if the pointer is a 64-bit address but the target process is 32-bit. 
     /// </summary>
     /// <param name="pointer">Pointer to test.</param>
-    private bool IsBitnessCompatible(UIntPtr pointer) => Is64Bits || pointer.ToUInt64() <= uint.MaxValue;
+    private bool IsBitnessCompatible(UIntPtr pointer) => Is64Bit || pointer.ToUInt64() <= uint.MaxValue;
 
     /// <summary>
     /// Gets a new instance of <see cref="Process"/> representing the attached process.

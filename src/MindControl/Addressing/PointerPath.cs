@@ -34,10 +34,10 @@ public class PointerPath
         public PointerOffset[] PointerOffsets { get; init; }
         
         /// <summary>
-        /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bits
+        /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bit
         /// process.
         /// </summary>
-        public bool IsStrictly64Bits => BaseModuleOffset.Is64Bits || PointerOffsets.Any(offset => offset.Is64Bits);
+        public bool IsStrictly64Bit => BaseModuleOffset.Is64Bit || PointerOffsets.Any(offset => offset.Is64Bit);
     }
     
     /// <summary>
@@ -69,13 +69,13 @@ public class PointerPath
     public PointerOffset[] PointerOffsets => _parsedData.PointerOffsets;
 
     /// <summary>
-    /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bits
+    /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bit
     /// process.
     /// For example, for the expression "app.dll+0000F04AA1218410", this boolean would be True.
     /// For the expression "app.dll+00000000F04AA121", this boolean would be False.
     /// Note that evaluating a 32-bit-compatible address may still end up overflowing.
     /// </summary>
-    public bool IsStrictly64Bits => _parsedData.IsStrictly64Bits;
+    public bool IsStrictly64Bit => _parsedData.IsStrictly64Bit;
     
     /// <summary>
     /// Builds a pointer path from the given expression.
@@ -111,13 +111,13 @@ public class PointerPath
     /// Checks the given expression and returns a boolean indicating if it is valid or not.
     /// </summary>
     /// <param name="expression">Expression to check.</param>
-    /// <param name="allowOnly32Bits">If set to True, valid 64-bit expressions will still cause False to be returned.
+    /// <param name="allowOnly32Bit">If set to True, valid 64-bit expressions will still cause False to be returned.
     /// </param>
     /// <returns>True if the expression is valid.</returns>
-    public static bool IsValid(string expression, bool allowOnly32Bits = false)
+    public static bool IsValid(string expression, bool allowOnly32Bit = false)
     {
         var parsedData = Parse(expression);
-        return parsedData != null && (!allowOnly32Bits || !parsedData.Value.IsStrictly64Bits);
+        return parsedData != null && (!allowOnly32Bit || !parsedData.Value.IsStrictly64Bit);
     }
 
     /// <summary>
@@ -125,14 +125,14 @@ public class PointerPath
     /// expression was successfully parsed, or null if the expression is not valid.
     /// </summary>
     /// <param name="expression">Expression to check.</param>
-    /// <param name="allowOnly32Bits">If set to True, valid 64-bit expressions will still cause null to be returned.
+    /// <param name="allowOnly32Bit">If set to True, valid 64-bit expressions will still cause null to be returned.
     /// </param>
     /// <returns>The resulting <see cref="PointerPath"/> instance if the expression was successfully parsed, or
     /// null if the expression is not valid.</returns>
-    public static PointerPath? TryParse(string expression, bool allowOnly32Bits = false)
+    public static PointerPath? TryParse(string expression, bool allowOnly32Bit = false)
     {
         var parsedData = Parse(expression);
-        return parsedData == null || allowOnly32Bits && parsedData.Value.IsStrictly64Bits ?
+        return parsedData == null || allowOnly32Bit && parsedData.Value.IsStrictly64Bit ?
             null : new PointerPath(expression, parsedData);
     }
     

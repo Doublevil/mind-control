@@ -14,7 +14,7 @@ public partial class ProcessMemory
     /// <returns>The memory address pointed by the pointer path.</returns>
     public Result<UIntPtr, PathEvaluationFailure> EvaluateMemoryAddress(PointerPath pointerPath)
     {
-        if (pointerPath.IsStrictly64Bits && (IntPtr.Size == 4 || !Is64Bits))
+        if (pointerPath.IsStrictly64Bit && (IntPtr.Size == 4 || !Is64Bit))
             return new PathEvaluationFailureOnIncompatibleBitness();
         
         UIntPtr? baseAddress;

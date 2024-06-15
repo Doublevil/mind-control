@@ -11,10 +11,10 @@ public readonly record struct MemoryRange
     /// <summary>End address of the range.</summary>
     public UIntPtr End { get; init; }
 
-    /// <summary>Instance representing the full 32-bits address space.</summary>
-    /// <remarks>There is no 64-bits equivalent because, if the system is 32-bits, such a range cannot be represented.
+    /// <summary>Instance representing the full 32-bit address space.</summary>
+    /// <remarks>There is no 64-bit equivalent because, if the system is 32-bit, such a range cannot be represented.
     /// </remarks>
-    public static readonly MemoryRange Full32BitsRange = new(UIntPtr.Zero, (UIntPtr)int.MaxValue);
+    public static readonly MemoryRange Full32BitRange = new(UIntPtr.Zero, int.MaxValue);
 
     /// <summary>
     /// Builds a <see cref="MemoryRange"/>.
@@ -134,7 +134,8 @@ public readonly record struct MemoryRange
     /// Returns a subset of this range, aligned to the specified byte alignment.
     /// For example, a range of [2,9] aligned to 4 bytes will result in [4,8].
     /// </summary>
-    /// <param name="alignment">Alignment in bytes. Usually 4 for 32-bits processes, or 8 for 64-bits processes.</param>
+    /// <param name="alignment">Alignment in bytes. Usually 4 for 32-bit processes, or 8 for 64-bit processes.
+    /// An alignment of 4 or 8 usually provide better performance when reading or writing memory.</param>
     /// <param name="alignmentMode">Alignment mode. Defines how the range should be aligned. Defaults to
     /// <see cref="RangeAlignmentMode.AlignBlock"/>.</param>
     /// <returns>The aligned memory range. The returned range is always a subset of the range, or the range itself.

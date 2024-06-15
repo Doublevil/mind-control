@@ -12,14 +12,14 @@ public static class AssemblerExtensions
     /// Checks if the register is compatible with the target architecture and can be saved and restored individually.
     /// </summary>
     /// <param name="register">Register to check.</param>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>True if the register is compatible with the target architecture, false otherwise.</returns>
     /// <remarks>For ST registers, this method will always return false, because ST registers must be saved and restored
     /// as a whole (to preserve the whole FPU stack).</remarks>
-    internal static bool IsIndividualPreservationSupported(this Register register, bool is64Bits)
+    internal static bool IsIndividualPreservationSupported(this Register register, bool is64Bit)
     {
-        return (is64Bits && register.IsGPR64()) || (!is64Bits && register.IsGPR32())
-            || (register.IsXMM() && register.GetNumber() <= GetMaxXmmRegisterNumber(is64Bits))
+        return (is64Bit && register.IsGPR64()) || (!is64Bit && register.IsGPR32())
+            || (register.IsXMM() && register.GetNumber() <= GetMaxXmmRegisterNumber(is64Bit))
             || register.IsST()
             || register.IsMM();
     }
@@ -27,9 +27,9 @@ public static class AssemblerExtensions
     /// <summary>
     /// Gets the maximum number of XMM registers available for the target architecture.
     /// </summary>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The maximum number of XMM registers available for the target architecture.</returns>
-    private static int GetMaxXmmRegisterNumber(bool is64Bits) => is64Bits ? 15 : 7;
+    private static int GetMaxXmmRegisterNumber(bool is64Bit) => is64Bit ? 15 : 7;
 
     /// <summary>
     /// Saves the given register to the stack (push it on the stack using instructions that depend on the register and
@@ -91,10 +91,10 @@ public static class AssemblerExtensions
     /// Gets the size in bytes of the instructions needed to save the given register to the stack.
     /// </summary>
     /// <param name="register">Register to save.</param>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to save the register to the stack.</returns>
     /// <exception cref="ArgumentException">Thrown if the register is not supported.</exception>
-    internal static int GetSizeOfSaveInstructions(Register register, bool is64Bits)
+    internal static int GetSizeOfSaveInstructions(Register register, bool is64Bit)
     {
         // Some registers are pushed on 2-byte instructions
         if (TwoBytePushGprRegisters.Contains(register))
@@ -113,8 +113,8 @@ public static class AssemblerExtensions
             // Additionally, the movq instruction for XMM registers with numbers 8 and above (only available in x64) is
             // one byte longer.
             
-            int subSize = is64Bits ? 4 : 3;
-            int movSize = is64Bits ? (register.GetNumber() >= 8 ? 6 : 5) : 4;
+            int subSize = is64Bit ? 4 : 3;
+            int movSize = is64Bit ? (register.GetNumber() >= 8 ? 6 : 5) : 4;
             return subSize + movSize;
         }
         
@@ -178,11 +178,11 @@ public static class AssemblerExtensions
     /// Gets the size in bytes of the instructions needed to restore the given register to the stack.
     /// </summary>
     /// <param name="register">Register to save.</param>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to restore the register from the stack.</returns>
     /// <exception cref="ArgumentException">Thrown if the register is not supported.</exception>
-    internal static int GetSizeOfRestoreInstructions(Register register, bool is64Bits)
-        => GetSizeOfSaveInstructions(register, is64Bits); // The instructions are the opposite, but the size is the same
+    internal static int GetSizeOfRestoreInstructions(Register register, bool is64Bit)
+        => GetSizeOfSaveInstructions(register, is64Bit); // The instructions are the opposite, but the size is the same
     
     /// <summary>
     /// Saves the FPU stack state as a whole (pushes all 8 ST registers to the stack).
@@ -216,9 +216,9 @@ public static class AssemblerExtensions
     /// <summary>
     /// Gets the size in bytes of the instructions needed to save the FPU stack state as a whole.
     /// </summary>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to save the FPU stack state as a whole.</returns>
-    internal static int GetSizeOfFpuStackSave(bool is64Bits)
+    internal static int GetSizeOfFpuStackSave(bool is64Bit)
     {
         // Example in x86:
         // sub esp, 64       ; 83 EC 40 (3 bytes)
@@ -230,7 +230,7 @@ public static class AssemblerExtensions
         // For x64, there is an added REX prefix byte (0x48) for each instruction.
         // So it should be 3 + 3 + 4 * 7 = 6 + 28 = 34 bytes for x86 and 4 + 4 + 5 * 7 = 8 + 35 = 43 bytes for x64.
         
-        return is64Bits ? 43 : 34;
+        return is64Bit ? 43 : 34;
     }
     
     /// <summary>
@@ -260,10 +260,10 @@ public static class AssemblerExtensions
     /// <summary>
     /// Gets the size in bytes of the instructions needed to restore the FPU stack state as a whole.
     /// </summary>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to restore the FPU stack state as a whole.</returns>
-    internal static int GetSizeOfFpuStackRestore(bool is64Bits)
-        => GetSizeOfFpuStackSave(is64Bits); // The instructions are the opposite, but the size is the same
+    internal static int GetSizeOfFpuStackRestore(bool is64Bit)
+        => GetSizeOfFpuStackSave(is64Bit); // The instructions are the opposite, but the size is the same
     
     /// <summary>
     /// Saves the CPU flags to the stack (pushes the flags to the stack).
@@ -280,9 +280,9 @@ public static class AssemblerExtensions
     /// <summary>
     /// Gets the size in bytes of the instructions needed to save the CPU flags.
     /// </summary>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to save the CPU flags.</returns>
-    internal static int GetSizeOfFlagsSave(bool is64Bits) => 1; // pushf is always single-byte
+    internal static int GetSizeOfFlagsSave(bool is64Bit) => 1; // pushf is always single-byte
     
     /// <summary>
     /// Restores the CPU flags from the stack (pops the flags from the stack).
@@ -299,9 +299,9 @@ public static class AssemblerExtensions
     /// <summary>
     /// Gets the size in bytes of the instructions needed to restore the CPU flags.
     /// </summary>
-    /// <param name="is64Bits">True if the target architecture is 64 bits, false if it is 32 bits.</param>
+    /// <param name="is64Bit">True if the target architecture is 64-bit, false if it is 32-bit.</param>
     /// <returns>The size in bytes of the instructions needed to restore the CPU flags.</returns>
-    internal static int GetSizeOfFlagsRestore(bool is64Bits) => 1; // popf is always single-byte
+    internal static int GetSizeOfFlagsRestore(bool is64Bit) => 1; // popf is always single-byte
     
     /// <summary>
     /// Attempts to assemble the instructions registered on this assembler instance and return the resulting bytes.

@@ -259,13 +259,13 @@ public class PointerPathTest
         {
             Expression = "mymoduleName.exe+FFFFFFFFFFFFFFFFF",
             ShouldBeValid = false,
-            Explanation = "A static offset cannot be over the 64-bits addressing limit."
+            Explanation = "A static offset cannot be over the 64-bit addressing limit."
         },
         new ExpressionTestCase
         {
             Expression = "mymoduleName.exe+FFFFFFFFFFFFFFFF+1",
             ShouldBeValid = false,
-            Explanation = "A static offset cannot be over the 64-bits addressing limit after adding up."
+            Explanation = "A static offset cannot be over the 64-bit addressing limit after adding up."
         },
         new ExpressionTestCase
         {
@@ -289,12 +289,12 @@ public class PointerPathTest
     
     /// <summary>
     /// Tests <see cref="PointerPath.IsValid(string,bool)"/> for the given expression test case.
-    /// The allowOnly32Bits boolean parameter will be set to False.
+    /// The allowOnly32Bit boolean parameter will be set to False.
     /// Verifies that the result is the expected one.
     /// </summary>
     /// <param name="testCase">Target test case.</param>
     [TestCaseSource(nameof(_testCases))]
-    public void IsValid_On64BitsTest(ExpressionTestCase testCase)
+    public void IsValidOn64BitTest(ExpressionTestCase testCase)
     {
         bool result = PointerPath.IsValid(testCase.Expression);
         Assert.That(result, Is.EqualTo(testCase.ShouldBeValid), testCase.Explanation);
@@ -302,12 +302,12 @@ public class PointerPathTest
     
     /// <summary>
     /// Tests <see cref="PointerPath.IsValid(string,bool)"/> for the given expression test case.
-    /// The allowOnly32Bits boolean parameter will be set to True.
+    /// The allowOnly32Bit boolean parameter will be set to True.
     /// Verifies that the result is the expected one, in accordance with the expected 64-bit exclusivity.
     /// </summary>
     /// <param name="testCase">Target test case.</param>
     [TestCaseSource(nameof(_testCases))]
-    public void IsValid_On32BitsTest(ExpressionTestCase testCase)
+    public void IsValidOn32BitTest(ExpressionTestCase testCase)
     {
         bool result = PointerPath.IsValid(testCase.Expression, true);
         Assert.That(result, Is.EqualTo(testCase is { ShouldBeValid: true, Expect64BitOnly: false }),
@@ -316,13 +316,13 @@ public class PointerPathTest
     
     /// <summary>
     /// Tests <see cref="PointerPath.TryParse(string,bool)"/> for the given expression test case.
-    /// The allowOnly32Bits boolean parameter will be set to False.
+    /// The allowOnly32Bit boolean parameter will be set to False.
     /// Verifies that the result is null when the expression is expected to be invalid, or otherwise that each property
     /// of the resulting address matches expectations.
     /// </summary>
     /// <param name="testCase">Target test case.</param>
     [TestCaseSource(nameof(_testCases))]
-    public void TryParse_On64BitsTest(ExpressionTestCase testCase)
+    public void TryParseOn64BitTest(ExpressionTestCase testCase)
     {
         var result = PointerPath.TryParse(testCase.Expression);
         AssertResultingAddress(result, testCase);
@@ -330,13 +330,13 @@ public class PointerPathTest
     
     /// <summary>
     /// Tests <see cref="PointerPath.TryParse(string,bool)"/> for the given expression test case.
-    /// The allowOnly32Bits boolean parameter will be set to True.
+    /// The allowOnly32Bit boolean parameter will be set to True.
     /// Verifies that the result is null when the expression is expected to be invalid in accordance with the expected
     /// 64-bit exclusivity, or otherwise that each property of the resulting address matches expectations.
     /// </summary>
     /// <param name="testCase">Target test case.</param>
     [TestCaseSource(nameof(_testCases))]
-    public void TryParse_On32BitsTest(ExpressionTestCase testCase)
+    public void TryParseOn32BitTest(ExpressionTestCase testCase)
     {
         var result = PointerPath.TryParse(testCase.Expression, true);
         if (testCase is { ShouldBeValid: true, Expect64BitOnly: true })
@@ -399,7 +399,7 @@ public class PointerPathTest
             Assert.That(result.BaseModuleName, Is.EqualTo(testCase.ExpectedModuleName), testCase.Explanation);
             Assert.That(result.BaseModuleOffset, Is.EqualTo(testCase.ExpectedModuleOffset), testCase.Explanation);
             Assert.That(result.PointerOffsets, Is.EquivalentTo(testCase.ExpectedPointerOffsets!), testCase.Explanation);
-            Assert.That(result.IsStrictly64Bits, Is.EqualTo(testCase.Expect64BitOnly), testCase.Explanation);
+            Assert.That(result.IsStrictly64Bit, Is.EqualTo(testCase.Expect64BitOnly), testCase.Explanation);
         });
     }
 }

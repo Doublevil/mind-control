@@ -18,8 +18,8 @@ public interface IOperatingSystemService
     /// Returns a value indicating if the process with the given identifier is a 64-bit process or not.
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
-    /// <returns>A result holding either a boolean indicating if the process is 64-bits, or a system failure.</returns>
-    Result<bool, SystemFailure> IsProcess64Bits(int pid);
+    /// <returns>A result holding either a boolean indicating if the process is 64-bit, or a system failure.</returns>
+    Result<bool, SystemFailure> IsProcess64Bit(int pid);
 
     /// <summary>
     /// Reads a targeted range of the memory of a specified process.
@@ -53,14 +53,14 @@ public interface IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.
     /// The handle must have PROCESS_VM_OPERATION access.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.</param>
+    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <param name="targetAddress">An address in the target page.</param>
     /// <param name="newProtection">New protection value for the page.</param>
     /// <returns>A result holding either the memory protection value that was effective on the page before being
     /// changed, or a system failure.</returns>
     /// <exception cref="ArgumentException">The process handle is invalid (zero pointer).</exception>
     /// <exception cref="ArgumentOutOfRangeException">The target address is invalid (zero pointer).</exception>
-    Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bits,
+    Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bit,
         UIntPtr targetAddress, MemoryProtection newProtection);
 
     /// <summary>
@@ -147,11 +147,10 @@ public interface IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
-    /// <param name="is64Bits">A boolean indicating if the target process is 64 bits or not.
-    /// If left null, the method will automatically determine the bitness of the process.</param>
+    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
     Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress,
-        bool is64Bits);
+        bool is64Bit);
 
     /// <summary>
     /// Gets the allocation granularity (minimal allocation size) of the system.

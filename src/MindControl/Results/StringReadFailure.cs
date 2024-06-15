@@ -16,7 +16,7 @@ public enum StringReadFailureReason
     InvalidSettings,
     
     /// <summary>
-    /// The string read operation failed because the target process is 32-bits, but the target memory address is not
+    /// The string read operation failed because the target process is 32-bit, but the target memory address is not
     /// within the 32-bit address space.
     /// </summary>
     IncompatibleBitness,
@@ -74,7 +74,7 @@ public record StringReadFailureOnInvalidSettings()
 }
 
 /// <summary>
-/// Represents a failure in a string read operation when the target process is 32-bits, but the target memory address is
+/// Represents a failure in a string read operation when the target process is 32-bit, but the target memory address is
 /// not within the 32-bit address space.
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>

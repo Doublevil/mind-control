@@ -6,7 +6,7 @@
 public enum PathEvaluationFailureReason
 {
     /// <summary>
-    /// The target process is 32-bits, but the path is not compatible with a 32-bit address space.
+    /// The target process is 32-bit, but the path is not compatible with a 32-bit address space.
     /// </summary>
     IncompatibleBitness,
     
@@ -33,7 +33,7 @@ public enum PathEvaluationFailureReason
 public abstract record PathEvaluationFailure(PathEvaluationFailureReason Reason);
 
 /// <summary>
-/// Represents a failure in a path evaluation operation when the target process is 32-bits, but the target memory
+/// Represents a failure in a path evaluation operation when the target process is 32-bit, but the target memory
 /// address is not within the 32-bit address space.
 /// </summary>
 /// <param name="PreviousAddress">Address where the value causing the issue was read. May be null if the first address
@@ -44,7 +44,7 @@ public record PathEvaluationFailureOnIncompatibleBitness(UIntPtr? PreviousAddres
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => "The specified pointer path contains 64-bit offsets, but the target process is 32-bits.";
+        => "The specified pointer path contains 64-bit offsets, but the target process is 32-bit.";
 }
 
 /// <summary>

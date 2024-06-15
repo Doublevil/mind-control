@@ -43,12 +43,12 @@ internal static class ConversionExtensions
     /// Converts the pointer to an array of bytes.
     /// </summary>
     /// <param name="pointer">Pointer to convert.</param>
-    /// <param name="is64">A boolean value indicating if the target architecture of the pointer is 64-bits or not.
+    /// <param name="is64Bit">A boolean value indicating if the target architecture of the pointer is 64-bit or not.
     /// This value is used to determine the size of the returned array.</param>
     /// <returns>The array of bytes representing the pointer.</returns>
-    public static byte[] ToBytes(this IntPtr pointer, bool is64)
+    public static byte[] ToBytes(this IntPtr pointer, bool is64Bit)
     {
-        var result = new byte[is64 ? 8 : 4];
+        var result = new byte[is64Bit ? 8 : 4];
         Marshal.Copy(pointer, result, 0, result.Length);
         return result;
     }

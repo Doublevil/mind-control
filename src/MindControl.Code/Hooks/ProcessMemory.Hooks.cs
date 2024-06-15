@@ -43,7 +43,7 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
         byte[] injectedCode, HookOptions options)
     {
-        ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bits)
+        ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
             + injectedCode.Length
             + MaxInstructionLength // Extra room for the original instructions
             + FarJumpInstructionLength); // Extra room for the jump back to the original code
@@ -64,7 +64,7 @@ public static class ProcessMemoryHookExtensions
         
         // Assemble the jump to the injected code
         var reservation = reservationResult.Value;
-        var jmpAssembler = new Assembler(processMemory.Is64Bits ? 64 : 32);
+        var jmpAssembler = new Assembler(processMemory.Is64Bit ? 64 : 32);
         jmpAssembler.jmp(reservation.Address);
         var jmpAssembleResult = jmpAssembler.AssembleToBytes(targetInstructionAddress);
         if (jmpAssembleResult.IsFailure)
@@ -78,7 +78,7 @@ public static class ProcessMemoryHookExtensions
         // Read the original instructions to replace, until we have enough bytes to fit the jump to the injected code
         using var stream = processMemory.GetMemoryStream(targetInstructionAddress);
         var codeReader = new StreamCodeReader(stream);
-        var decoder = Decoder.Create(processMemory.Is64Bits ? 64 : 32, codeReader, targetInstructionAddress);
+        var decoder = Decoder.Create(processMemory.Is64Bit ? 64 : 32, codeReader, targetInstructionAddress);
         var instructionsToReplace = new List<Instruction>();
         int bytesRead = 0;
         while (bytesRead < jmpBytes.Length)
@@ -112,7 +112,7 @@ public static class ProcessMemoryHookExtensions
         var nextOriginalInstructionAddress = (UIntPtr)(targetInstructionAddress + (ulong)bytesRead);
         
         // Assemble the pre-code
-        var preHookCodeResult = BuildPreHookCode(reservation.Address, instructionsToReplace, processMemory.Is64Bits,
+        var preHookCodeResult = BuildPreHookCode(reservation.Address, instructionsToReplace, processMemory.Is64Bit,
             options);
         if (preHookCodeResult.IsFailure)
         {
@@ -124,7 +124,7 @@ public static class ProcessMemoryHookExtensions
         // Assemble the post-code
         var postHookCodeAddress = (UIntPtr)(reservation.Address + (ulong)preHookCodeBytes.Length
             + (ulong)injectedCode.Length);
-        var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bits,
+        var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bit,
             options, nextOriginalInstructionAddress);
         if (postHookCodeResult.IsFailure)
         {
@@ -171,13 +171,13 @@ public static class ProcessMemoryHookExtensions
     /// </summary>
     /// <param name="baseAddress">Address where the pre-hook code is going to be written.</param>
     /// <param name="instructionsToReplace">Original instructions to be replaced by a jump to the injected code.</param>
-    /// <param name="is64Bits">Boolean indicating if the target process is 64-bits.</param>
+    /// <param name="is64Bit">Boolean indicating if the target process is 64-bit.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
     private static Result<byte[], HookFailure> BuildPreHookCode(ulong baseAddress,
-        IList<Instruction> instructionsToReplace, bool is64Bits, HookOptions options)
+        IList<Instruction> instructionsToReplace, bool is64Bit, HookOptions options)
     {
-        var assembler = new Assembler(is64Bits ? 64 : 32);
+        var assembler = new Assembler(is64Bit ? 64 : 32);
 
         // If the hook mode specifies that the original instruction should be executed first, add it to the code
         if (options.ExecutionMode == HookExecutionMode.ExecuteOriginalInstructionFirst
@@ -187,21 +187,23 @@ public static class ProcessMemoryHookExtensions
         }
         
         // Save flags if needed
-        if (options.IsolationMode.HasFlag(HookIsolationMode.PreserveFlags))
+        if (options.RegistersToPreserve.Contains(HookRegister.Flags))
             assembler.SaveFlags();
         
         // Save registers if needed
-        foreach (var register in options.RegistersToPreserve)
+        foreach (var hookRegister in options.RegistersToPreserve)
         {
+            var register = hookRegister.ToRegister(is64Bit);
+            
             // Skip the register if it's not supported or not compatible with the target architecture
-            if (!register.IsIndividualPreservationSupported(is64Bits))
+            if (register == null)
                 continue;
             
-            assembler.SaveRegister(register);
+            assembler.SaveRegister(register.Value);
         }
         
         // Save the FPU stack if needed
-        if (options.IsolationMode.HasFlag(HookIsolationMode.PreserveFpuStack))
+        if (options.RegistersToPreserve.Contains(HookRegister.FpuStack))
             assembler.SaveFpuStack();
         
         // Assemble the code and return the resulting bytes
@@ -217,31 +219,33 @@ public static class ProcessMemoryHookExtensions
     /// </summary>
     /// <param name="baseAddress">Address where the post-hook code is going to be written.</param>
     /// <param name="instructionsToReplace">Original instructions to be replaced by a jump to the injected code.</param>
-    /// <param name="is64Bits">Boolean indicating if the target process is 64-bits.</param>
+    /// <param name="is64Bit">Boolean indicating if the target process is 64-bit.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <param name="originalCodeJumpTarget">Address of the first byte of the instruction to jump back to.</param>
     /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
     private static Result<byte[], HookFailure> BuildPostHookCode(ulong baseAddress,
-        IList<Instruction> instructionsToReplace, bool is64Bits, HookOptions options, UIntPtr originalCodeJumpTarget)
+        IList<Instruction> instructionsToReplace, bool is64Bit, HookOptions options, UIntPtr originalCodeJumpTarget)
     {
-        var assembler = new Assembler(is64Bits ? 64 : 32);
+        var assembler = new Assembler(is64Bit ? 64 : 32);
         
         // Restore the FPU stack if needed
-        if (options.IsolationMode.HasFlag(HookIsolationMode.PreserveFpuStack))
+        if (options.RegistersToPreserve.Contains(HookRegister.FpuStack))
             assembler.RestoreFpuStack();
         
         // Restore registers if needed
-        foreach (var register in options.RegistersToPreserve.Reverse())
+        foreach (var hookRegister in options.RegistersToPreserve.Reverse())
         {
+            var register = hookRegister.ToRegister(is64Bit);
+            
             // Skip the register if it's not supported or not compatible with the target architecture
-            if (!register.IsIndividualPreservationSupported(is64Bits))
+            if (register == null)
                 continue;
             
-            assembler.RestoreRegister(register);
+            assembler.RestoreRegister(register.Value);
         }
         
         // Restore flags if needed
-        if (options.IsolationMode.HasFlag(HookIsolationMode.PreserveFlags))
+        if (options.RegistersToPreserve.Contains(HookRegister.Flags))
             assembler.RestoreFlags();
         
         // If the hook mode specifies that the hook code should be executed first, append the original instructions
@@ -279,17 +283,17 @@ public static class ProcessMemoryHookExtensions
         // The range of a near jump is limited by the signed byte displacement that follows the opcode.
         // The displacement is a signed 4-byte integer, so the range is from -2GB to +2GB.
         
-        // In 32-bits processes, near jumps can be made to any address, despite the offset being a signed integer.
+        // In 32-bit processes, near jumps can be made to any address, despite the offset being a signed integer.
         // For example, a jump from 0x00000000 to 0xFFFFFFFF can be made with a near jump with an offset of -1.
         // Which means that for 32-bit processes, we can reserve memory anywhere in the address space.
-        if (!processMemory.Is64Bits)
+        if (!processMemory.Is64Bit)
             return processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
         
-        // In 64-bits processes, however, the offset is still a signed 4-byte integer, but the full range is much
+        // In 64-bit processes, however, the offset is still a signed 4-byte integer, but the full range is much
         // larger, meaning we can't reach any address.
         
-        // For practical purposes, we disregard wrap-around jumps for 64-bits processes (cases where the address plus
-        // the offset is outside the 64-bits address space), because they mostly make sense for 32-bits processes and
+        // For practical purposes, we disregard wrap-around jumps for 64-bit processes (cases where the address plus
+        // the offset is outside the 64-bit address space), because they mostly make sense for 32-bit processes and
         // would complicate things unnecessarily.
         
         // The displacement is relative to the address of the next instruction. A near jump instruction is 5 bytes long.

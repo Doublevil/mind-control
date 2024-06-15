@@ -14,9 +14,9 @@ public readonly record struct PointerOffset(ulong Offset, bool IsNegative)
     public static readonly PointerOffset Zero = new(0, false);
     
     /// <summary>
-    /// Gets a value indicating whether this offset is 64-bits.
+    /// Gets a value indicating whether this offset is 64-bit.
     /// </summary>
-    public bool Is64Bits => Offset > uint.MaxValue;
+    public bool Is64Bit => Offset > uint.MaxValue;
     
     /// <summary>
     /// Produces the result of the addition between this offset and the given value.

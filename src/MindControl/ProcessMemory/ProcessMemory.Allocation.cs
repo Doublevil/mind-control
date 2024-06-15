@@ -97,7 +97,7 @@ public partial class ProcessMemory
         MemoryRangeMetadata currentMetadata;
         while ((nextAddressForward.ToUInt64() < actualRange.Value.End.ToUInt64()
                 || nextAddressBackwards.ToUInt64() > actualRange.Value.Start.ToUInt64())
-            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress, Is64Bits)
+            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress, Is64Bit)
                 .GetValueOrDefault()).Size.ToUInt64() > 0)
         {
             nextAddressForward = (UIntPtr)Math.Max(nextAddressForward.ToUInt64(),
@@ -198,7 +198,7 @@ public partial class ProcessMemory
             return new AllocationFailureOnInvalidArguments(
                 "The size of the memory range to reserve must be greater than zero.");
         
-        uint alignment = Is64Bits ? (uint)8 : 4;
+        uint alignment = Is64Bit ? (uint)8 : 4;
         var existingAllocations = _allocations
             .Where(a => (!requireExecutable || a.IsExecutable)
                 && (limitRange == null || limitRange.Value.Contains(a.Range.Start)));
@@ -265,7 +265,7 @@ public partial class ProcessMemory
     /// <returns>A result holding either the reservation storing the data, or a reservation failure.</returns>
     public Result<MemoryReservation, ReservationFailure> Store(byte[] data, MemoryAllocation allocation)
     {
-        uint alignment = Is64Bits ? (uint)8 : 4;
+        uint alignment = Is64Bit ? (uint)8 : 4;
         var reservedRangeResult = allocation.ReserveRange((ulong)data.Length, alignment);
         if (reservedRangeResult.IsFailure)
             return reservedRangeResult.Error;

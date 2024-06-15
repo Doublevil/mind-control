@@ -58,7 +58,7 @@ public static class ProcessMemoryCodeExtensions
         
         using var stream = processMemory.GetMemoryStream(address);
         var codeReader = new StreamCodeReader(stream);
-        var decoder = Decoder.Create(processMemory.Is64Bits ? 64 : 32, codeReader);
+        var decoder = Decoder.Create(processMemory.Is64Bit ? 64 : 32, codeReader);
 
         ulong fullLength = 0;
         for (int i = 0; i < instructionCount; i++)

@@ -16,7 +16,7 @@ public enum ReadFailureReason
     PointerPathEvaluationFailure,
     
     /// <summary>
-    /// The target process is 32-bits, but the target memory address is not within the 32-bit address space.
+    /// The target process is 32-bit, but the target memory address is not within the 32-bit address space.
     /// </summary>
     IncompatibleBitness,
     
@@ -73,7 +73,7 @@ public record ReadFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
 }
 
 /// <summary>
-/// Represents a failure in a memory read operation when the target process is 32-bits, but the target memory address is
+/// Represents a failure in a memory read operation when the target process is 32-bit, but the target memory address is
 /// not within the 32-bit address space.
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
@@ -83,7 +83,7 @@ public record ReadFailureOnIncompatibleBitness(UIntPtr Address)
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"The address to read, {Address}, is a 64-bit address, but the target process is 32-bits.";
+        => $"The address to read, {Address}, is a 64-bit address, but the target process is 32-bit.";
 }
 
 /// <summary>

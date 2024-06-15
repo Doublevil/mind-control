@@ -113,7 +113,8 @@ public class MemoryAllocation
     /// <param name="byteAlignment">Optional byte alignment for the range. When null, values are not aligned. The
     /// default value is 8, meaning that for example a range of [0x15,0x3C] will be aligned to [0x18,0x38] and thus
     /// only accomodate 32 bytes. Alignment means the resulting range might be bigger than the <paramref name="size"/>,
-    /// but will never make it smaller.</param>
+    /// but will never make it smaller. An alignment of 4 or 8 usually provide better performance when reading or
+    /// writing memory.</param>
     /// <returns>The first free range that can fit the specified size, or null if no range is large enough.</returns>
     public MemoryRange? GetNextRangeFittingSize(ulong size, uint? byteAlignment = 8)
     {

@@ -41,7 +41,7 @@ public partial class ProcessMemory
         MemoryProtection? previousProtection = null;
         if (memoryProtectionStrategy is MemoryProtectionStrategy.Remove or MemoryProtectionStrategy.RemoveAndRestore)
         {
-            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bits,
+            var protectionRemovalResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bit,
                 address, MemoryProtection.ExecuteReadWrite);
             
             if (protectionRemovalResult.IsFailure)
@@ -59,7 +59,7 @@ public partial class ProcessMemory
         if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
             && previousProtection != MemoryProtection.ExecuteReadWrite)
         {
-            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bits,
+            var protectionRestorationResult = _osService.ReadAndOverwriteProtection(ProcessHandle, Is64Bit,
                 address, previousProtection!.Value);
             
             if (protectionRestorationResult.IsFailure)
@@ -208,7 +208,7 @@ public partial class ProcessMemory
     /// <returns>A successful result, or a write failure</returns>
     private Result<WriteFailure> WriteIntPtr(UIntPtr address, IntPtr value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
-        => WriteBytes(address, value.ToBytes(Is64Bits), memoryProtectionStrategy);
+        => WriteBytes(address, value.ToBytes(Is64Bit), memoryProtectionStrategy);
     
     /// <summary>
     /// Writes a float to the given address in the process memory.
