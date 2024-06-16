@@ -34,12 +34,15 @@ public enum HookJumpMode
     /// Use a near jump if possible. If a near jump is not possible, fall back to a far jump.
     /// This is the safest option, as it will always work, but may not always give you the best performance (although
     /// it should in most cases).
+    /// For 32-bit processes, this mode is equivalent to <see cref="NearJumpOnly"/>, as near jumps are always possible.
     /// </summary>
     NearJumpWithFallbackOnFarJump,
     
     /// <summary>
     /// Use a near jump only. If a near jump is not possible, the hook operation will fail.
     /// Use this only if hook performance is critical and a far jump would not be acceptable.
+    /// For 32-bit processes, this mode is equivalent to <see cref="NearJumpWithFallbackOnFarJump"/>, as near jumps are
+    /// always possible.
     /// </summary>
     NearJumpOnly
 }

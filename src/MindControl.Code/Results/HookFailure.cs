@@ -13,6 +13,11 @@ public enum HookFailureReason
     PathEvaluationFailure,
     
     /// <summary>
+    /// The target address is a zero pointer.
+    /// </summary>
+    ZeroPointer,
+        
+    /// <summary>
     /// The arguments provided to the hook operation are invalid.
     /// </summary>
     InvalidArguments,
@@ -59,6 +64,16 @@ public record HookFailureOnPathEvaluation(PathEvaluationFailure Details)
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => $"Failed to evaluate the given pointer path: {Details}";
+}
+
+/// <summary>
+/// Represents a failure that occurred in a hook operation when the target address is a zero pointer.
+/// </summary>
+public record HookFailureOnZeroPointer() : HookFailure(HookFailureReason.ZeroPointer)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => "The target address is a zero pointer.";
 }
 
 /// <summary>

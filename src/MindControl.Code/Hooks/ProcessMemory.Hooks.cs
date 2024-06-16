@@ -23,47 +23,185 @@ public static class ProcessMemoryHookExtensions
     
     /// <summary>Maximum byte count for a single instruction.</summary>
     private const int MaxInstructionLength = 15;
+
+    #region Public hook methods
+    
+    /// <summary>
+    /// Injects code into the target process to be executed when the instruction at the executable address pointed by
+    /// the given pointer path is reached. Depending on the options, the injected code may replace the original target
+    /// instruction, or get executed either before or after it. If specified, additional instrutions that save and
+    /// restore registers will be added to the injected code.
+    /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the instruction to hook into.
+    /// </param>
+    /// <param name="code">Assembled code to inject into the target process. The jump back to the original code will be
+    /// appended automatically, so it is not necessary to include it. Warning: if your code contains instructions with
+    /// relative operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// <see cref="Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/> signature.</param>
+    /// <param name="options">Options defining how the hook works.</param>
+    /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
+    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
+    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, byte[] code, HookOptions options)
+    {
+        var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
+        if (addressResult.IsFailure)
+            return new HookFailureOnPathEvaluation(addressResult.Error);
+        
+        return processMemory.Hook(addressResult.Value, code, options);
+    }
     
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the given executable address is
-    /// reached.
-    /// Execution of the original code will continue normally (unless the given hook code is designed otherwise).
-    /// With default options, some code will be generated to save and restore state, so that the hook code is isolated
-    /// from the original code.
+    /// reached. Depending on the options, the injected code may replace the original target instruction, or get
+    /// executed either before or after it. If specified, additional instrutions that save and restore registers will be
+    /// added to the injected code.
+    /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.
     /// </summary>
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="targetInstructionAddress">Address of the first byte of the instruction to hook into.</param>
-    /// <param name="injectedCode">Assembled code to inject into the target process. Warning: if your code contains
-    /// instructions with relative operands (like most jumps or calls), they will break. Use the
-    /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature to make sure they still point to the
-    /// right address.</param>
+    /// <param name="code">Assembled code to inject into the target process. The jump back to the original code will be
+    /// appended automatically, so it is not necessary to include it. Warning: if your code contains instructions with
+    /// relative operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
     /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
-        byte[] injectedCode, HookOptions options)
+        byte[] code, HookOptions options)
     {
+        if (targetInstructionAddress == UIntPtr.Zero)
+            return new HookFailureOnZeroPointer();
+        if (code.Length == 0)
+            return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
+        
         ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
-            + injectedCode.Length
+            + code.Length
             + MaxInstructionLength // Extra room for the original instructions
             + FarJumpInstructionLength); // Extra room for the jump back to the original code
 
-        // Reserve memory for the injected code. Try to reserve memory close enough to the target instruction to use a
-        // near jump, if possible.
-        var reservationResult = ReserveNearHookTarget(processMemory, sizeToReserve, targetInstructionAddress);
-        if (reservationResult.IsFailure && options.JumpMode == HookJumpMode.NearJumpOnly)
-            return new HookFailureOnAllocationFailure(reservationResult.Error);
-        
+        // Reserve memory for the injected code as close as possible to the target instruction
+        var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
+            options.JumpMode);
         if (reservationResult.IsFailure)
-        {
-            // If we cannot reserve memory for a near jump, try going for a far jump
-            reservationResult = processMemory.Reserve(sizeToReserve, true);
-            if (reservationResult.IsFailure)
-                return new HookFailureOnAllocationFailure(reservationResult.Error);
-        }
-        
-        // Assemble the jump to the injected code
+            return reservationResult.Error;
         var reservation = reservationResult.Value;
+        
+        return PerformHook(processMemory, targetInstructionAddress, code, reservation, options);
+    }
+
+    /// <summary>
+    /// Injects code into the target process to be executed when the instruction at the executable address pointed by
+    /// the given pointer path is reached. Depending on the options, the injected code may replace the original target
+    /// instruction, or get executed either before or after it. If specified, additional instrutions that save and
+    /// restore registers will be added to the injected code.
+    /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the right locations.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the instruction to hook into.
+    /// </param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process. The jump
+    /// back to the original code will be appended automatically, so it is not necessary to include it.</param>
+    /// <param name="options">Options defining how the hook works.</param>
+    /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
+    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
+    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, Assembler codeAssembler, HookOptions options)
+    {
+        var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
+        if (addressResult.IsFailure)
+            return new HookFailureOnPathEvaluation(addressResult.Error);
+        
+        return processMemory.Hook(addressResult.Value, codeAssembler, options);
+    }
+    
+    /// <summary>
+    /// Injects code into the target process to be executed when the instruction at the given executable address is
+    /// reached. Depending on the options, the injected code may replace the original target instruction, or get
+    /// executed either before or after it. If specified, additional instrutions that save and restore registers will be
+    /// added to the injected code.
+    /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the right locations.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the instruction to hook into.</param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process. The jump
+    /// back to the original code will be appended automatically, so it is not necessary to include it.</param>
+    /// <param name="options">Options defining how the hook works.</param>
+    /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
+    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
+    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
+        Assembler codeAssembler, HookOptions options)
+    {
+        if (targetInstructionAddress == UIntPtr.Zero)
+            return new HookFailureOnZeroPointer();
+        if (codeAssembler.Instructions.Count == 0)
+            return new HookFailureOnInvalidArguments("The given code assembler must have at least one instruction.");
+        
+        // The problem with using an assembler is that we don't know how many bytes the assembled code will take, so we
+        // have to use the most conservative estimate possible, which is the maximum length of an instruction multiplied
+        // by the number of instructions in the assembler.
+        int codeMaxLength = MaxInstructionLength * codeAssembler.Instructions.Count;
+        ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
+                                      + codeMaxLength
+                                      + MaxInstructionLength // Extra room for the original instructions
+                                      + FarJumpInstructionLength); // Extra room for the jump back to the original code
+
+        // Reserve memory for the injected code, as close as possible to the target instruction
+        var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
+            options.JumpMode);
+        if (reservationResult.IsFailure)
+            return reservationResult.Error;
+        var reservation = reservationResult.Value;
+        
+        // Assemble the code to inject
+        var assemblingResult = codeAssembler.AssembleToBytes(reservation.Address, 128);
+        if (assemblingResult.IsFailure)
+        {
+            reservation.Dispose();
+            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, assemblingResult.Error);
+        }
+        byte[] codeBytes = assemblingResult.Value;
+        
+        // Resize the reservation now that we have more accurate information
+        int difference = codeMaxLength - codeBytes.Length;
+        if (difference > 0)
+            reservation.Shrink((ulong)difference);
+        
+        return PerformHook(processMemory, targetInstructionAddress, codeBytes, reservation, options);
+    }
+
+    #endregion
+    
+    #region Internal hook methods
+    
+    /// <summary>
+    /// Method called internally by the hook methods to assemble the full code to inject, write it in the given
+    /// reserved memory, and write the jump to the injected code at the target instruction address.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the instruction to hook into.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="reservation">Memory reservation where the injected code will be written.</param>
+    /// <param name="options">Options defining how the hook behaves.</param>
+    /// <returns>A result holding either a code hook instance, or a hook failure when the operation failed.</returns>
+    private static Result<CodeHook, HookFailure> PerformHook(ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, byte[] code, MemoryReservation reservation, HookOptions options)
+    {
+        // Assemble the jump to the injected code
         var jmpAssembler = new Assembler(processMemory.Is64Bit ? 64 : 32);
         jmpAssembler.jmp(reservation.Address);
         var jmpAssembleResult = jmpAssembler.AssembleToBytes(targetInstructionAddress);
@@ -123,7 +261,7 @@ public static class ProcessMemoryHookExtensions
 
         // Assemble the post-code
         var postHookCodeAddress = (UIntPtr)(reservation.Address + (ulong)preHookCodeBytes.Length
-            + (ulong)injectedCode.Length);
+            + (ulong)code.Length);
         var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bit,
             options, nextOriginalInstructionAddress);
         if (postHookCodeResult.IsFailure)
@@ -134,7 +272,7 @@ public static class ProcessMemoryHookExtensions
         byte[] postHookCodeBytes = postHookCodeResult.Value;
         
         // Assemble the full code to inject
-        var fullCodeLength = preHookCodeBytes.Length + injectedCode.Length + postHookCodeBytes.Length;
+        var fullCodeLength = preHookCodeBytes.Length + code.Length + postHookCodeBytes.Length;
         if ((ulong)fullCodeLength > reservation.Size)
         {
             reservation.Dispose();
@@ -143,8 +281,8 @@ public static class ProcessMemoryHookExtensions
         }
         var fullInjectedCode = new byte[fullCodeLength];
         Buffer.BlockCopy(preHookCodeBytes, 0, fullInjectedCode, 0, preHookCodeBytes.Length);
-        Buffer.BlockCopy(injectedCode, 0, fullInjectedCode, preHookCodeBytes.Length, injectedCode.Length);
-        Buffer.BlockCopy(postHookCodeBytes, 0, fullInjectedCode, preHookCodeBytes.Length + injectedCode.Length,
+        Buffer.BlockCopy(code, 0, fullInjectedCode, preHookCodeBytes.Length, code.Length);
+        Buffer.BlockCopy(postHookCodeBytes, 0, fullInjectedCode, preHookCodeBytes.Length + code.Length,
             postHookCodeBytes.Length);
         
         // Write the assembled code to the reserved memory
@@ -165,7 +303,7 @@ public static class ProcessMemoryHookExtensions
 
         return new CodeHook(processMemory, targetInstructionAddress, originalBytesResult.Value, reservation);
     }
-
+    
     /// <summary>
     /// Assembles the code that comes before the user-made injected code in a hook operation.
     /// </summary>
@@ -271,14 +409,15 @@ public static class ProcessMemoryHookExtensions
     }
     
     /// <summary>
-    /// Attempts to reserve executable memory close to the hook target instruction.
+    /// Attempts to reserve executable memory as close as possible to the hook target instruction.
     /// </summary>
     /// <param name="processMemory">Target process memory instance.</param>
     /// <param name="sizeToReserve">Size of the memory to reserve.</param>
     /// <param name="jumpAddress">Address of the jump instruction that will jump to the injected code.</param>
+    /// <param name="jumpMode">Jump mode of the hook.</param>
     /// <returns>A result holding either the memory reservation, or an allocation failure.</returns>
-    private static Result<MemoryReservation, AllocationFailure> ReserveNearHookTarget(ProcessMemory processMemory,
-        ulong sizeToReserve, UIntPtr jumpAddress)
+    private static Result<MemoryReservation, HookFailure> ReserveHookTarget(ProcessMemory processMemory,
+        ulong sizeToReserve, UIntPtr jumpAddress, HookJumpMode jumpMode)
     {
         // The range of a near jump is limited by the signed byte displacement that follows the opcode.
         // The displacement is a signed 4-byte integer, so the range is from -2GB to +2GB.
@@ -287,8 +426,13 @@ public static class ProcessMemoryHookExtensions
         // For example, a jump from 0x00000000 to 0xFFFFFFFF can be made with a near jump with an offset of -1.
         // Which means that for 32-bit processes, we can reserve memory anywhere in the address space.
         if (!processMemory.Is64Bit)
-            return processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
-        
+        {
+            var reservationResult = processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
+            if (reservationResult.IsFailure)
+                return new HookFailureOnAllocationFailure(reservationResult.Error);
+            return reservationResult.Value;
+        }
+
         // In 64-bit processes, however, the offset is still a signed 4-byte integer, but the full range is much
         // larger, meaning we can't reach any address.
         
@@ -305,10 +449,24 @@ public static class ProcessMemoryHookExtensions
         var extraCloseRange = nextInstructionAddress.GetRangeAround(int.MaxValue);
         var extraCloseReservation = processMemory.Reserve(sizeToReserve, true, extraCloseRange, nextInstructionAddress);
         if (extraCloseReservation.IsSuccess)
-            return extraCloseReservation;
+            return extraCloseReservation.Value;
         
         // If the extra close reservation failed, use the full range of a near jump
         var nearJumpRange = nextInstructionAddress.GetRangeAround(uint.MaxValue);
-        return processMemory.Reserve(sizeToReserve, true, nearJumpRange, nextInstructionAddress);
+        var nearJumpResult = processMemory.Reserve(sizeToReserve, true, nearJumpRange, nextInstructionAddress);
+        if (nearJumpResult.IsSuccess)
+            return nearJumpResult.Value;
+        
+        // If the jump mode is set to near jump only, we return the failure, as we would not be able to use a near jump.
+        if (jumpMode == HookJumpMode.NearJumpOnly)
+            return new HookFailureOnAllocationFailure(nearJumpResult.Error);
+        
+        // Otherwise, we try to reserve memory anywhere in the address space
+        var fullRangeResult = processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
+        if (fullRangeResult.IsFailure)
+            return new HookFailureOnAllocationFailure(fullRangeResult.Error);
+        return fullRangeResult.Value;
     }
+    
+    #endregion
 }

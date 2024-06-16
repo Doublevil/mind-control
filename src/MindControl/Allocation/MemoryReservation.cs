@@ -11,7 +11,7 @@ public class MemoryReservation
     /// <summary>
     /// Gets the memory range of this reservation.
     /// </summary>
-    public MemoryRange Range { get; }
+    public MemoryRange Range { get; private set; }
 
     /// <summary>
     /// Gets the starting address of the reservation.
@@ -55,5 +55,19 @@ public class MemoryReservation
 
         IsDisposed = true;
         ParentAllocation.FreeReservation(this);
+    }
+
+    /// <summary>
+    /// Shrinks the reservation by the given number of bytes.
+    /// </summary>
+    /// <param name="difference">Number of bytes to remove from the reservation.</param>
+    /// <exception cref="ArgumentException">Thrown when the difference is equal to or greater than the size of the
+    /// reservation.</exception>
+    public void Shrink(ulong difference)
+    {
+        if (difference >= Size)
+            throw new ArgumentException("Cannot shrink the reservation by its full size or more.");
+        
+        Range = new MemoryRange(Range.Start, unchecked((UIntPtr)(Range.End.ToUInt64() - difference)));
     }
 }

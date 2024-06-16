@@ -95,8 +95,8 @@ public partial class ProcessMemory
         
         MemoryRange? freeRange = null;
         MemoryRangeMetadata currentMetadata;
-        while ((nextAddressForward.ToUInt64() < actualRange.Value.End.ToUInt64()
-                || nextAddressBackwards.ToUInt64() > actualRange.Value.Start.ToUInt64())
+        while ((nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
+                && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64())
             && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress, Is64Bit)
                 .GetValueOrDefault()).Size.ToUInt64() > 0)
         {
@@ -117,7 +117,8 @@ public partial class ProcessMemory
                 {
                     var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
                     var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
-                    goingForward = forwardDistance <= backwardDistance;
+                    goingForward = forwardDistance <= backwardDistance
+                        && nextAddressForward.ToUInt64() <= actualRange.Value.End.ToUInt64();
                     nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
                 }
                 
@@ -164,7 +165,8 @@ public partial class ProcessMemory
                 {
                     var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
                     var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
-                    goingForward = forwardDistance <= backwardDistance;
+                    goingForward = forwardDistance <= backwardDistance
+                        && nextAddressForward.ToUInt64() <= actualRange.Value.End.ToUInt64();
                     nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
                 }
                 
