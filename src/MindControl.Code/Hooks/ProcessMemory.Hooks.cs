@@ -29,11 +29,11 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the executable address pointed by
     /// the given pointer path is reached. Depending on the options, the injected code may replace the original target
-    /// instruction, or get executed either before or after it. If specified, additional instrutions that save and
+    /// instruction, or get executed either before or after it. If specified, additional instructions that save and
     /// restore registers will be added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
-    /// operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
     /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.
     /// </summary>
     /// <param name="processMemory">Process memory instance to use.</param>
@@ -41,7 +41,7 @@ public static class ProcessMemoryHookExtensions
     /// </param>
     /// <param name="code">Assembled code to inject into the target process. The jump back to the original code will be
     /// appended automatically, so it is not necessary to include it. Warning: if your code contains instructions with
-    /// relative operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// relative operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
     /// <see cref="Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/> signature.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
@@ -59,18 +59,18 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the given executable address is
     /// reached. Depending on the options, the injected code may replace the original target instruction, or get
-    /// executed either before or after it. If specified, additional instrutions that save and restore registers will be
+    /// executed either before or after it. If specified, additional instructions that save and restore registers will be
     /// added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
-    /// operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
     /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.
     /// </summary>
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="targetInstructionAddress">Address of the first byte of the instruction to hook into.</param>
     /// <param name="code">Assembled code to inject into the target process. The jump back to the original code will be
     /// appended automatically, so it is not necessary to include it. Warning: if your code contains instructions with
-    /// relative operands (like jumps or calls), they may not point to the right addresses. In these cases, prefer the
+    /// relative operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
     /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
@@ -101,12 +101,12 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the executable address pointed by
     /// the given pointer path is reached. Depending on the options, the injected code may replace the original target
-    /// instruction, or get executed either before or after it. If specified, additional instrutions that save and
+    /// instruction, or get executed either before or after it. If specified, additional instructions that save and
     /// restore registers will be added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
     /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
-    /// the right locations.
+    /// the intended locations.
     /// </summary>
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the instruction to hook into.
@@ -129,12 +129,12 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the given executable address is
     /// reached. Depending on the options, the injected code may replace the original target instruction, or get
-    /// executed either before or after it. If specified, additional instrutions that save and restore registers will be
+    /// executed either before or after it. If specified, additional instructions that save and restore registers will be
     /// added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
     /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
-    /// the right locations.
+    /// the intended locations.
     /// </summary>
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="targetInstructionAddress">Address of the first byte of the instruction to hook into.</param>
@@ -184,6 +184,118 @@ public static class ProcessMemoryHookExtensions
         return PerformHook(processMemory, targetInstructionAddress, codeBytes, reservation, options);
     }
 
+    /// <summary>
+    /// Injects code in the process to be executed right before the instruction pointed by the given pointer path, by
+    /// performing a hook.
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
+    /// <see cref="InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/> signature.
+    /// </summary>
+    /// <remarks>
+    /// This method is essentially a shortcut for <see cref="Hook(ProcessMemory,PointerPath,byte[],HookOptions)"/> with
+    /// the execution mode set to <see cref="HookExecutionMode.ExecuteInjectedCodeFirst"/>. It is provided for
+    /// convenience, readability, and discoverability for users who might not be familiar with hooks but are looking to
+    /// achieve the same result.
+    /// </remarks>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the target instruction. The
+    /// injected code will be executed just before the instruction.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
+    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
+    /// </returns>
+    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, byte[] code, params HookRegister[] registersToPreserve)
+        => processMemory.Hook(targetInstructionPointerPath, code,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
+
+    /// <summary>
+    /// Injects code in the process to be executed right before the instruction at the given address, by performing a
+    /// hook.
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
+    /// <see cref="InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/> signature.
+    /// </summary>
+    /// <remarks>
+    /// This method is essentially a shortcut for <see cref="Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> with the
+    /// execution mode set to <see cref="HookExecutionMode.ExecuteInjectedCodeFirst"/>. It is provided for convenience,
+    /// readability, and discoverability for users who might not be familiar with hooks but are looking to achieve the
+    /// same result.
+    /// </remarks>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the target instruction. The injected code
+    /// will be executed just before the instruction.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
+    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
+    /// </returns>
+    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, byte[] code, params HookRegister[] registersToPreserve)
+        => processMemory.Hook(targetInstructionAddress, code,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
+    
+    /// <summary>
+    /// Injects code in the process to be executed right before the instruction pointed by the given pointer path, by
+    /// performing a hook.
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the intended locations.
+    /// </summary>
+    /// <remarks>
+    /// This method is essentially a shortcut for <see cref="Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/>
+    /// with the execution mode set to <see cref="HookExecutionMode.ExecuteInjectedCodeFirst"/>. It is provided for
+    /// convenience, readability, and discoverability for users who might not be familiar with hooks but are looking to
+    /// achieve the same result.
+    /// </remarks>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the target instruction. The
+    /// injected code will be executed just before the instruction.</param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
+    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
+    /// </returns>
+    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, Assembler codeAssembler, params HookRegister[] registersToPreserve)
+        => processMemory.Hook(targetInstructionPointerPath, codeAssembler,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
+    
+    /// <summary>
+    /// Injects code in the process to be executed right before the instruction at the given address, by performing a
+    /// hook.
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the intended locations.
+    /// </summary>
+    /// <remarks>
+    /// This method is essentially a shortcut for <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> with
+    /// the execution mode set to <see cref="HookExecutionMode.ExecuteInjectedCodeFirst"/>. It is provided for
+    /// convenience, readability, and discoverability for users who might not be familiar with hooks but are looking to
+    /// achieve the same result.
+    /// </remarks>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the target instruction. The injected code
+    /// will be executed just before the instruction.</param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
+    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
+    /// </returns>
+    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, Assembler codeAssembler, params HookRegister[] registersToPreserve)
+        => processMemory.Hook(targetInstructionAddress, codeAssembler,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
+    
     #endregion
     
     #region Internal hook methods

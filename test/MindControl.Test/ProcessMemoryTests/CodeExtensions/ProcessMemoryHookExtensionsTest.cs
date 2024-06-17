@@ -11,6 +11,10 @@ namespace MindControl.Test.ProcessMemoryTests.CodeExtensions;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
 {
+    private const string MovLongValueInstructionBytePattern = "48 B8 DF 54 09 2B BA 3C FD FF";
+    
+    #region Hook
+    
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
     /// The hook replaces a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
@@ -24,7 +28,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var movLongAddress = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
 
         // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
         var hookResult = TestProcessMemory!.Hook(movLongAddress, bytes,
@@ -57,7 +61,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
         
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var movLongAddress = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
 
         // Hook the instruction that writes the long value to RAX, to append code that writes another value.
         // Specify that the RAX register should be isolated.
@@ -83,7 +87,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
     {
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var movLongAddress = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
 
         // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
         var hookResult = TestProcessMemory!.Hook(movLongAddress, assembler,
@@ -115,7 +119,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var movLongAddress = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
 
         // Hook the instruction that writes the long value to RAX, to append code that writes another value.
         // Specify that the RAX register should be isolated.
@@ -184,7 +188,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
     [Test]
     public void HookWithEmptyCodeArrayTest()
     {
-        var address = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var address = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
         var hookResult = TestProcessMemory!.Hook(address, [],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
@@ -199,7 +203,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
     [Test]
     public void HookWithEmptyAssemblerTest()
     {
-        var address = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var address = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
         var assembler = new Assembler(64);
         var hookResult = TestProcessMemory!.Hook(address, assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
@@ -220,7 +224,7 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
+        var movLongAddress = TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First();
 
         // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
         var hookResult = TestProcessMemory!.Hook(movLongAddress, bytes,
@@ -230,4 +234,153 @@ public class ProcessMemoryHookExtensionsTest : ProcessMemoryTest
         ProceedUntilProcessEnds();
         AssertFinalResults(5, ExpectedFinalValues[5]);
     }
+    
+    #endregion
+    
+    #region InsertCodeAt
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>
+    /// method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. This should change the output long value.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var bytes = assembler.AssembleToBytes().Value;
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        
+        // Insert the code right after our target MOV instruction.
+        // That way, the RAX register will be set to the value we want before it's used to write the new long value.
+        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, bytes);
+        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
+        Assert.That(hookResult.Value.Address, Is.EqualTo(movLongNextInstructionAddress));
+        Assert.That(hookResult.Value.Length, Is.AtLeast(5));
+        
+        ProceedUntilProcessEnds();
+        
+        // After execution, the long in the output at index 5 must reflect the new value written by the hook.
+        AssertFinalResults(5, "1234567890");
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>
+    /// method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. However, we specify that RAX should be preserved.
+    /// The output long value must be the original one, because the RAX register is isolated.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithIsolationTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var bytes = assembler.AssembleToBytes().Value;
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        
+        // Insert the code right after our target MOV instruction.
+        // That way, the RAX register will be set to the value we want before it's used to write the new long value.
+        // But because we specify that the RAX register should be preserved, after the hook, the RAX register will
+        // be restored to its original value.
+        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, bytes, HookRegister.RaxEax);
+        
+        Assert.That(hookResult.IsSuccess, Is.True);
+        ProceedUntilProcessEnds();
+        AssertExpectedFinalResults();
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
+    /// method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. This should change the output long value.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler);
+        
+        Assert.That(hookResult.IsSuccess, Is.True);
+        ProceedUntilProcessEnds();
+        AssertFinalResults(5, "1234567890");
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
+    /// method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. However, we specify that RAX should be preserved.
+    /// The output long value must be the original one, because the RAX register is isolated.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithIsolationTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler, HookRegister.RaxEax);
+        
+        Assert.That(hookResult.IsSuccess, Is.True);
+        ProceedUntilProcessEnds();
+        AssertExpectedFinalResults();
+    }
+    
+    /// <summary>
+    /// Tests the
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/> method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. This should change the output long value.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithPointerPathTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var bytes = assembler.AssembleToBytes().Value;
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        var pointerPath = movLongNextInstructionAddress.ToString("X");
+        
+        var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, bytes);
+        Assert.That(hookResult.IsSuccess, Is.True);
+        
+        ProceedUntilProcessEnds();
+        AssertFinalResults(5, "1234567890");
+    }
+    
+    /// <summary>
+    /// Tests the
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>
+    /// method.
+    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
+    /// the RAX register. This should change the output long value.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithPointerPathTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var movLongNextInstructionAddress =
+            TestProcessMemory!.FindBytes(MovLongValueInstructionBytePattern).First() + 10;
+        var pointerPath = movLongNextInstructionAddress.ToString("X");
+        
+        var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, assembler);
+        Assert.That(hookResult.IsSuccess, Is.True);
+        
+        ProceedUntilProcessEnds();
+        AssertFinalResults(5, "1234567890");
+    }
+
+    #endregion
 }
