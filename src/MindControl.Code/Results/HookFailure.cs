@@ -129,7 +129,7 @@ public record HookFailureOnDecodingFailure(DecoderError Error)
 public enum HookCodeAssemblySource
 {
     /// <summary>Default value used when the source is unknown.</summary>
-    Unkown,
+    Unknown,
     /// <summary>Designates the jump instruction that forwards execution to the injected code.</summary>
     JumpToInjectedCode,
     /// <summary>Designates the code block that is prepended to the injected code.</summary>
@@ -150,7 +150,19 @@ public record HookFailureOnCodeAssembly(HookCodeAssemblySource Source, string Me
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString() => $"Failed to assemble code: {Message}";
+    public override string ToString() => $"Failed to assemble code in {GetSourceAsString(Source)}: {Message}";
+    
+    /// <summary>Returns a string representation of the given <see cref="HookCodeAssemblySource"/>.</summary>
+    /// <param name="source">The source to convert to a string.</param>
+    /// <returns>A string representation of the given <see cref="HookCodeAssemblySource"/>.</returns>
+    public static string GetSourceAsString(HookCodeAssemblySource source) => source switch
+    {
+        HookCodeAssemblySource.JumpToInjectedCode => "the jump to the injected code",
+        HookCodeAssemblySource.PrependedCode => "the code block generated before the injected code",
+        HookCodeAssemblySource.InjectedCode => "the given code to inject",
+        HookCodeAssemblySource.AppendedCode => "the code block generated after the injected code",
+        _ => "an undetermined code block"
+    };
 }
 
 /// <summary>

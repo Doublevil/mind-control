@@ -103,26 +103,52 @@ public class HookOptions
     }
     
     /// <summary>
-    /// Gets the predicted length in bytes of the additional code that will be prepended and appended to the hook code.
+    /// Gets the sum of <see cref="GetExpectedPreCodeSize"/> and <see cref="GetExpectedPostCodeSize"/>.
     /// </summary>
     /// <param name="is64Bit">Indicates if the target process is 64-bit.</param>
-    /// <returns>The total size in bytes of the additional code.</returns>
+    /// <returns>The total size in bytes of the additional code that will be prepended and appended to the injected
+    /// code.</returns>
     internal int GetExpectedGeneratedCodeSize(bool is64Bit)
+        => GetExpectedPreCodeSize(is64Bit) + GetExpectedPostCodeSize(is64Bit);
+
+    /// <summary>
+    /// Gets the predicted length in bytes of the additional code that will be prepended to the hook code.
+    /// </summary>
+    /// <param name="is64Bit">Indicates if the target process is 64-bit.</param>
+    /// <returns>The size in bytes of the prepended code.</returns>
+    internal int GetExpectedPreCodeSize(bool is64Bit)
     {
         int totalSize = 0;
         if (RegistersToPreserve.Contains(HookRegister.Flags))
-            totalSize += AssemblerExtensions.GetSizeOfFlagsSave(is64Bit)
-                + AssemblerExtensions.GetSizeOfFlagsRestore(is64Bit);
+            totalSize += AssemblerExtensions.GetSizeOfFlagsSave(is64Bit);
 
-        foreach (var register in RegistersToPreserve.Select(r => r.ToRegister(is64Bit)).Where(r => r != null))
-        {
-            totalSize += AssemblerExtensions.GetSizeOfSaveInstructions(register!.Value, is64Bit);
-            totalSize += AssemblerExtensions.GetSizeOfRestoreInstructions(register.Value, is64Bit);
-        }
+        totalSize += RegistersToPreserve.Select(r => r.ToRegister(is64Bit))
+            .Where(r => r != null)
+            .Sum(register => AssemblerExtensions.GetSizeOfSaveInstructions(register!.Value, is64Bit));
 
         if (RegistersToPreserve.Contains(HookRegister.FpuStack))
-            totalSize += AssemblerExtensions.GetSizeOfFpuStackSave(is64Bit)
-                + AssemblerExtensions.GetSizeOfFpuStackRestore(is64Bit);
+            totalSize += AssemblerExtensions.GetSizeOfFpuStackSave(is64Bit);
+        
+        return totalSize;
+    }
+    
+    /// <summary>
+    /// Gets the predicted length in bytes of the additional code that will be appended to the hook code.
+    /// </summary>
+    /// <param name="is64Bit">Indicates if the target process is 64-bit.</param>
+    /// <returns>The size in bytes of the appended code.</returns>
+    internal int GetExpectedPostCodeSize(bool is64Bit)
+    {
+        int totalSize = 0;
+        if (RegistersToPreserve.Contains(HookRegister.Flags))
+            totalSize += AssemblerExtensions.GetSizeOfFlagsRestore(is64Bit);
+
+        totalSize += RegistersToPreserve.Select(r => r.ToRegister(is64Bit))
+            .Where(r => r != null)
+            .Sum(register => AssemblerExtensions.GetSizeOfRestoreInstructions(register!.Value, is64Bit));
+
+        if (RegistersToPreserve.Contains(HookRegister.FpuStack))
+            totalSize += AssemblerExtensions.GetSizeOfFpuStackRestore(is64Bit);
         
         return totalSize;
     }

@@ -82,13 +82,9 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnZeroPointer();
         if (code.Length == 0)
             return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
-        
-        ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
-            + code.Length
-            + MaxInstructionLength // Extra room for the original instructions
-            + FarJumpInstructionLength); // Extra room for the jump back to the original code
 
         // Reserve memory for the injected code as close as possible to the target instruction
+        ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, code.Length, options);
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             options.JumpMode);
         if (reservationResult.IsFailure)
@@ -155,10 +151,7 @@ public static class ProcessMemoryHookExtensions
         // have to use the most conservative estimate possible, which is the maximum length of an instruction multiplied
         // by the number of instructions in the assembler.
         int codeMaxLength = MaxInstructionLength * codeAssembler.Instructions.Count;
-        ulong sizeToReserve = (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
-                                      + codeMaxLength
-                                      + MaxInstructionLength // Extra room for the original instructions
-                                      + FarJumpInstructionLength); // Extra room for the jump back to the original code
+        ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, codeMaxLength, options);
 
         // Reserve memory for the injected code, as close as possible to the target instruction
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
@@ -168,7 +161,9 @@ public static class ProcessMemoryHookExtensions
         var reservation = reservationResult.Value;
         
         // Assemble the code to inject
-        var assemblingResult = codeAssembler.AssembleToBytes(reservation.Address, 128);
+        UIntPtr injectedCodeStartAddress = reservation.Address
+            + (UIntPtr)options.GetExpectedPreCodeSize(processMemory.Is64Bit);
+        var assemblingResult = codeAssembler.AssembleToBytes(injectedCodeStartAddress, 128);
         if (assemblingResult.IsFailure)
         {
             reservation.Dispose();
@@ -176,7 +171,7 @@ public static class ProcessMemoryHookExtensions
         }
         byte[] codeBytes = assemblingResult.Value;
         
-        // Resize the reservation now that we have more accurate information
+        // Resize the reservation now that we know the exact code size
         int difference = codeMaxLength - codeBytes.Length;
         if (difference > 0)
             reservation.Shrink((ulong)difference);
@@ -295,6 +290,210 @@ public static class ProcessMemoryHookExtensions
         UIntPtr targetInstructionAddress, Assembler codeAssembler, params HookRegister[] registersToPreserve)
         => processMemory.Hook(targetInstructionAddress, codeAssembler,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
+
+    /// <summary>
+    /// Replaces the instruction or instructions at the address pointed by the given path with the provided code. If the
+    /// injected code does not fit in the space occupied by the original instructions, a hook will be performed so that
+    /// the injected code can still be executed instead of the original instructions.
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
+    /// <see cref="ReplaceCodeAt(ProcessMemory,PointerPath,int,Assembler,HookRegister[])"/> signature.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the first instruction to replace.
+    /// </param>
+    /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
+    /// failure when the operation failed. If the operation performed a hook, the result will be a
+    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
+    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, int instructionCount, byte[] code,
+        params HookRegister[] registersToPreserve)
+    {
+        var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
+        if (addressResult.IsFailure)
+            return new HookFailureOnPathEvaluation(addressResult.Error);
+        
+        return processMemory.ReplaceCodeAt(addressResult.Value, instructionCount, code, registersToPreserve);
+    }
+    
+    /// <summary>
+    /// Replaces the instruction or instructions at the given address with the provided code. If the injected code does
+    /// not fit in the space occupied by the original instructions, a hook will be performed so that the injected code
+    /// can still be executed instead of the original instructions.
+    /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
+    /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
+    /// <see cref="ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/> signature.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the first instruction to replace.</param>
+    /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
+    /// failure when the operation failed. If the operation performed a hook, the result will be a
+    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
+    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, int instructionCount, byte[] code, params HookRegister[] registersToPreserve)
+    {
+        if (targetInstructionAddress == UIntPtr.Zero)
+            return new HookFailureOnZeroPointer();
+        if (instructionCount < 1)
+            return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
+        if (code.Length == 0)
+            return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
+        
+        var hookOptions = new HookOptions(HookExecutionMode.ReplaceOriginalInstruction, registersToPreserve);
+        
+        // Attempt to replace the code directly (write the injected code bytes directly on top of the original
+        // instruction bytes if it can fit).
+        var fullCodeAssemblyResult = AssembleFullCodeToInject(processMemory, code, targetInstructionAddress,
+            hookOptions);
+        if (fullCodeAssemblyResult.IsFailure)
+            return fullCodeAssemblyResult.Error;
+        var directReplaceResult = TryReplaceCodeBytes(processMemory, targetInstructionAddress, instructionCount,
+            fullCodeAssemblyResult.Value);
+        if (directReplaceResult.IsFailure)
+            return directReplaceResult.Error;
+        if (directReplaceResult.Value != null)
+            return directReplaceResult.Value;
+        
+        // The code to inject is larger than the original instructions, so we need to perform a hook
+        ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, code.Length, hookOptions);
+        var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
+            hookOptions.JumpMode);
+        if (reservationResult.IsFailure)
+            return reservationResult.Error;
+        var reservation = reservationResult.Value;
+        
+        var hookResult = PerformHook(processMemory, targetInstructionAddress, code, reservation, hookOptions);
+        if (hookResult.IsFailure)
+            return hookResult.Error;
+        return hookResult.Value;
+    }
+    
+    /// <summary>
+    /// Replaces the instruction or instructions pointed by the given pointer path with the provided code. If the
+    /// injected code does not fit in the space occupied by the original instructions, a hook will be performed so that
+    /// the injected code can still be executed instead of the original instructions.
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the intended locations.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionPointerPath">Pointer path to the first byte of the first instruction to replace.
+    /// </param>
+    /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
+    /// failure when the operation failed. If the operation performed a hook, the result will be a
+    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
+    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+        PointerPath targetInstructionPointerPath, int instructionCount, Assembler codeAssembler,
+        params HookRegister[] registersToPreserve)
+    {
+        var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
+        if (addressResult.IsFailure)
+            return new HookFailureOnPathEvaluation(addressResult.Error);
+        
+        return processMemory.ReplaceCodeAt(addressResult.Value, instructionCount, codeAssembler, registersToPreserve);
+    }
+    
+    /// <summary>
+    /// Replaces the instruction or instructions at the given address with the provided code. If the injected code does
+    /// not fit in the space occupied by the original instructions, a hook will be performed so that the injected code
+    /// can still be executed instead of the original instructions.
+    /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
+    /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
+    /// the intended locations.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the first instruction to replace.</param>
+    /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
+    /// <param name="codeAssembler">Code assembler loaded with instructions to inject into the target process.</param>
+    /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
+    /// code. This allows the injected code to modify registers without affecting the original code, which could
+    /// otherwise lead to crashes or unexpected behavior.</param>
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
+    /// failure when the operation failed. If the operation performed a hook, the result will be a
+    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
+    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, int instructionCount, Assembler codeAssembler,
+        params HookRegister[] registersToPreserve)
+    {
+        if (targetInstructionAddress == UIntPtr.Zero)
+            return new HookFailureOnZeroPointer();
+        if (instructionCount < 1)
+            return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
+        if (codeAssembler.Instructions.Count == 0)
+            return new HookFailureOnInvalidArguments("The given code assembler must have at least one instruction.");
+        
+        var hookOptions = new HookOptions(HookExecutionMode.ReplaceOriginalInstruction, registersToPreserve);
+        int preCodeSize = hookOptions.GetExpectedPreCodeSize(processMemory.Is64Bit);
+        
+        // Attempt to replace the code directly (write the injected code bytes directly on top of the original
+        // instruction bytes if it can fit).
+        // For that, we need to assemble the code to inject at the target address.
+        var targetAddressAssemblyResult = codeAssembler.AssembleToBytes(
+            targetInstructionAddress + (UIntPtr)preCodeSize, 128);
+        if (targetAddressAssemblyResult.IsFailure)
+            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, targetAddressAssemblyResult.Error);
+        var fullCodeAssemblyAtTargetAddressResult = AssembleFullCodeToInject(processMemory,
+            targetAddressAssemblyResult.Value, targetInstructionAddress, hookOptions);
+        if (fullCodeAssemblyAtTargetAddressResult.IsFailure)
+            return fullCodeAssemblyAtTargetAddressResult.Error;
+        byte[] codeAssembledAtTargetAddress = fullCodeAssemblyAtTargetAddressResult.Value;
+        var directReplaceResult = TryReplaceCodeBytes(processMemory, targetInstructionAddress, instructionCount,
+            codeAssembledAtTargetAddress);
+        if (directReplaceResult.IsFailure)
+            return directReplaceResult.Error;
+        if (directReplaceResult.Value != null)
+            return directReplaceResult.Value;
+        
+        // The code to inject is larger than the original instructions, so we need to perform a hook
+        // Reserve memory
+        int codeMaxLength = MaxInstructionLength * codeAssembler.Instructions.Count;
+        ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, codeMaxLength, hookOptions);
+        var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
+            hookOptions.JumpMode);
+        if (reservationResult.IsFailure)
+            return reservationResult.Error;
+        var reservation = reservationResult.Value;
+        
+        // Assemble the code to inject (even though we already assembled the code before, it was at a different address,
+        // which could lead to different instruction bytes).
+        var injectedCodeStartAddress = reservation.Address
+            + (UIntPtr)hookOptions.GetExpectedPreCodeSize(processMemory.Is64Bit);
+        var assemblyResult = codeAssembler.AssembleToBytes(injectedCodeStartAddress, 128);
+        if (assemblyResult.IsFailure)
+        {
+            reservation.Dispose();
+            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, assemblyResult.Error);
+        }
+        byte[] code = assemblyResult.Value;
+        
+        // Resize the reservation now that we know the exact code size
+        int difference = codeMaxLength - code.Length;
+        if (difference > 0)
+            reservation.Shrink((ulong)difference);
+        
+        var hookResult = PerformHook(processMemory, targetInstructionAddress, code, reservation, hookOptions);
+        if (hookResult.IsFailure)
+        {
+            reservation.Dispose();
+            return hookResult.Error;
+        }
+        return hookResult.Value;
+    }
     
     #endregion
     
@@ -359,46 +558,25 @@ public static class ProcessMemoryHookExtensions
             jmpBytes = jmpBytes.Concat(Enumerable.Repeat(ProcessMemoryCodeExtensions.NopByte,
                 bytesRead - jmpBytes.Length)).ToArray();
         
-        var nextOriginalInstructionAddress = (UIntPtr)(targetInstructionAddress + (ulong)bytesRead);
-        
-        // Assemble the pre-code
-        var preHookCodeResult = BuildPreHookCode(reservation.Address, instructionsToReplace, processMemory.Is64Bit,
-            options);
-        if (preHookCodeResult.IsFailure)
-        {
-            reservation.Dispose();
-            return preHookCodeResult.Error;
-        }
-        byte[] preHookCodeBytes = preHookCodeResult.Value;
-
-        // Assemble the post-code
-        var postHookCodeAddress = (UIntPtr)(reservation.Address + (ulong)preHookCodeBytes.Length
-            + (ulong)code.Length);
-        var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bit,
-            options, nextOriginalInstructionAddress);
-        if (postHookCodeResult.IsFailure)
-        {
-            reservation.Dispose();
-            return postHookCodeResult.Error;
-        }
-        byte[] postHookCodeBytes = postHookCodeResult.Value;
-        
         // Assemble the full code to inject
-        var fullCodeLength = preHookCodeBytes.Length + code.Length + postHookCodeBytes.Length;
-        if ((ulong)fullCodeLength > reservation.Size)
+        var nextOriginalInstructionAddress = (UIntPtr)(targetInstructionAddress + (ulong)bytesRead);
+        var fullCodeResult = AssembleFullCodeToInject(processMemory, code, reservation.Address, options,
+            instructionsToReplace, nextOriginalInstructionAddress);
+        if (fullCodeResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.Unkown,
-                $"The assembled code is too large to fit in the reserved memory (reserved {reservation.Size} bytes, but assembled a total of {fullCodeLength} bytes). Please report this, as it is a bug in the hook code generation.");
+            return fullCodeResult.Error;
         }
-        var fullInjectedCode = new byte[fullCodeLength];
-        Buffer.BlockCopy(preHookCodeBytes, 0, fullInjectedCode, 0, preHookCodeBytes.Length);
-        Buffer.BlockCopy(code, 0, fullInjectedCode, preHookCodeBytes.Length, code.Length);
-        Buffer.BlockCopy(postHookCodeBytes, 0, fullInjectedCode, preHookCodeBytes.Length + code.Length,
-            postHookCodeBytes.Length);
+
+        byte[] fullCode = fullCodeResult.Value;
+        if ((ulong)fullCode.Length > reservation.Size)
+        {
+            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.Unknown,
+                $"The assembled code is too large to fit in the reserved memory (reserved {reservation.Size} bytes, but assembled a total of {fullCode.Length} bytes). Please report this, as it is a bug in the hook code generation.");
+        }
         
         // Write the assembled code to the reserved memory
-        var writeResult = processMemory.WriteBytes(reservation.Address, fullInjectedCode);
+        var writeResult = processMemory.WriteBytes(reservation.Address, fullCodeResult.Value);
         if (writeResult.IsFailure)
         {
             reservation.Dispose();
@@ -415,6 +593,104 @@ public static class ProcessMemoryHookExtensions
 
         return new CodeHook(processMemory, targetInstructionAddress, originalBytesResult.Value, reservation);
     }
+
+    /// <summary>
+    /// Assembles the full code to inject, including the pre-hook code, the injected code, and the post-hook code.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <param name="injectionAddress">Address where the injected code will be written.</param>
+    /// <param name="options">Options defining how the hook behaves.</param>
+    /// <param name="instructionsToReplace">Original instructions that will be replaced by the injected code. These
+    /// instructions are used to insert original instructions before or after the injected code depending on the hook
+    /// options, if required at all. If null, no original instructions will be considered.</param>
+    /// <param name="nextInstructionAddress">Address of the first byte of the instruction that comes after the original
+    /// instructions to replace. This is used to generate the jump instruction in the post-hook code. If null, no jump
+    /// will be assembled.</param>
+    /// <returns></returns>
+    private static Result<byte[], HookFailure> AssembleFullCodeToInject(ProcessMemory processMemory, byte[] code,
+        UIntPtr injectionAddress, HookOptions options, IList<Instruction>? instructionsToReplace = null,
+        UIntPtr? nextInstructionAddress = null)
+    {
+        // Assemble the pre-code
+        var preHookCodeResult = BuildPreHookCode(injectionAddress, instructionsToReplace, processMemory.Is64Bit,
+            options);
+        if (preHookCodeResult.IsFailure)
+            return preHookCodeResult.Error;
+        byte[] preHookCodeBytes = preHookCodeResult.Value;
+
+        // Assemble the post-code
+        var postHookCodeAddress = (UIntPtr)(injectionAddress + (ulong)preHookCodeBytes.Length + (ulong)code.Length);
+        var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bit,
+            options, nextInstructionAddress);
+        if (postHookCodeResult.IsFailure)
+            return postHookCodeResult.Error;
+        byte[] postHookCodeBytes = postHookCodeResult.Value;
+        
+        // Assemble the full code to inject
+        var fullCodeLength = preHookCodeBytes.Length + code.Length + postHookCodeBytes.Length;
+        var fullInjectedCode = new byte[fullCodeLength];
+        Buffer.BlockCopy(preHookCodeBytes, 0, fullInjectedCode, 0, preHookCodeBytes.Length);
+        Buffer.BlockCopy(code, 0, fullInjectedCode, preHookCodeBytes.Length, code.Length);
+        Buffer.BlockCopy(postHookCodeBytes, 0, fullInjectedCode, preHookCodeBytes.Length + code.Length,
+            postHookCodeBytes.Length);
+
+        return fullInjectedCode;
+    }
+
+    /// <summary>
+    /// Attempts to replace the bytes of the specified number of instructions, starting at the instruction at the given
+    /// address, with the provided code. If the injected code is larger than the original instructions, the operation
+    /// cannot be performed and the result will be successful but null, signaling that a hook should be performed
+    /// instead.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="targetInstructionAddress">Address of the first byte of the first instruction to replace.</param>
+    /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
+    /// <param name="code">Assembled code to inject into the target process.</param>
+    /// <returns>A result that can hold either a code change instance, or a hook failure when the operation failed.
+    /// If the operation cannot be performed, the result will be successful but the value will be null.</returns>
+    private static Result<CodeChange?, HookFailure> TryReplaceCodeBytes(ProcessMemory processMemory,
+        UIntPtr targetInstructionAddress, int instructionCount, byte[] code)
+    {
+        // Read the original instructions to replace to determine how many bytes it makes up.
+        using var stream = processMemory.GetMemoryStream(targetInstructionAddress);
+        var codeReader = new StreamCodeReader(stream);
+        var decoder = Decoder.Create(processMemory.Is64Bit ? 64 : 32, codeReader, targetInstructionAddress);
+        var instructionsToReplace = new List<Instruction>();
+        int bytesRead = 0;
+        while (instructionsToReplace.Count < instructionCount)
+        {
+            var instruction = decoder.Decode();
+            if (instruction.IsInvalid)
+                return new HookFailureOnDecodingFailure(decoder.LastError);
+            
+            instructionsToReplace.Add(instruction);
+            bytesRead += instruction.Length;
+        }
+        
+        // If the instructions to replace are shorter than the injected code, we can't replace them directly
+        if (bytesRead < code.Length)
+            return (CodeChange?)null;
+        
+        // If we reach this point, we can replace the code bytes.
+        // Read the original bytes to replace (so that the change can be reverted)
+        var originalBytesResult = processMemory.ReadBytes(targetInstructionAddress, bytesRead);
+        if (originalBytesResult.IsFailure)
+            return new HookFailureOnReadFailure(originalBytesResult.Error);
+        
+        // Pad the injected code with NOPs if needed, to avoid leaving bytes from the original instructions in memory
+        if (bytesRead > code.Length)
+            code = code.Concat(Enumerable.Repeat(ProcessMemoryCodeExtensions.NopByte, bytesRead - code.Length))
+                .ToArray();
+        
+        // Write the injected code directly
+        var writeResult = processMemory.WriteBytes(targetInstructionAddress, code);
+        if (writeResult.IsFailure)
+            return new HookFailureOnWriteFailure(writeResult.Error);
+        
+        return new CodeChange(processMemory, targetInstructionAddress, originalBytesResult.Value);
+    }
     
     /// <summary>
     /// Assembles the code that comes before the user-made injected code in a hook operation.
@@ -425,13 +701,13 @@ public static class ProcessMemoryHookExtensions
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
     private static Result<byte[], HookFailure> BuildPreHookCode(ulong baseAddress,
-        IList<Instruction> instructionsToReplace, bool is64Bit, HookOptions options)
+        IList<Instruction>? instructionsToReplace, bool is64Bit, HookOptions options)
     {
         var assembler = new Assembler(is64Bit ? 64 : 32);
 
         // If the hook mode specifies that the original instruction should be executed first, add it to the code
         if (options.ExecutionMode == HookExecutionMode.ExecuteOriginalInstructionFirst
-            && instructionsToReplace.Count > 0)
+            && instructionsToReplace?.Count > 0)
         {
             assembler.AddInstruction(instructionsToReplace.First());
         }
@@ -471,10 +747,11 @@ public static class ProcessMemoryHookExtensions
     /// <param name="instructionsToReplace">Original instructions to be replaced by a jump to the injected code.</param>
     /// <param name="is64Bit">Boolean indicating if the target process is 64-bit.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
-    /// <param name="originalCodeJumpTarget">Address of the first byte of the instruction to jump back to.</param>
+    /// <param name="originalCodeJumpTarget">Address of the first byte of the instruction to jump back to. If null,
+    /// the jump back will not be assembled.</param>
     /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
     private static Result<byte[], HookFailure> BuildPostHookCode(ulong baseAddress,
-        IList<Instruction> instructionsToReplace, bool is64Bit, HookOptions options, UIntPtr originalCodeJumpTarget)
+        IList<Instruction>? instructionsToReplace, bool is64Bit, HookOptions options, UIntPtr? originalCodeJumpTarget)
     {
         var assembler = new Assembler(is64Bit ? 64 : 32);
         
@@ -498,19 +775,20 @@ public static class ProcessMemoryHookExtensions
         if (options.RegistersToPreserve.Contains(HookRegister.Flags))
             assembler.RestoreFlags();
         
-        // If the hook mode specifies that the hook code should be executed first, append the original instructions
+        // If the hook mode specifies that the injected code should be executed first, append the original instruction
         if (options.ExecutionMode == HookExecutionMode.ExecuteInjectedCodeFirst
-            && instructionsToReplace.Count > 0)
+            && instructionsToReplace?.Count > 0)
         {
             assembler.AddInstruction(instructionsToReplace.First());
         }
         
         // In all cases, add any additional instructions that were replaced by the jump to the injected code
-        foreach (var instruction in instructionsToReplace.Skip(1))
+        foreach (var instruction in instructionsToReplace?.Skip(1) ?? [])
             assembler.AddInstruction(instruction);
         
         // Jump back to the original code
-        assembler.jmp(originalCodeJumpTarget);
+        if (originalCodeJumpTarget.HasValue)
+            assembler.jmp(originalCodeJumpTarget.Value);
         
         // Assemble the code and return the resulting bytes
         var result = assembler.AssembleToBytes(baseAddress, 128);
@@ -518,6 +796,21 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnCodeAssembly(HookCodeAssemblySource.AppendedCode, result.Error);
 
         return result.Value;
+    }
+
+    /// <summary>
+    /// Gets the number of bytes to reserve to inject a given code with the specified hook options.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="codeLength">Maximum length in bytes of the code instructions to inject.</param>
+    /// <param name="options">Options defining how the hook behaves.</param>
+    /// <returns>The size to reserve in bytes.</returns>
+    private static ulong GetSizeToReserveForCodeInjection(ProcessMemory processMemory, int codeLength, HookOptions options)
+    {
+        return (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
+            + codeLength
+            + MaxInstructionLength // Extra room for the original instructions
+            + FarJumpInstructionLength); // Extra room for the jump back to the original code
     }
     
     /// <summary>
