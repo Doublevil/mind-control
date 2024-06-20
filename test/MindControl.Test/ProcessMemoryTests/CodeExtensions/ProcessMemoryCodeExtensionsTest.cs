@@ -8,7 +8,7 @@ namespace MindControl.Test.ProcessMemoryTests.CodeExtensions;
 /// Tests the features of the <see cref="ProcessMemory"/> class related to code manipulation.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
+public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTest
 {
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
@@ -20,12 +20,12 @@ public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
     [Test]
     public void DisableCodeAtTest()
     {
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First() + 10;
-        var result = TestProcessMemory.DisableCodeAt(movLongAddress);
+        var movLongAddress = FindMovLongAddress() + 10;
+        var result = TestProcessMemory!.DisableCodeAt(movLongAddress);
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value.Address, Is.EqualTo(movLongAddress));
         Assert.That(result.Value.Length, Is.AtLeast(1)); // We don't care how long it is but we check that it is set.
-        
+
         ProceedUntilProcessEnds();
         
         // Test that the output long at index 5 is the first value set when the program starts, not the one that was
@@ -40,9 +40,9 @@ public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
     [Test]
     public void DisableCodeAtWithPointerPathTest()
     {
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First() + 10;
+        var movLongAddress = FindMovLongAddress() + 10;
         var pointerPath = movLongAddress.ToString("X");
-        var result = TestProcessMemory.DisableCodeAt(pointerPath);
+        var result = TestProcessMemory!.DisableCodeAt(pointerPath);
         Assert.That(result.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
@@ -59,8 +59,8 @@ public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
     [Test]
     public void DisableCodeAtWithMultipleInstructionsTest()
     {
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First();
-        var result = TestProcessMemory.DisableCodeAt(movLongAddress, 5);
+        var movLongAddress = FindMovLongAddress();
+        var result = TestProcessMemory!.DisableCodeAt(movLongAddress, 5);
         Assert.That(result.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
@@ -82,8 +82,8 @@ public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
     [Test]
     public void DisableCodeAtRevertTest()
     {
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First() + 10;
-        var result = TestProcessMemory.DisableCodeAt(movLongAddress);
+        var movLongAddress = FindMovLongAddress() + 10;
+        var result = TestProcessMemory!.DisableCodeAt(movLongAddress);
         result.Value.Revert();
         
         ProceedUntilProcessEnds();
@@ -111,8 +111,8 @@ public class ProcessMemoryCodeExtensionsTest : ProcessMemoryTest
     [Test]
     public void DisableCodeAtWithInvalidInstructionCountTest()
     {
-        var movLongAddress = TestProcessMemory!.FindBytes("48 B8 DF 54 09 2B BA 3C FD FF").First() + 10;
-        var result = TestProcessMemory.DisableCodeAt(movLongAddress, 0);
+        var movLongAddress = FindMovLongAddress() + 10;
+        var result = TestProcessMemory!.DisableCodeAt(movLongAddress, 0);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnInvalidArguments>());
     }

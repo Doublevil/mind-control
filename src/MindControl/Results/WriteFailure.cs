@@ -98,7 +98,7 @@ public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailu
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to remove the protection of the memory at address {Address}: {Details}.{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Ignore)} to prevent memory protection removal. As protection removal is the first step when writing a value, it may simply be that the provided target address does not point to valid memory.";
+        => $"Failed to remove the protection of the memory at address {Address:X}: \"{Details}\".{Environment.NewLine}Change the memory protection strategy to {nameof(MemoryProtectionStrategy)}.{nameof(MemoryProtectionStrategy.Ignore)} to prevent memory protection removal. As protection removal is the first step when writing a value, it may simply be that the provided target address does not point to valid memory.";
 }
 
 /// <summary>

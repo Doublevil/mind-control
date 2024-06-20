@@ -76,7 +76,9 @@ public static class ProcessMemoryCodeExtensions
         
         var nopInstructions = new byte[fullLength];
         nopInstructions.AsSpan().Fill(NopByte);
-        processMemory.WriteBytes(address, nopInstructions);
+        var writeResult = processMemory.WriteBytes(address, nopInstructions, MemoryProtectionStrategy.Remove);
+        if (writeResult.IsFailure)
+            return new CodeWritingFailureOnWriteFailure(writeResult.Error);
         
         return new CodeChange(processMemory, address, originalBytesResult.Value);
     }
