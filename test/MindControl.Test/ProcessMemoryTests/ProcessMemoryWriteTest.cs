@@ -6,34 +6,34 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the memory writing methods of <see cref="ProcessMemory"/>.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryWriteTest : ProcessMemoryTest
+public class ProcessMemoryWriteTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Write a value in the target app memory, and assert that the output of the app for that specific value (and no
     /// other value) reflects the change.
     /// </summary>
-    /// <param name="pointerPathSuffix">Pointer path fragment to insert after the address of the target object instance
-    /// in order to reach the address where we want to write the value.</param>
     /// <param name="value">Value to write.</param>
     /// <param name="finalResultsIndex">Index of the value to assert in the array representing the final output from the
     /// target app.</param>
     /// <param name="expectedValue">Expected value of the final output from the target app.</param>
-    [TestCase("+48", true, 0, "True")]
-    [TestCase("+49", (byte)94, 1, "94")]
-    [TestCase("+38", (int)-447712345, 2, "-447712345")]
-    [TestCase("+3C", (uint)74753312, 3, "74753312")]
-    [TestCase("+20", (long)-858884523, 5, "-858884523")]
-    [TestCase("+28", (ulong)755443121891, 6, "755443121891")]
-    [TestCase("+10,8", (long)51356, 9, "51356")]
-    [TestCase("+44", (short)-2421, 10, "-2421")]
-    [TestCase("+46", (ushort)2594, 11, "2594")]
-    [TestCase("+40", (float)4474.783, 12, "4474.783")]
-    [TestCase("+30", (double)54234423.3147, 13, "54234423.3147")]
-    [TestCase("+18,10", new byte[] { 0x8, 0x6, 0x4, 0xA }, 14, "8,6,4,10")]
-    public void WriteValueTest(string pointerPathSuffix, object value, int finalResultsIndex, string expectedValue)
+    [TestCase(true, IndexOfOutputOuterBool, "True")]
+    [TestCase((byte)94, IndexOfOutputOuterByte, "94")]
+    [TestCase((int)-447712345, IndexOfOutputOuterInt, "-447712345")]
+    [TestCase((uint)74753312, IndexOfOutputOuterUint, "74753312")]
+    [TestCase((long)-858884523, IndexOfOutputOuterLong, "-858884523")]
+    [TestCase((ulong)755443121891, IndexOfOutputOuterUlong, "755443121891")]
+    [TestCase((long)51356, IndexOfOutputInnerLong, "51356")]
+    [TestCase((short)-2421, IndexOfOutputOuterShort, "-2421")]
+    [TestCase((ushort)2594, IndexOfOutputOuterUshort, "2594")]
+    [TestCase((float)4474.783, IndexOfOutputOuterFloat, "4474.783")]
+    [TestCase((double)54234423.3147, IndexOfOutputOuterDouble, "54234423.3147")]
+    [TestCase(new byte[] { 0x8, 0x6, 0x4, 0xA }, IndexOfOutputOuterByteArray, "8,6,4,10")]
+    public void WriteValueTest(object value, int finalResultsIndex, string expectedValue)
     {
+        var result = TestProcessMemory.Read<UIntPtr>(OuterClassPointer + (UIntPtr)0x10).Value;
+        var pointerPath = GetPointerPathForValueAtIndex(finalResultsIndex);
         ProceedToNextStep();
-        TestProcessMemory!.Write($"{OuterClassPointer:X}{pointerPathSuffix}", value);
+        TestProcessMemory!.Write(pointerPath, value);
         ProceedToNextStep();
         AssertFinalResults(finalResultsIndex, expectedValue);
     }
@@ -69,17 +69,23 @@ public class ProcessMemoryWriteTest : ProcessMemoryTest
     [Test]
     public void WriteStringPointerTest()
     {
-        var pointerAddress = OuterClassPointer + 8;
+        var pointerAddress = GetPointerPathForValueAtIndex(IndexOfOutputOuterString);
         var stringSettings = TestProcessMemory!.FindStringSettings(pointerAddress, "ThisIsÄString").Value;
         ProceedToNextStep(); // Make sure we make the test program change the string pointer before we overwrite it
         
-        var newString = "ThisStringIsCompletelyOriginalAndAlsoLongerThanTheOriginalOne";
+        var newString = "This String Is Completely New And Also Longer Than The Original One";
         var newStringReservation = TestProcessMemory.StoreString(newString, stringSettings).Value;
         TestProcessMemory.Write(pointerAddress, newStringReservation.Address);
         
         ProceedToNextStep(); // Makes the test program output the final results
         
         // Test that the program actually used (wrote to the console) the string that we hacked in
-        Assert.That(FinalResults[4], Is.EqualTo(newString));
+        AssertFinalResults(IndexOfOutputOuterString, newString);
     }
 }
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryWriteTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest { protected override bool Is64Bit => false; }

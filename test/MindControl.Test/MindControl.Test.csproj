@@ -27,16 +27,24 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\MindControl.Code\MindControl.Code.csproj" />
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
-      <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
-      <ProjectReference Include="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj"
-                        Condition="'$(AUTOMATED_BUILD)' != 'true'">
-        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        <OutputItemType>Content</OutputItemType>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <SetConfiguration>Release</SetConfiguration>
-        <SetPlatform>x64</SetPlatform>
-        <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
-      </ProjectReference>
     </ItemGroup>
 
+    <Target Name="PostBuild" AfterTargets="Build" DependsOnTargets="Build">
+        <!-- Build the TargetApp in Any CPU & x86 and output it to the right folder -->
+        <MSBuild Projects="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj"
+                 Properties="Configuration=Release;Platform=Any CPU;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x64\"
+                 Targets="Build" />
+        <MSBuild Projects="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj"
+                 Properties="Configuration=Release;Platform=x86;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x86\"
+                 Targets="Build" />
+        
+        <!-- Build the InjectedLibrary in x64 & 86 and output it to the right folder -->
+        <MSBuild Projects="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj"
+                 Properties="Configuration=Release;Platform=x64;OutDir=$(MSBuildProjectDirectory)\$(OutDir)\InjectedLibrary\x64\"
+                 Targets="Build" />
+        <MSBuild Projects="..\MindControl.Test.InjectedLibrary\MindControl.Test.InjectedLibrary.vcxproj"
+                 Properties="Configuration=Release;Platform=x86;OutDir=$(MSBuildProjectDirectory)\$(OutDir)\InjectedLibrary\x86\"
+                 Targets="Build" />
+    </Target>
+    
 </Project>

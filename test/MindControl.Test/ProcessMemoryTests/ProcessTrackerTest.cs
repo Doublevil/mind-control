@@ -48,7 +48,7 @@ public class ProcessTrackerTest
     /// </summary>
     private Process StartTargetAppProcess()
     {
-        var process = ProcessMemoryTest.StartTargetAppProcess();
+        var process = BaseProcessMemoryTest.StartTargetAppProcess();
         _targetProcesses.Add(process);
         Thread.Sleep(500); // Wait a bit to make sure the process is ready.
         return process;

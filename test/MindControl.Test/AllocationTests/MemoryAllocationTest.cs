@@ -12,7 +12,7 @@ namespace MindControl.Test.AllocationTests;
 /// depend on that method.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class MemoryAllocationTest : ProcessMemoryTest
+public class MemoryAllocationTest : BaseProcessMemoryTest
 {
     private MemoryAllocation _allocation;
 

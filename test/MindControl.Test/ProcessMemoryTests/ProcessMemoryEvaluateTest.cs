@@ -9,7 +9,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// <remarks>Most pointer path evaluation features are implicitly tested through memory reading and writing methods.
 /// This test class focuses on special cases.</remarks>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryEvaluateTest : ProcessMemoryTest
+public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Tests the nominal case, with a path that evaluates to a valid address.

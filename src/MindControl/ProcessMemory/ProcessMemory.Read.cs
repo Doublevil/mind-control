@@ -160,13 +160,20 @@ public partial class ProcessMemory
         
         // Get the size of the target type
         int size;
-        try
+        
+        // Exception for UIntPtr to use the size of the attached process platform, not the system platform
+        if (typeof(T) == typeof(UIntPtr))
+            size = Is64Bit ? 8 : 4;
+        else
         {
-            size = Marshal.SizeOf<T>();
-        }
-        catch (ArgumentException)
-        {
-            return new ReadFailureOnConversionFailure();
+            try
+            {
+                size = Marshal.SizeOf<T>();
+            }
+            catch (ArgumentException)
+            {
+                return new ReadFailureOnConversionFailure();
+            }
         }
 
         // Read the bytes from the process memory
@@ -178,6 +185,10 @@ public partial class ProcessMemory
         // Convert the bytes into the target type
         try
         {
+            // Exception for UIntPtr to use the size of the attached process platform, not the system platform
+            if (typeof(T) == typeof(UIntPtr) && !Is64Bit)
+                return (T)(object)new UIntPtr(BitConverter.ToUInt32(bytes, 0));
+            
             return MemoryMarshal.Read<T>(bytes);
         }
         catch (Exception)

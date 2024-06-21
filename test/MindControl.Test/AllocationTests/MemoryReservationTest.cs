@@ -10,7 +10,7 @@ namespace MindControl.Test.AllocationTests;
 /// actual instance of <see cref="ProcessMemory"/> and depend on that method.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class MemoryReservationTest : ProcessMemoryTest
+public class MemoryReservationTest : BaseProcessMemoryTest
 {
     private MemoryAllocation _allocation;
     private MemoryReservation _reservation;

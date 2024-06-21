@@ -8,7 +8,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the features of the <see cref="ProcessMemory"/> class related to memory allocation.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryAllocationTest : ProcessMemoryTest
+public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Allocate"/> method.

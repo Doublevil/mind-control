@@ -8,7 +8,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the memory reading methods of <see cref="ProcessMemory"/>.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryReadTest : ProcessMemoryTest
+public class ProcessMemoryReadTest : BaseProcessMemoryTest
 {
     #region Bytes reading
     

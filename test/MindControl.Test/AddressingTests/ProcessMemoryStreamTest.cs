@@ -11,7 +11,7 @@ namespace MindControl.Test.AddressingTests;
 /// actual instance of <see cref="ProcessMemory"/> and depend on that method.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryStreamTest : ProcessMemoryTest
+public class ProcessMemoryStreamTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Tests the <see cref="ProcessMemory.GetMemoryStream(UIntPtr)"/> method.

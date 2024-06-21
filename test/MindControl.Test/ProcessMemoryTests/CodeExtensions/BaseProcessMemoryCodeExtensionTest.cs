@@ -4,7 +4,7 @@
 /// Base class for tests of the <see cref="ProcessMemory"/> class related to code manipulation.
 /// Provides methods and properties related to code manipulation.
 /// </summary>
-public abstract class BaseProcessMemoryCodeExtensionTest : ProcessMemoryTest
+public abstract class BaseProcessMemoryCodeExtensionTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Finds and returns the address of the MOV instruction that loads the new long value in the target app into the

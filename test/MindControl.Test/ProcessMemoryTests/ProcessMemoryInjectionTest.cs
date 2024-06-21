@@ -7,9 +7,19 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the features of the <see cref="ProcessMemory"/> class related to injecting a library.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryInjectionTest : ProcessMemoryTest
+public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
 {
-    private const string InjectedLibraryPath = "./MindControl.Test.InjectedLibrary.dll";
+    /// <summary>
+    /// Gets a relative path to the injected library appropriate for the given bitness, or, by default, for
+    /// the bitness of the test.
+    /// </summary>
+    /// <param name="use64Bit">Whether to use the 64-bit version of the library. Default is the bitness of the
+    /// test.</param>
+    protected string GetInjectedLibraryPath(bool? use64Bit = null)
+    {
+        use64Bit ??= Is64Bit;
+        return $"./InjectedLibrary/{(use64Bit.Value ? "x64" : "x86")}/MindControl.Test.InjectedLibrary.dll";
+    }
 
     /// <summary>
     /// Ensures the tests are correctly set up before running.
@@ -17,7 +27,7 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     [SetUp]
     public void SetUp()
     {
-        if (!File.Exists(InjectedLibraryPath))
+        if (!File.Exists(GetInjectedLibraryPath()))
         {
             throw new FileNotFoundException("Injected library not found. Make sure the project \"MindControl.Test.InjectedLibrary\" was built before running the tests.");
         }
@@ -31,7 +41,7 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     [Test]
     public void InjectLibraryTest()
     {
-        var result = TestProcessMemory!.InjectLibrary(InjectedLibraryPath);
+        var result = TestProcessMemory!.InjectLibrary(GetInjectedLibraryPath());
         Assert.That(result.IsSuccess, Is.True);
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
@@ -45,8 +55,11 @@ public class ProcessMemoryInjectionTest : ProcessMemoryTest
     [Test]
     public void InjectLibraryWithNonAsciiPathTest()
     {
-        const string targetPath = "憂 鬱.dll";
-        File.Copy(InjectedLibraryPath, targetPath, true);
+        string injectedLibraryPath = GetInjectedLibraryPath();
+        const string targetFileName = "憂 鬱.dll";
+        string targetPath = Path.Combine(Path.GetDirectoryName(injectedLibraryPath)!, targetFileName);
+        
+        File.Copy(GetInjectedLibraryPath(), targetPath, true);
         var result = TestProcessMemory!.InjectLibrary(targetPath);
         Assert.That(result.IsSuccess, Is.True);
         var output = ProceedToNextStep();

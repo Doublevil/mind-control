@@ -198,7 +198,7 @@ public partial class Win32Service : IOperatingSystemService
         UIntPtr currentAddress = range.Start;
         while (currentAddress.ToUInt64() <= rangeEnd)
         {
-            var getRegionResult = GetRegionMetadata(processHandle, currentAddress, is64Bit);
+            var getRegionResult = GetRegionMetadata(processHandle, currentAddress);
             
             // If we failed to get the region metadata, stop iterating.
             if (getRegionResult.IsFailure)
@@ -450,13 +450,11 @@ public partial class Win32Service : IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
-    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
-    public Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress,
-        bool is64Bit)
+    public Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress)
     {
         MemoryBasicInformation memoryBasicInformation;
-        if (is64Bit)
+        if (IsSystem64Bit())
         {
             // Use the 64-bit variant of the structure.
             var memInfo64 = new MemoryBasicInformation64();

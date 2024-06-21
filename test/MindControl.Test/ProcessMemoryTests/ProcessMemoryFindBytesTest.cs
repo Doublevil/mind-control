@@ -6,7 +6,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the features of the <see cref="ProcessMemory"/> class related to finding bytes in the target process.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryFindBytesTest : ProcessMemoryTest
+public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// Tests the <see cref="ProcessMemory.FindBytes"/> method with a known fixed bytes pattern.

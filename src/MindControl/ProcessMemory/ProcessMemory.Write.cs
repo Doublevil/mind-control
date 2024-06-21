@@ -106,7 +106,11 @@ public partial class ProcessMemory
     {
         if (value == null)
             throw new ArgumentNullException(nameof(value), "The value to write cannot be null.");
-
+        if (value is IntPtr ptr && ptr.ToInt64() > uint.MaxValue)
+            return new WriteFailureOnIncompatibleBitness((UIntPtr)ptr);
+        if (value is UIntPtr uptr && uptr.ToUInt64() > uint.MaxValue)
+            return new WriteFailureOnIncompatibleBitness(uptr);
+        
         return value switch
         {
             bool v => WriteBool(address, v, memoryProtectionStrategy),
@@ -116,6 +120,8 @@ public partial class ProcessMemory
             int v => WriteInt(address, v, memoryProtectionStrategy),
             uint v => WriteUInt(address, v, memoryProtectionStrategy),
             IntPtr v => WriteIntPtr(address, v, memoryProtectionStrategy),
+            UIntPtr v => Is64Bit ? WriteULong(address, v.ToUInt64(), memoryProtectionStrategy)
+                : WriteUInt(address, (uint)v.ToUInt64(), memoryProtectionStrategy),
             float v => WriteFloat(address, v, memoryProtectionStrategy),
             long v => WriteLong(address, v, memoryProtectionStrategy),
             ulong v => WriteULong(address, v, memoryProtectionStrategy),

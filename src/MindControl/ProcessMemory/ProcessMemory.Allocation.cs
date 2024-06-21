@@ -97,7 +97,7 @@ public partial class ProcessMemory
         MemoryRangeMetadata currentMetadata;
         while ((nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
                 && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64())
-            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress, Is64Bit)
+            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress)
                 .GetValueOrDefault()).Size.ToUInt64() > 0)
         {
             nextAddressForward = (UIntPtr)Math.Max(nextAddressForward.ToUInt64(),

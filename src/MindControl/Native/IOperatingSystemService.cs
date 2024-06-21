@@ -147,10 +147,8 @@ public interface IOperatingSystemService
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
-    /// <param name="is64Bit">A boolean indicating if the target process is 64-bit or not.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
-    Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress,
-        bool is64Bit);
+    Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress);
 
     /// <summary>
     /// Gets the allocation granularity (minimal allocation size) of the system.

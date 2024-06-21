@@ -72,7 +72,7 @@ public record WriteFailureOnIncompatibleBitness(UIntPtr Address)
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"The address to write, {Address}, is a 64-bit address, but the target process is 32-bit.";
+        => $"The pointer to write, {Address}, is too large for a 32-bit process. If you want to write an 8-byte value and not a memory address, use a ulong instead.";
 }
 
 /// <summary>

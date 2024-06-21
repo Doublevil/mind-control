@@ -6,7 +6,7 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the features of the <see cref="ProcessMemory"/> class related to attaching to a process.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryAttachTest : ProcessMemoryTest
+public class ProcessMemoryAttachTest : BaseProcessMemoryTest
 {
     /// <summary>
     /// This test only ensures that the setup works, i.e. that opening a process as a
