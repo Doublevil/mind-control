@@ -16,23 +16,22 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
     /// <param name="finalResultsIndex">Index of the value to assert in the array representing the final output from the
     /// target app.</param>
     /// <param name="expectedValue">Expected value of the final output from the target app.</param>
-    [TestCase(true, IndexOfOutputOuterBool, "True")]
-    [TestCase((byte)94, IndexOfOutputOuterByte, "94")]
-    [TestCase((int)-447712345, IndexOfOutputOuterInt, "-447712345")]
-    [TestCase((uint)74753312, IndexOfOutputOuterUint, "74753312")]
-    [TestCase((long)-858884523, IndexOfOutputOuterLong, "-858884523")]
-    [TestCase((ulong)755443121891, IndexOfOutputOuterUlong, "755443121891")]
+    [TestCase(true, IndexOfOutputBool, "True")]
+    [TestCase((byte)94, IndexOfOutputByte, "94")]
+    [TestCase((int)-447712345, IndexOfOutputInt, "-447712345")]
+    [TestCase((uint)74753312, IndexOfOutputUInt, "74753312")]
+    [TestCase((long)-858884523, IndexOfOutputLong, "-858884523")]
+    [TestCase((ulong)755443121891, IndexOfOutputULong, "755443121891")]
     [TestCase((long)51356, IndexOfOutputInnerLong, "51356")]
-    [TestCase((short)-2421, IndexOfOutputOuterShort, "-2421")]
-    [TestCase((ushort)2594, IndexOfOutputOuterUshort, "2594")]
-    [TestCase((float)4474.783, IndexOfOutputOuterFloat, "4474.783")]
-    [TestCase((double)54234423.3147, IndexOfOutputOuterDouble, "54234423.3147")]
-    [TestCase(new byte[] { 0x8, 0x6, 0x4, 0xA }, IndexOfOutputOuterByteArray, "8,6,4,10")]
+    [TestCase((short)-2421, IndexOfOutputShort, "-2421")]
+    [TestCase((ushort)2594, IndexOfOutputUShort, "2594")]
+    [TestCase((float)4474.783, IndexOfOutputFloat, "4474.783")]
+    [TestCase((double)54234423.3147, IndexOfOutputDouble, "54234423.3147")]
+    [TestCase(new byte[] { 0x8, 0x6, 0x4, 0xA }, IndexOfOutputByteArray, "8,6,4,10")]
     public void WriteValueTest(object value, int finalResultsIndex, string expectedValue)
     {
-        var result = TestProcessMemory.Read<UIntPtr>(OuterClassPointer + (UIntPtr)0x10).Value;
         var pointerPath = GetPointerPathForValueAtIndex(finalResultsIndex);
-        ProceedToNextStep();
+        ProceedToNextStep(); // Let the app overwrite the values once before writing
         TestProcessMemory!.Write(pointerPath, value);
         ProceedToNextStep();
         AssertFinalResults(finalResultsIndex, expectedValue);
@@ -69,8 +68,8 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
     [Test]
     public void WriteStringPointerTest()
     {
-        var pointerAddress = GetPointerPathForValueAtIndex(IndexOfOutputOuterString);
-        var stringSettings = TestProcessMemory!.FindStringSettings(pointerAddress, "ThisIsÄString").Value;
+        var pointerAddress = GetPointerPathForValueAtIndex(IndexOfOutputString);
+        var stringSettings = TestProcessMemory!.FindStringSettings(pointerAddress, InitialStringValue).Value;
         ProceedToNextStep(); // Make sure we make the test program change the string pointer before we overwrite it
         
         var newString = "This String Is Completely New And Also Longer Than The Original One";
@@ -80,7 +79,7 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
         ProceedToNextStep(); // Makes the test program output the final results
         
         // Test that the program actually used (wrote to the console) the string that we hacked in
-        AssertFinalResults(IndexOfOutputOuterString, newString);
+        AssertFinalResults(IndexOfOutputString, newString);
     }
 }
 

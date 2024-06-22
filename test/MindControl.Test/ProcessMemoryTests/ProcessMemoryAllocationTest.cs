@@ -364,12 +364,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     public void StoreStringWithoutAllocationTest()
     {
         var stringToStore = "Hello 世界!";
-        var reservationResult = TestProcessMemory!.StoreString(stringToStore, DotNetStringSettings);
+        var reservationResult = TestProcessMemory!.StoreString(stringToStore, GetDotNetStringSettings());
         Assert.That(reservationResult.IsSuccess, Is.True);
         var reservation = reservationResult.Value;
 
         var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;
-        var stringReadBack = DotNetStringSettings.GetString(bytesReadBack);
+        var stringReadBack = GetDotNetStringSettings().GetString(bytesReadBack);
         
         // The store method should have allocated a new range.
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
@@ -390,12 +390,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var stringToStore = "Hello 世界!";
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         
-        var reservationResult = TestProcessMemory.StoreString(stringToStore, DotNetStringSettings, allocation);
+        var reservationResult = TestProcessMemory.StoreString(stringToStore, GetDotNetStringSettings(), allocation);
         Assert.That(reservationResult.IsSuccess, Is.True);
         var reservation = reservationResult.Value;
         
         var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;
-        var stringReadBack = DotNetStringSettings.GetString(bytesReadBack);
+        var stringReadBack = GetDotNetStringSettings().GetString(bytesReadBack);
         
         Assert.That(reservation.IsDisposed, Is.False);
         // The resulting range should be a range reserved from our original range.
