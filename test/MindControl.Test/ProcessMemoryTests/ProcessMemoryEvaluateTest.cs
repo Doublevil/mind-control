@@ -17,46 +17,52 @@ public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
     [Test]
     public void EvaluateOnKnownPointerTest()
     {
-        // This path is known to point to 0xFFFFFFFFFFFFFFFF (i.e. the max 8-byte value).
-        var result = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10,0");
+        var result = TestProcessMemory!.EvaluateMemoryAddress(GetPathToMaxAddress());
         
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value, Is.EqualTo(unchecked((UIntPtr)ulong.MaxValue)));
+        Assert.That(result.Value, Is.EqualTo(GetMaxPointerValue()));
     }
     
     /// <summary>
     /// Tests an error case where the pointer path points to a value located after the last possible byte in memory
     /// (the maximum value of a UIntPtr + 1).
-    /// The operation is expected to fail with a <see cref="PathEvaluationFailureOnPointerOutOfRange"/>.
+    /// The operation is expected to fail with a <see cref="PathEvaluationFailureOnPointerOutOfRange"/> on an x64
+    /// process, or a <see cref="PathEvaluationFailureOnIncompatibleBitness"/> on an x86 process.
     /// </summary>
     [Test]
     public void EvaluateOverMaxPointerValueTest()
     {
-        var result = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10,1");
+        var result = TestProcessMemory!.EvaluateMemoryAddress(GetPathToPointerToMaxAddressPlusOne());
         
         Assert.That(result.IsSuccess, Is.False);
         var error = result.Error;
-        Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerOutOfRange>());
-        var pathError = (PathEvaluationFailureOnPointerOutOfRange)error;
-        Assert.That(pathError.Offset, Is.EqualTo(new PointerOffset(1, false)));
-        Assert.That(pathError.PreviousAddress, Is.EqualTo(UIntPtr.MaxValue));
+
+        if (Is64Bit)
+        {
+            Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerOutOfRange>());
+            var pathError = (PathEvaluationFailureOnPointerOutOfRange)error;
+            Assert.That(pathError.Offset, Is.EqualTo(new PointerOffset(1, false)));
+            Assert.That(pathError.PreviousAddress, Is.EqualTo(UIntPtr.MaxValue));
+        }
+        else
+            Assert.That(error, Is.TypeOf<PathEvaluationFailureOnIncompatibleBitness>());
     }
     
     /// <summary>
-    /// Tests an error case where the pointer path points to a value that is not readable.
+    /// Tests an error case where the pointer path points to an unreachable value because one of the pointers in the
+    /// path (but not the last one) points to an unreadable address.
     /// The operation is expected to fail with a <see cref="PathEvaluationFailureOnPointerReadFailure"/>.
     /// </summary>
     [Test]
-    public void EvaluateWithUnreadableAddressTest()
+    public void EvaluateWithUnreadableAddressHalfwayThroughTest()
     {
-        // This path will try to follow a pointer to 0xFFFFFFFFFFFFFFFF, which is not readable
-        var result = TestProcessMemory!.EvaluateMemoryAddress($"{OuterClassPointer:X}+10,10,0,0");
+        var result = TestProcessMemory!.EvaluateMemoryAddress(GetPathToPointerThroughMaxAddress());
         
         Assert.That(result.IsSuccess, Is.False);
         var error = result.Error;
         Assert.That(error, Is.TypeOf<PathEvaluationFailureOnPointerReadFailure>());
         var pathError = (PathEvaluationFailureOnPointerReadFailure)error;
-        Assert.That(pathError.Address, Is.EqualTo(unchecked((UIntPtr)ulong.MaxValue)));
+        Assert.That(pathError.Address, Is.EqualTo(GetMaxPointerValue()));
         Assert.That(pathError.Details, Is.TypeOf<ReadFailureOnSystemRead>());
         var readFailure = (ReadFailureOnSystemRead)pathError.Details;
         Assert.That(readFailure.Details, Is.TypeOf<OperatingSystemCallFailure>());
@@ -96,4 +102,14 @@ public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
         var error = (PathEvaluationFailureOnBaseModuleNotFound)result.Error;
         Assert.That(error.ModuleName, Is.EqualTo("ThisModuleDoesNotExist.dll"));
     }
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryEvaluateTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryEvaluateTestX86 : ProcessMemoryEvaluateTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
 }

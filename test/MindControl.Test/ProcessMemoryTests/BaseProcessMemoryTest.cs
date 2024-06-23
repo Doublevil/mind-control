@@ -289,10 +289,31 @@ public class BaseProcessMemoryTest
     /// Gets a pointer path that evaluates to an address pointing to a 0xFFFFFFFFFFFFFFFF (x64) or 0xFFFFFFFF (x86)
     /// value. Warning: the path itself does not evaluate to the max address, but to a pointer to it. To clarify with
     /// an example, this path will evaluate to say 0x4A64F850, and if you read a ulong at that address, you will get
-    /// 0xFFFFFFFFFFFFFFFF.
+    /// 0xFFFFFFFFFFFFFFFF. See <see cref="GetPathToMaxAddress"/> for the former.
     /// </summary>
     protected PointerPath GetPathToPointerToMaxAddress()
         => OuterClassPointer.ToString("X") + (Is64Bit ? "+10,10" : "+20,10");
+    
+    /// <summary>
+    /// Gets a pointer path that evaluates to 0xFFFFFFFFFFFFFFFF (x64) or 0xFFFFFFFF (x86).
+    /// </summary>
+    protected PointerPath GetPathToMaxAddress()
+        => OuterClassPointer.ToString("X") + (Is64Bit ? "+10,10,0" : "+20,10,0");
+    
+    /// <summary>
+    /// Gets a pointer path that evaluates to an address located one byte after 0xFFFFFFFFFFFFFFFF (x64) or 0xFFFFFFFF
+    /// (x86), which is out of bounds. This path should cause a failure on evaluation.
+    /// </summary>
+    protected PointerPath GetPathToPointerToMaxAddressPlusOne()
+        => OuterClassPointer.ToString("X") + (Is64Bit ? "+10,10,1" : "+20,10,1");
+    
+    /// <summary>
+    /// Gets a pointer path that should not evaluate properly because it goes through the maximum possible address
+    /// (0xFFFFFFFFFFFFFFFF in x64 bits or 0xFFFFFFFF in x86) but does not stop there, which should cause a read failure
+    /// on evaluation.
+    /// </summary>
+    protected PointerPath GetPathToPointerThroughMaxAddress()
+        => OuterClassPointer.ToString("X") + (Is64Bit ? "+10,10,0,0" : "+20,10,0,0");
     
     /// <summary>
     /// Gets the address of the pointer of the output string of the target app, regardless of its bitness.

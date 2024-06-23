@@ -51,3 +51,13 @@ public class ProcessMemoryAttachTest : BaseProcessMemoryTest
         });
     }
 }
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryAttachTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryAttachTestX86 : ProcessMemoryAttachTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
+}
