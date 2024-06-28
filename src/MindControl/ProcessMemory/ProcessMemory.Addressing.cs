@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MindControl.Internal;
+using MindControl.Modules;
 using MindControl.Results;
 
 namespace MindControl;
@@ -114,17 +115,6 @@ public partial class ProcessMemory
             .Cast<ProcessModule>()
             .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase));
     }
-
-    /// <summary>
-    /// Gets the process module loaded in the attached process by its name.
-    /// </summary>
-    /// <param name="moduleName">Name of the target module.</param>
-    /// <returns>The module if found, null otherwise.</returns>
-    public ProcessModule? GetModule(string moduleName)
-    {
-        using var process = GetAttachedProcessInstance();
-        return GetModule(moduleName, process);
-    }
     
     /// <summary>
     /// Gets the base address of the process module with the given name.
@@ -134,7 +124,6 @@ public partial class ProcessMemory
     public UIntPtr? GetModuleAddress(string moduleName)
     {
         using var process = GetAttachedProcessInstance();
-
         var module = GetModule(moduleName, process);
         IntPtr? baseAddress = module?.BaseAddress;
 
@@ -142,20 +131,15 @@ public partial class ProcessMemory
     }
 
     /// <summary>
-    /// Gets the memory range of the process module with the given name.
+    /// Gets the module with the given name, if it exists.
     /// </summary>
     /// <param name="moduleName">Name of the target module.</param>
-    /// <returns>The memory range of the module if found, null otherwise.</returns>
-    public MemoryRange? GetModuleRange(string moduleName)
+    /// <returns>The module if found, null otherwise.</returns>
+    public RemoteModule? GetModule(string moduleName)
     {
         using var process = GetAttachedProcessInstance();
-
         var module = GetModule(moduleName, process);
-
-        if (module == null)
-            return null;
-        
-        return MemoryRange.FromStartAndSize((UIntPtr)(long)module.BaseAddress, (ulong)module.ModuleMemorySize - 1);
+        return module == null ? null : new RemoteModule(this, module);
     }
     
     /// <summary>

@@ -367,6 +367,15 @@ public partial class Win32Service
     }
     
     /// <summary>
+    /// Gets the exit code of the process with the given handle.
+    /// </summary>
+    /// <param name="hThread">A handle to the target thread.</param>
+    /// <param name="lpExitCode">A pointer to a variable to receive the exit code.</param>
+    /// <returns>True if the function succeeds, or false otherwise.</returns>
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetExitCodeThread(IntPtr hThread, out uint lpExitCode);
+    
+    /// <summary>
     /// Closes an open object handle.
     /// </summary>
     /// <param name="hObject">A valid handle to an open object.</param>

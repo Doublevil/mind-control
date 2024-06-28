@@ -113,13 +113,13 @@ public interface IOperatingSystemService
         UIntPtr parameterAddress);
 
     /// <summary>
-    /// Waits for the specified thread to finish execution.
+    /// Waits for the specified thread to finish execution and returns its exit code.
     /// </summary>
     /// <param name="threadHandle">Handle of the target thread.</param>
     /// <param name="timeout">Maximum time to wait for the thread to finish.</param>
-    /// <returns>A result holding either a boolean indicating if the thread returned (True) or timed out (False), or a
-    /// system failure for other error cases.</returns>
-    Result<bool, SystemFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout);
+    /// <returns>A result holding either the exit code of the thread, or a thread failure when the operation failed.
+    /// </returns>
+    Result<uint, ThreadFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout);
 
     /// <summary>
     /// Frees the memory allocated in the specified process for a region or a placeholder.

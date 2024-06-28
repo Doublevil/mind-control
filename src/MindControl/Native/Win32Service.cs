@@ -358,25 +358,31 @@ public partial class Win32Service : IOperatingSystemService
     }
 
     /// <summary>
-    /// Waits for the specified thread to finish execution.
+    /// Waits for the specified thread to finish execution and returns its exit code.
     /// </summary>
     /// <param name="threadHandle">Handle of the target thread.</param>
     /// <param name="timeout">Maximum time to wait for the thread to finish.</param>
-    /// <returns>A result holding either a boolean indicating if the thread returned (True) or timed out (False), or a
-    /// system failure for other error cases.</returns>
-    public Result<bool, SystemFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout)
+    /// <returns>A result holding either the exit code of the thread, or a thread failure when the operation failed.
+    /// </returns>
+    public Result<uint, ThreadFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout)
     {
         if (threadHandle == IntPtr.Zero)
-            return new SystemFailureOnInvalidArgument(nameof(threadHandle),
-                "The thread handle is invalid (zero pointer).");
+            return new ThreadFailureOnInvalidArguments("The thread handle is invalid (zero pointer).");
 
         uint result = WaitForSingleObject(threadHandle, (uint)timeout.TotalMilliseconds);
-        if (WaitForSingleObjectResult.IsSuccessful(result))
-            return true;
+        if (result == WaitForSingleObjectResult.Failed)
+            return new ThreadFailureOnSystemFailure("Failed to wait for the thread to finish execution.",
+                GetLastSystemError()); 
         if (result == WaitForSingleObjectResult.Timeout)
-            return false;
+            return new ThreadFailureOnWaitTimeout();
+        if (!WaitForSingleObjectResult.IsSuccessful(result))
+            return new ThreadFailureOnWaitAbandoned();
 
-        return GetLastSystemError();
+        var exitCodeResult = GetExitCodeThread(threadHandle, out uint exitCode);
+        if (!exitCodeResult)
+            return new ThreadFailureOnSystemFailure("Failed to get the exit code of the thread.",
+                GetLastSystemError());
+        return exitCode;
     }
     
     /// <summary>

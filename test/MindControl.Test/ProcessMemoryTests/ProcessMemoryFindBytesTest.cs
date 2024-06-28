@@ -16,9 +16,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
     [Test]
     public void FindBytesWithKnownFixedBytesPatternTest()
     {
-        var range = TestProcessMemory!.GetModuleRange(MainModuleName);
-        Assert.That(range, Is.Not.Null);
-        
+        var range = TestProcessMemory!.GetModule(MainModuleName)!.GetRange();
         var results = TestProcessMemory!.FindBytes("4D 79 53 74 72 69 6E 67 56 61 6C 75 65", range).ToArray();
         
         // We won't verify the exact address, because it can change between runs and with modifications in the target
@@ -28,7 +26,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.Contains(results.Single()), Is.True);
+        Assert.That(range.Contains(results.Single()), Is.True);
     }
     
     /// <summary>
@@ -39,9 +37,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
     [Test]
     public void FindBytesWithKnownMaskedBytesPatternTest()
     {
-        var range = TestProcessMemory!.GetModuleRange(MainModuleName);
-        Assert.That(range, Is.Not.Null);
-        
+        var range = TestProcessMemory!.GetModule(MainModuleName)!.GetRange();
         var results = TestProcessMemory!.FindBytes("4D 79 ?? ?? ?? ?? ?? ?? 56 61 6C 75 65", range).ToArray();
         
         // We know there should be 3 occurrences of the pattern in the main module from observations with hacking tools
@@ -55,7 +51,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
         
         // Verify that the results are within the range of the main module
         foreach (var result in results)
-            Assert.That(range!.Value.Contains(result), Is.True);
+            Assert.That(range.Contains(result), Is.True);
     }
     
     /// <summary>
@@ -66,9 +62,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
     [Test]
     public void FindBytesWithKnownPartialMasksBytesPatternTest()
     {
-        var range = TestProcessMemory!.GetModuleRange(MainModuleName);
-        Assert.That(range, Is.Not.Null);
-        
+        var range = TestProcessMemory!.GetModule(MainModuleName)!.GetRange();
         var results = TestProcessMemory!.FindBytes("4D 79 53 74 72 69 6E 6? ?6 61 6C 75 65", range).ToArray();
         
         // We won't verify the exact address, because it can change between runs and with modifications in the target
@@ -78,7 +72,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.Contains(results.Single()), Is.True);
+        Assert.That(range.Contains(results.Single()), Is.True);
     }
     
     /// <summary>
@@ -89,9 +83,7 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
     [Test]
     public async Task FindBytesAsyncWithKnownFixedBytesPatternTest()
     {
-        var range = TestProcessMemory!.GetModuleRange(MainModuleName);
-        Assert.That(range, Is.Not.Null);
-        
+        var range = TestProcessMemory!.GetModule(MainModuleName)!.GetRange();
         var results = await TestProcessMemory!.FindBytesAsync("4D 79 53 74 72 69 6E 67 56 61 6C 75 65", range)
             .ToArrayAsync();
         
@@ -102,6 +94,6 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
         Assert.That(results, Has.Length.EqualTo(1));
         
         // Verify that the result is within the range of the main module
-        Assert.That(range!.Value.Contains(results.Single()), Is.True);
+        Assert.That(range.Contains(results.Single()), Is.True);
     }
 }

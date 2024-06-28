@@ -1,4 +1,5 @@
-﻿using MindControl.Results;
+﻿using MindControl.Modules;
+using MindControl.Results;
 using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
@@ -42,7 +43,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     public void InjectLibraryTest()
     {
         var result = TestProcessMemory!.InjectLibrary(GetInjectedLibraryPath());
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, () => result.Error.ToString());
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
     }
@@ -82,4 +83,14 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
         Assert.That(error.LibraryPath, Has.Length.GreaterThan(path.Length)); // We expect a full path
         Assert.That(error.LibraryPath, Does.EndWith("NonExistentLibrary.dll"));
     }
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryInjectionTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryInjectionTestX86 : ProcessMemoryInjectionTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
 }

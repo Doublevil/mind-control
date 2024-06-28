@@ -350,4 +350,9 @@ public class BaseProcessMemoryTest
         for (int i = 0; i < ExpectedFinalValues.Length; i++)
             Assert.That(FinalResults.ElementAtOrDefault(i), Is.EqualTo(ExpectedFinalValues[i]));
     }
+
+    /// <summary>
+    /// Gets a boolean value indicating whether the target process has exited.
+    /// </summary>
+    protected bool HasProcessExited => _targetProcess?.HasExited ?? false;
 }
