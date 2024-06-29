@@ -35,7 +35,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemory.InjectLibrary"/> method.
+    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
     /// After injecting the library, the target process should output "Injected library attached", which is the text
     /// printed by code run from the injected library.
     /// </summary>
@@ -49,7 +49,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemory.InjectLibrary"/> method.
+    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
     /// Does the same as <see cref="InjectLibraryTest"/>, but with a DLL that has a path containing spaces and non-ASCII
     /// characters.
     /// </summary>
@@ -68,7 +68,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemory.InjectLibrary"/> method.
+    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
     /// Specify a path to a non-existent library file.
     /// The method should fail with a <see cref="InjectionFailureOnLibraryFileNotFound"/>.
     /// </summary>
@@ -82,6 +82,18 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
         var error = (InjectionFailureOnLibraryFileNotFound)result.Error;
         Assert.That(error.LibraryPath, Has.Length.GreaterThan(path.Length)); // We expect a full path
         Assert.That(error.LibraryPath, Does.EndWith("NonExistentLibrary.dll"));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
+    /// </summary>
+    [Test]
+    public void InjectLibraryWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.InjectLibrary(GetInjectedLibraryPath());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<InjectionFailureOnDetachedProcess>());
     }
 }
 

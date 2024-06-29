@@ -1,16 +1,14 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a thread operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a thread operation to fail.</summary>
 public enum ThreadFailureReason
 {
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
     /// <summary>Invalid arguments were provided to the thread operation.</summary>
     InvalidArguments,
     /// <summary>The thread handle has already been disposed.</summary>
     DisposedInstance,
-    /// <summary>Failure when storing a thread parameter in the target process memory.</summary>
-    ParameterStorageFailure,
     /// <summary>Failure when evaluating the pointer path to the target address.</summary>
     PointerPathEvaluationFailure,
     /// <summary>The target function cannot be found.</summary>
@@ -27,6 +25,17 @@ public enum ThreadFailureReason
 /// Represents a failure in a thread operation.
 /// </summary>
 public record ThreadFailure(ThreadFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a thread operation when the target process is not attached.
+/// </summary>
+public record ThreadFailureOnDetachedProcess()
+    : ThreadFailure(ThreadFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a thread operation when the arguments provided are invalid.
@@ -50,19 +59,6 @@ public record ThreadFailureOnDisposedInstance()
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => "The thread handle has already been disposed.";
-}
-
-/// <summary>
-/// Represents a failure in a thread operation when storing a thread parameter in the target process memory.
-/// </summary>
-/// <param name="Details">Details about the failure.</param>
-public record ThreadFailureOnParameterStorageFailure(AllocationFailure Details)
-    : ThreadFailure(ThreadFailureReason.ParameterStorageFailure)
-{
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"Could not store the thread parameter in the target process memory: {Details}";
 }
 
 /// <summary>
@@ -98,7 +94,7 @@ public record ThreadFailureOnWaitTimeout()
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"The thread did not finish execution within the specified timeout.";
+        => "The thread did not finish execution within the specified timeout.";
 }
 
 /// <summary>

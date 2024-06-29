@@ -1,18 +1,13 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a memory reservation operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a memory reservation operation to fail.</summary>
 public enum ReservationFailureReason
 {
-    /// <summary>
-    /// The arguments provided to the reservation operation are invalid.
-    /// </summary>
+    /// <summary>The target allocation has been disposed.</summary>
+    DisposedAllocation,
+    /// <summary>The arguments provided to the reservation operation are invalid.</summary>
     InvalidArguments,
-    
-    /// <summary>
-    /// No space is available within the allocated memory range to reserve the specified size.
-    /// </summary>
+    /// <summary>No space is available within the allocated memory range to reserve the specified size.</summary>
     NoSpaceAvailable
 }
 
@@ -21,6 +16,17 @@ public enum ReservationFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record ReservationFailure(ReservationFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory reservation operation when the target allocation has been disposed.
+/// </summary>
+public record ReservationFailureOnDisposedAllocation()
+    : ReservationFailure(ReservationFailureReason.DisposedAllocation)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => "The target allocation has been disposed.";
+}
 
 /// <summary>
 /// Represents a failure in a memory reservation operation when the provided arguments are invalid.

@@ -1,33 +1,19 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a string settings search operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a string settings search operation to fail.</summary>
 public enum FindStringSettingsFailureReason
 {
-    /// <summary>
-    /// Failure when trying to evaluate the given pointer path.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>Failure when trying to evaluate the given pointer path.</summary>
     PointerPathEvaluation,
-    
-    /// <summary>
-    /// Failure when trying to read the given pointer.
-    /// </summary>
+    /// <summary>Failure when trying to read the given pointer.</summary>
     PointerReadFailure,
-    
-    /// <summary>
-    /// The given pointer is a zero pointer.
-    /// </summary>
+    /// <summary>The given pointer is a zero pointer.</summary>
     ZeroPointer,
-    
-    /// <summary>
-    /// Failure when trying to read bytes at the address pointed by the given pointer.
-    /// </summary>
+    /// <summary>Failure when trying to read bytes at the address pointed by the given pointer.</summary>
     StringReadFailure,
-    
-    /// <summary>
-    /// No adequate settings were found to read the given string from the specified pointer.
-    /// </summary>
+    /// <summary>No adequate settings were found to read the given string from the specified pointer.</summary>
     NoSettingsFound
 }
 
@@ -36,6 +22,17 @@ public enum FindStringSettingsFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record FindStringSettingsFailure(FindStringSettingsFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a string settings search operation when the target process is not attached.
+/// </summary>
+public record FindStringSettingsFailureOnDetachedProcess()
+    : FindStringSettingsFailure(FindStringSettingsFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a string settings search operation when failing to evaluate the specified pointer path.

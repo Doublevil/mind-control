@@ -1,16 +1,16 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for an injection operation to fail.
-/// </summary>
+/// <summary>Represents a reason for an injection operation to fail.</summary>
 public enum InjectionFailureReason
 {
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
     /// <summary>The library file to inject was not found.</summary>
     LibraryFileNotFound,
     /// <summary>The module to inject is already loaded in the target process.</summary>
     ModuleAlreadyLoaded,
-    /// <summary>Failure when trying to reserve memory to store function parameters.</summary>
-    ParameterAllocationFailure,
+    /// <summary>Failure when trying to store function parameters.</summary>
+    ParameterStorageFailure,
     /// <summary>Failure when running the library loading thread.</summary>
     ThreadFailure,
     /// <summary>The library failed to load.</summary>
@@ -21,6 +21,17 @@ public enum InjectionFailureReason
 /// Represents a failure in an injection operation.
 /// </summary>
 public abstract record InjectionFailure(InjectionFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in an injection operation when the target process is not attached.
+/// </summary>
+public record InjectionFailureOnDetachedProcess()
+    : InjectionFailure(InjectionFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in an injection operation when the library file to inject was not found.
@@ -48,16 +59,16 @@ public record InjectionFailureOnModuleAlreadyLoaded()
 }
 
 /// <summary>
-/// Represents a failure in an injection operation when trying to reserve memory to store function parameters.
+/// Represents a failure in an injection operation when trying to store function parameters.
 /// </summary>
 /// <param name="Details">Details about the failure.</param>
-public record InjectionFailureOnParameterAllocation(AllocationFailure Details)
-    : InjectionFailure(InjectionFailureReason.ParameterAllocationFailure)
+public record InjectionFailureOnParameterStorage(StoreFailure Details)
+    : InjectionFailure(InjectionFailureReason.ParameterStorageFailure)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => $"Failed to allocate memory to store function parameters required to inject the library: {Details}";
+        => $"Failed to store function parameters required to inject the library: {Details}";
 }
 
 /// <summary>

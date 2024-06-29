@@ -7,34 +7,19 @@ namespace MindControl.Results;
 /// </summary>
 public enum CodeWritingFailureReason
 {
-    /// <summary>
-    /// The given pointer path could not be successfully evaluated.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>The given pointer path could not be successfully evaluated.</summary>
     PathEvaluationFailure,
-    
-    /// <summary>
-    /// The arguments provided to the code write operation are invalid.
-    /// </summary>
+    /// <summary>The arguments provided to the code write operation are invalid.</summary>
     InvalidArguments,
-    
-    /// <summary>
-    /// The target address is a zero pointer.
-    /// </summary>
+    /// <summary>The target address is a zero pointer.</summary>
     ZeroPointer,
-    
-    /// <summary>
-    /// A reading operation failed.
-    /// </summary>
+    /// <summary>A reading operation failed.</summary>
     ReadFailure,
-    
-    /// <summary>
-    /// A code disassembling operation failed.
-    /// </summary>
+    /// <summary>A code disassembling operation failed.</summary>
     DecodingFailure,
-    
-    /// <summary>
-    /// A write operation failed.
-    /// </summary>
+    /// <summary>A write operation failed.</summary>
     WriteFailure
 }
 
@@ -43,6 +28,17 @@ public enum CodeWritingFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record CodeWritingFailure(CodeWritingFailureReason Reason);
+
+/// <summary>
+/// Represents a failure that occurred while writing code to a target process when the target process is not attached.
+/// </summary>
+public record CodeWritingFailureOnDetachedProcess()
+    : CodeWritingFailure(CodeWritingFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure that occurred while writing code to a target process when the pointer path failed to evaluate.

@@ -144,4 +144,30 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDecoding>());
     }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method with a
+    /// detached process. Expects a <see cref="CodeWritingFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void DisableCodeWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory!.DisableCodeAt(FindMovLongAddress());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,PointerPath,int)"/> method with a
+    /// detached process. Expects a <see cref="CodeWritingFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void DisableCodeWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory!.DisableCodeAt(FindMovLongAddress().ToString("X"));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
+    }
 }

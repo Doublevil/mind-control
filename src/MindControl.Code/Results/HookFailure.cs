@@ -7,44 +7,23 @@ namespace MindControl.Results;
 /// </summary>
 public enum HookFailureReason
 {
-    /// <summary>
-    /// The given pointer path could not be successfully evaluated.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>The given pointer path could not be successfully evaluated.</summary>
     PathEvaluationFailure,
-    
-    /// <summary>
-    /// The target address is a zero pointer.
-    /// </summary>
+    /// <summary>The target address is a zero pointer.</summary>
     ZeroPointer,
-        
-    /// <summary>
-    /// The arguments provided to the hook operation are invalid.
-    /// </summary>
+    /// <summary>The arguments provided to the hook operation are invalid.</summary>
     InvalidArguments,
-    
-    /// <summary>
-    /// The memory allocation operation failed.
-    /// </summary>
+    /// <summary>The memory allocation operation failed.</summary>
     AllocationFailure,
-    
-    /// <summary>
-    /// A reading operation failed.
-    /// </summary>
+    /// <summary>A reading operation failed.</summary>
     ReadFailure,
-    
-    /// <summary>
-    /// A code disassembling operation failed.
-    /// </summary>
+    /// <summary>A code disassembling operation failed.</summary>
     DecodingFailure,
-    
-    /// <summary>
-    /// Instructions could not be assembled into a code block.
-    /// </summary>
+    /// <summary>Instructions could not be assembled into a code block.</summary>
     CodeAssemblyFailure,
-    
-    /// <summary>
-    /// A write operation failed.
-    /// </summary>
+    /// <summary>A write operation failed.</summary>
     WriteFailure
 }
 
@@ -53,6 +32,17 @@ public enum HookFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record HookFailure(HookFailureReason Reason);
+
+/// <summary>
+/// Represents a failure that occurred in a hook operation when the target process is not attached.
+/// </summary>
+public record HookFailureOnDetachedProcess()
+    : HookFailure(HookFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure that occurred in a hook operation when the pointer path failed to evaluate.

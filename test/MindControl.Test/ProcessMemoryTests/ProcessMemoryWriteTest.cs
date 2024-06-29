@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using MindControl.Results;
+using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
 
@@ -81,10 +82,95 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
         // Test that the program actually used (wrote to the console) the string that we hacked in
         AssertFinalResults(IndexOfOutputString, newString);
     }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a zero pointer.
+    /// Expect a <see cref="WriteFailureOnZeroPointer"/> error.
+    /// </summary>
+    [Test]
+    public void WriteAtZeroPointerTest()
+    {
+        var result = TestProcessMemory!.Write(UIntPtr.Zero, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnZeroPointer>());
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a null value.
+    /// Expect a <see cref="WriteFailureOnInvalidArguments"/> error.
+    /// </summary>
+    [Test]
+    public void WriteNullValueTest()
+    {
+        var result = TestProcessMemory!.Write(OuterClassPointer, (int?)null);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnInvalidArguments>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with an unsupported
+    /// type. Expect a <see cref="WriteFailureOnUnsupportedType"/> error.
+    /// </summary>
+    [Test]
+    public void WriteUnsupportedTypeTest()
+    {
+        var result = TestProcessMemory!.Write(OuterClassPointer, new object());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnUnsupportedType>());
+    }
+
+    /// <summary>Defines a structure that is expected to be incompatible with writing methods.</summary>
+    private struct IncompatibleStruct { public long A; public byte[] B; } // The byte[] makes it incompatible
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with an incompatible
+    /// struct. Expect a <see cref="WriteFailureOnConversion"/> error.
+    /// </summary>
+    /// <remarks>
+    /// This test has been disabled because it triggers a System.AccessViolationException. This exception type used to
+    /// be impossible to catch by default in .net, and will still crash the NUnit test runner. It may be re-enabled in
+    /// the future if a solution is found. 
+    /// </remarks>
+    public void WriteIncompatibleStructTest()
+    {
+        var result = TestProcessMemory!.Write(OuterClassPointer, new IncompatibleStruct());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnConversion>());
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a detached
+    /// process. Expect a <see cref="WriteFailureOnDetachedProcess"/> error.
+    /// </summary>
+    [Test]
+    public void WriteWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Write(OuterClassPointer, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(PointerPath,T,Nullable{MemoryProtectionStrategy})"/> with a detached
+    /// process. Expect a <see cref="WriteFailureOnDetachedProcess"/> error.
+    /// </summary>
+    [Test]
+    public void WriteAtPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Write(OuterClassPointer.ToString("X"), 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnDetachedProcess>());
+    }
 }
 
 /// <summary>
 /// Runs the tests from <see cref="ProcessMemoryWriteTest"/> with a 32-bit version of the target app.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest { protected override bool Is64Bit => false; }
+public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
+}

@@ -15,28 +15,28 @@ public class ByteSearchPatternTest
     {
         // Nominal case: only full bytes
         new("1F 49 1A 03", new PatternExpectedResult(
-            new byte[] { 0x1F, 0x49, 0x1A, 0x03 },
-            new byte[] { 0xFF, 0xFF, 0xFF, 0xFF })),
+            [0x1F, 0x49, 0x1A, 0x03],
+            [0xFF, 0xFF, 0xFF, 0xFF])),
         
         // Full bytes and full wildcards
         new("1F ?? 1A 03", new PatternExpectedResult(
-            new byte[] { 0x1F, 0x00, 0x1A, 0x03 },
-            new byte[] { 0xFF, 0x00, 0xFF, 0xFF })),
+            [0x1F, 0x00, 0x1A, 0x03],
+            [0xFF, 0x00, 0xFF, 0xFF])),
         
         // Partial wildcard (left)
         new("1F ?9 1A 03", new PatternExpectedResult(
-            new byte[] { 0x1F, 0x09, 0x1A, 0x03 },
-            new byte[] { 0xFF, 0x0F, 0xFF, 0xFF })),
+            [0x1F, 0x09, 0x1A, 0x03],
+            [0xFF, 0x0F, 0xFF, 0xFF])),
         
         // Partial wildcard (right)
         new("1F 4? 1A 03", new PatternExpectedResult(
-            new byte[] { 0x1F, 0x40, 0x1A, 0x03 },
-            new byte[] { 0xFF, 0xF0, 0xFF, 0xFF })),
+            [0x1F, 0x40, 0x1A, 0x03],
+            [0xFF, 0xF0, 0xFF, 0xFF])),
         
         // Mixed (all cases and odd spaces)
         new("1F4? ?A??", new PatternExpectedResult(
-            new byte[] { 0x1F, 0x40, 0x0A, 0x00 },
-            new byte[] { 0xFF, 0xF0, 0x0F, 0x00 })),
+            [0x1F, 0x40, 0x0A, 0x00],
+            [0xFF, 0xF0, 0x0F, 0x00])),
         
         // Error case: odd number of characters
         new("1F 49 1A 0", null),

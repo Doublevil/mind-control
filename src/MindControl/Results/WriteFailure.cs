@@ -5,40 +5,28 @@
 /// </summary>
 public enum WriteFailureReason
 {
-    /// <summary>
-    /// Failure when evaluating the pointer path to the target memory.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>Failure when evaluating the pointer path to the target memory.</summary>
     PointerPathEvaluationFailure,
-    
-    /// <summary>
-    /// The target process is 32-bit, but the target memory address is not within the 32-bit address space.
+    /// <summary>The arguments provided to the memory read operation are invalid.</summary>
+    InvalidArguments,
+    /// <summary>The type to write is not supported.</summary>
+    UnsupportedType,
+    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
     /// </summary>
     IncompatibleBitness,
-    
-    /// <summary>
-    /// The target address is a zero pointer.
-    /// </summary>
+    /// <summary>The target address is a zero pointer.</summary>
     ZeroPointer,
-    
-    /// <summary>
-    /// Failure when invoking the system API to remove the protection properties of the target memory space.
+    /// <summary>Failure when invoking the system API to remove the protection properties of the target memory space.
     /// </summary>
     SystemProtectionRemovalFailure,
-    
-    /// <summary>
-    /// Failure when invoking the system API to restore the protection properties of the target memory space after
-    /// writing.
-    /// </summary>
+    /// <summary>Failure when invoking the system API to restore the protection properties of the target memory space
+    /// after writing.</summary>
     SystemProtectionRestorationFailure,
-    
-    /// <summary>
-    /// Failure when invoking the system API to write bytes in memory.
-    /// </summary>
+    /// <summary>Failure when invoking the system API to write bytes in memory.</summary>
     SystemWriteFailure,
-    
-    /// <summary>
-    /// Failure when trying to convert the value to write to an array of bytes to write in memory.
-    /// </summary>
+    /// <summary>Failure when trying to convert the value to write to an array of bytes to write in memory.</summary>
     ConversionFailure
 }
 
@@ -47,6 +35,17 @@ public enum WriteFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record WriteFailure(WriteFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory write operation when the target process is not attached.
+/// </summary>
+public record WriteFailureOnDetachedProcess()
+    : WriteFailure(WriteFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a memory write operation when evaluating the pointer path to the target memory.
@@ -59,6 +58,30 @@ public record WriteFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
         => $"Failed to evaluate the specified pointer path: {Details}";
+}
+
+/// <summary>
+/// Represents a failure in a memory write operation when the arguments provided are invalid.
+/// </summary>
+/// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
+public record WriteFailureOnInvalidArguments(string Message)
+    : WriteFailure(WriteFailureReason.InvalidArguments)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The arguments provided are invalid: {Message}";
+}
+
+/// <summary>
+/// Represents a failure in a memory write operation when the value to write cannot be converted to an array of bytes.
+/// </summary>
+/// <param name="Type">Type that caused the failure.</param>
+public record WriteFailureOnUnsupportedType(Type Type)
+    : WriteFailure(WriteFailureReason.UnsupportedType)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"The type {Type} is not supported for writing.";
 }
 
 /// <summary>
@@ -128,4 +151,19 @@ public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Details)
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
         => $"Failed to write at the address {Address}: {Details}";
+}
+
+/// <summary>
+/// Represents a failure in a memory write operation when trying to convert the value to write to an array of bytes to
+/// write in memory.
+/// </summary>
+/// <param name="Type">Type that caused the failure.</param>
+/// <param name="ConversionException">Exception that occurred during the conversion.</param>
+public record WriteFailureOnConversion(Type Type, Exception ConversionException)
+    : WriteFailure(WriteFailureReason.ConversionFailure)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+        => $"Failed to convert the value of type {Type} to an array of bytes. Make sure the type has a fixed length. See the ConversionException property for more details.";
 }

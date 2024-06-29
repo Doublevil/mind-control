@@ -20,9 +20,6 @@ public static class ProcessMemoryHookExtensions
     /// code, and aligned properly.
     /// </summary>
     private const int FarJumpInstructionLength = 15;
-    
-    /// <summary>Maximum byte count for a single instruction.</summary>
-    private const int MaxInstructionLength = 15;
 
     #region Public hook methods
     
@@ -49,6 +46,9 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, byte[] code, HookOptions options)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
+        
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
             return new HookFailureOnPathEvaluation(addressResult.Error);
@@ -59,8 +59,8 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the given executable address is
     /// reached. Depending on the options, the injected code may replace the original target instruction, or get
-    /// executed either before or after it. If specified, additional instructions that save and restore registers will be
-    /// added to the injected code.
+    /// executed either before or after it. If specified, additional instructions that save and restore registers will
+    /// be added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses a byte array containing the code to inject. If your code contains instructions with relative
     /// operands (like jumps or calls), they may not point to the intended address. In these cases, prefer the
@@ -78,6 +78,8 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
         byte[] code, HookOptions options)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
         if (code.Length == 0)
@@ -115,6 +117,9 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, Assembler codeAssembler, HookOptions options)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
+        
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
             return new HookFailureOnPathEvaluation(addressResult.Error);
@@ -125,8 +130,8 @@ public static class ProcessMemoryHookExtensions
     /// <summary>
     /// Injects code into the target process to be executed when the instruction at the given executable address is
     /// reached. Depending on the options, the injected code may replace the original target instruction, or get
-    /// executed either before or after it. If specified, additional instructions that save and restore registers will be
-    /// added to the injected code.
+    /// executed either before or after it. If specified, additional instructions that save and restore registers will
+    /// be added to the injected code.
     /// Execution of the original code will then continue normally (unless the provided code is designed otherwise).
     /// This signature uses an assembler, which is recommended, especially if your code contains instructions with
     /// relative operands (like jumps or calls), because the assembler will adjust addresses to guarantee they point to
@@ -142,6 +147,8 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
         Assembler codeAssembler, HookOptions options)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
         if (codeAssembler.Instructions.Count == 0)
@@ -150,7 +157,7 @@ public static class ProcessMemoryHookExtensions
         // The problem with using an assembler is that we don't know how many bytes the assembled code will take, so we
         // have to use the most conservative estimate possible, which is the maximum length of an instruction multiplied
         // by the number of instructions in the assembler.
-        int codeMaxLength = MaxInstructionLength * codeAssembler.Instructions.Count;
+        int codeMaxLength = ProcessMemoryCodeExtensions.MaxInstructionLength * codeAssembler.Instructions.Count;
         ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, codeMaxLength, options);
 
         // Reserve memory for the injected code, as close as possible to the target instruction
@@ -314,6 +321,9 @@ public static class ProcessMemoryHookExtensions
         PointerPath targetInstructionPointerPath, int instructionCount, byte[] code,
         params HookRegister[] registersToPreserve)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
+        
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
             return new HookFailureOnPathEvaluation(addressResult.Error);
@@ -342,6 +352,8 @@ public static class ProcessMemoryHookExtensions
     public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, int instructionCount, byte[] code, params HookRegister[] registersToPreserve)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
         if (instructionCount < 1)
@@ -401,6 +413,9 @@ public static class ProcessMemoryHookExtensions
         PointerPath targetInstructionPointerPath, int instructionCount, Assembler codeAssembler,
         params HookRegister[] registersToPreserve)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
+        
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
             return new HookFailureOnPathEvaluation(addressResult.Error);
@@ -430,6 +445,8 @@ public static class ProcessMemoryHookExtensions
         UIntPtr targetInstructionAddress, int instructionCount, Assembler codeAssembler,
         params HookRegister[] registersToPreserve)
     {
+        if (!processMemory.IsAttached)
+            return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
         if (instructionCount < 1)
@@ -446,7 +463,8 @@ public static class ProcessMemoryHookExtensions
         var targetAddressAssemblyResult = codeAssembler.AssembleToBytes(
             targetInstructionAddress + (UIntPtr)preCodeSize, 128);
         if (targetAddressAssemblyResult.IsFailure)
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, targetAddressAssemblyResult.Error);
+            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode,
+                targetAddressAssemblyResult.Error);
         var fullCodeAssemblyAtTargetAddressResult = AssembleFullCodeToInject(processMemory,
             targetAddressAssemblyResult.Value, targetInstructionAddress, hookOptions);
         if (fullCodeAssemblyAtTargetAddressResult.IsFailure)
@@ -461,7 +479,7 @@ public static class ProcessMemoryHookExtensions
         
         // The code to inject is larger than the original instructions, so we need to perform a hook
         // Reserve memory
-        int codeMaxLength = MaxInstructionLength * codeAssembler.Instructions.Count;
+        int codeMaxLength = ProcessMemoryCodeExtensions.MaxInstructionLength * codeAssembler.Instructions.Count;
         ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, codeMaxLength, hookOptions);
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             hookOptions.JumpMode);
@@ -805,11 +823,12 @@ public static class ProcessMemoryHookExtensions
     /// <param name="codeLength">Maximum length in bytes of the code instructions to inject.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <returns>The size to reserve in bytes.</returns>
-    private static ulong GetSizeToReserveForCodeInjection(ProcessMemory processMemory, int codeLength, HookOptions options)
+    private static ulong GetSizeToReserveForCodeInjection(ProcessMemory processMemory, int codeLength,
+        HookOptions options)
     {
         return (ulong)(options.GetExpectedGeneratedCodeSize(processMemory.Is64Bit)
             + codeLength
-            + MaxInstructionLength // Extra room for the original instructions
+            + ProcessMemoryCodeExtensions.MaxInstructionLength // Extra room for the original instruction(s)
             + FarJumpInstructionLength); // Extra room for the jump back to the original code
     }
     

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using MindControl.Native;
 using MindControl.Results;
 
 namespace MindControl;
@@ -27,7 +26,7 @@ public partial class ProcessMemory
     public Result<InjectionFailure> InjectLibrary(string libraryPath, TimeSpan waitTimeout)
     {
         if (!IsAttached)
-            throw new InvalidOperationException(DetachedErrorMessage);
+            return new InjectionFailureOnDetachedProcess();
 
         // Check if the library file exists
         string absoluteLibraryPath = Path.GetFullPath(libraryPath);
@@ -42,7 +41,7 @@ public partial class ProcessMemory
         // Store the library path string in the target process memory
         var reservationResult = StoreString(absoluteLibraryPath, new StringSettings(Encoding.Unicode));
         if (reservationResult.IsFailure)
-            return new InjectionFailureOnParameterAllocation(reservationResult.Error);
+            return new InjectionFailureOnParameterStorage(reservationResult.Error);
         var reservation = reservationResult.Value;
         
         // Run LoadLibraryW from inside the target process to have it load the library itself, which is usually safer

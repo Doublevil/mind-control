@@ -60,8 +60,8 @@ public readonly record struct PointerOffset(ulong Offset, bool IsNegative)
     /// <returns>The offset address, or null if the result overflows or is negative.</returns>
     public UIntPtr? OffsetAddress(UIntPtr address)
     {
-        var sum = Plus((ulong)address, false);
-        if (sum == null || sum.Value.IsNegative || sum.Value.Offset > (ulong)UIntPtr.MaxValue)
+        var sum = Plus(address, false);
+        if (sum == null || sum.Value.IsNegative || sum.Value.Offset > UIntPtr.MaxValue)
             return null;
 
         return (UIntPtr)sum.Value.Offset;
@@ -73,7 +73,7 @@ public readonly record struct PointerOffset(ulong Offset, bool IsNegative)
     /// <returns>The value of this offset as an address, or null if the offset is negative.</returns>
     public UIntPtr? AsAddress()
     {
-        if (IsNegative || Offset > (ulong)UIntPtr.MaxValue)
+        if (IsNegative || Offset > UIntPtr.MaxValue)
             return null;
         return (UIntPtr)Offset;
     }

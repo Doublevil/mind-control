@@ -185,6 +185,24 @@ public class PointerPathTest
         // Non valid expression cases
         new ExpressionTestCase
         {
+            Expression = string.Empty,
+            ShouldBeValid = false,
+            Explanation = "An empty expression is invalid."
+        },
+        new ExpressionTestCase
+        {
+            Expression = "    ",
+            ShouldBeValid = false,
+            Explanation = "An all-whitespace expression is invalid."
+        },
+        new ExpressionTestCase
+        {
+            Expression = "\"mymodulename.exe+1F016644,13,A0,0",
+            ShouldBeValid = false,
+            Explanation = "Double-quoted module names must be closed."
+        },
+        new ExpressionTestCase
+        {
             Expression = "mymoduleName.exe+FFFFFFFFFFFFFFFF+1-1,FFFFFFFFFFFFFFFF+1-1",
             ShouldBeValid = false,
             Explanation = "Offsets sub-summing up to over the 64-bit addressing boundaries must be invalid, even if the sum as a whole is within the boundaries."

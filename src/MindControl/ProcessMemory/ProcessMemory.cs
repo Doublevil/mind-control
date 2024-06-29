@@ -12,10 +12,6 @@ namespace MindControl;
 /// </summary>
 public partial class ProcessMemory : IDisposable
 {
-    /// <summary>Exception message to use in exceptions thrown when trying to use a detached process.</summary>
-    private const string DetachedErrorMessage =
-        "The process is not attached. It may have exited or this instance may have been disposed.";
-    
     private readonly Process _process;
     private readonly IOperatingSystemService _osService;
     private readonly bool _ownsProcessInstance;

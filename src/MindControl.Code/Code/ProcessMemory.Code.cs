@@ -9,7 +9,60 @@ namespace MindControl.Code;
 public static class ProcessMemoryCodeExtensions
 {
     /// <summary>NOP instruction opcode.</summary>
-    public const byte NopByte = 0x90;
+    internal const byte NopByte = 0x90;
+    
+    /// <summary>Maximum byte count for a single instruction.</summary>
+    internal const int MaxInstructionLength = 15;
+    
+    /// <summary>
+    /// Assembles and stores the instructions registered in the given assembler as executable code in the process
+    /// memory. If needed, memory is allocated to store the data. Returns the reservation that holds the data.
+    /// </summary>
+    /// <param name="processMemory">Process memory instance to use.</param>
+    /// <param name="assembler">Assembler holding the instructions to store.</param>
+    /// <param name="nearAddress"></param>
+    /// <returns>A result holding either the reservation where the code has been written, or an allocation failure.
+    /// </returns>
+    public static Result<MemoryReservation, StoreFailure> StoreCode(this ProcessMemory processMemory,
+        Assembler assembler, UIntPtr? nearAddress = null)
+    {
+        if (!processMemory.IsAttached)
+            return new StoreFailureOnDetachedProcess();
+        if (!assembler.Instructions.Any())
+            return new StoreFailureOnInvalidArguments("The given assembler has no instructions to assemble.");
+        
+        // The length of the assembled code will vary depending on where we store it (because of relative operands).
+        // So the problem is, we need a memory reservation to assemble the code, but we need to assemble the code to
+        // know how much memory to reserve.
+        // Fortunately, we know that instructions are at most 15 bytes long, and we know the instruction count, so we
+        // can start by reserving the maximum possible length of the assembled code.
+        var codeMaxLength = assembler.Instructions.Count * MaxInstructionLength;
+        var reservationResult = processMemory.Reserve((ulong)codeMaxLength, true, nearAddress: nearAddress);
+        if (reservationResult.IsFailure)
+            return new StoreFailureOnAllocation(reservationResult.Error);
+
+        var reservation = reservationResult.Value;
+        
+        // Once we have the reservation, we can assemble it, using its address as a base address.
+        var assemblyResult = assembler.AssembleToBytes(reservation.Address);
+        if (assemblyResult.IsFailure)
+            return new StoreFailureOnInvalidArguments(
+                $"The given assembler failed to assemble the code: {assemblyResult.Error}");
+        
+        // Shrink the reservation to the actual size of the assembled code to avoid wasting memory as much as possible.
+        var assembledCode = assemblyResult.Value;
+        reservation.Shrink((ulong)(codeMaxLength - assembledCode.Length));
+        
+        // Write the assembled code to the reservation.
+        var writeResult = processMemory.WriteBytes(reservation.Address, assembledCode, MemoryProtectionStrategy.Ignore);
+        if (writeResult.IsFailure)
+        {
+            reservation.Dispose();
+            return new StoreFailureOnWrite(writeResult.Error);
+        }
+
+        return reservation;
+    }
     
     /// <summary>
     /// Replaces the instruction (or multiple consecutive instructions) referenced by the given pointer path with NOP
@@ -23,6 +76,8 @@ public static class ProcessMemoryCodeExtensions
     public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
         PointerPath pointerPath, int instructionCount = 1)
     {
+        if (!processMemory.IsAttached)
+            return new CodeWritingFailureOnDetachedProcess();
         if (instructionCount < 1)
             return new CodeWritingFailureOnInvalidArguments(
                 "The number of instructions to replace must be at least 1.");
@@ -46,6 +101,8 @@ public static class ProcessMemoryCodeExtensions
     public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
         UIntPtr address, int instructionCount = 1)
     {
+        if (!processMemory.IsAttached)
+            return new CodeWritingFailureOnDetachedProcess();
         if (address == UIntPtr.Zero)
             return new CodeWritingFailureOnZeroPointer();
         if (instructionCount < 1)

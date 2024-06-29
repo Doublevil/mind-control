@@ -1,43 +1,24 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a memory read operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a memory read operation to fail.</summary>
 public enum ReadFailureReason
 {
-    /// <summary>
-    /// The arguments provided to the memory read operation are invalid.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>The arguments provided to the memory read operation are invalid.</summary>
     InvalidArguments,
-    
-    /// <summary>
-    /// Failure when evaluating the pointer path to the target address.
-    /// </summary>
+    /// <summary>Failure when evaluating the pointer path to the target address.</summary>
     PointerPathEvaluationFailure,
-    
-    /// <summary>
-    /// The target process is 32-bit, but the target memory address is not within the 32-bit address space.
+    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
     /// </summary>
     IncompatibleBitness,
-    
-    /// <summary>
-    /// The target pointer is a zero pointer.
-    /// </summary>
+    /// <summary>The target pointer is a zero pointer.</summary>
     ZeroPointer,
-    
-    /// <summary>
-    /// Failure when invoking the system API to read the target memory.
-    /// </summary>
+    /// <summary>Failure when invoking the system API to read the target memory.</summary>
     SystemReadFailure,
-    
-    /// <summary>
-    /// Failure when trying to convert the bytes read from memory to the target type.
-    /// </summary>
+    /// <summary>Failure when trying to convert the bytes read from memory to the target type.</summary>
     ConversionFailure,
-    
-    /// <summary>
-    /// The type to read is not supported.
-    /// </summary>
+    /// <summary>The type to read is not supported.</summary>
     UnsupportedType
 }
 
@@ -46,6 +27,17 @@ public enum ReadFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record ReadFailure(ReadFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory read operation when the target process is not attached.
+/// </summary>
+public record ReadFailureOnDetachedProcess()
+    : ReadFailure(ReadFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a memory read operation when the arguments provided are invalid.

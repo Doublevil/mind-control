@@ -209,6 +209,66 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         Assert.That(hookResult.IsFailure, Is.True);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
     }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> with a
+    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithDetachedProcessTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.ret();
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.Hook(0x1234, assembler,
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/> with a
+    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithPointerPathWithDetachedProcessTest()
+    {
+        var assembler = new Assembler(64);
+        assembler.ret();
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.Hook("1234", assembler,
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> with a
+    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithByteArrayWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.Hook(0x1234, [0xCC],
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,byte[],HookOptions)"/> with a
+    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithByteArrayWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.Hook("1234", [0xCC],
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
@@ -250,8 +310,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         
         // Insert the code right after our target MOV instruction.
         // That way, the RAX register will be set to the value we want before it's used to write the new long value.
@@ -280,8 +339,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         
         // Insert the code right after our target MOV instruction.
         // That way, the RAX register will be set to the value we want before it's used to write the new long value.
@@ -305,8 +363,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler);
         
         Assert.That(hookResult.IsSuccess, Is.True);
@@ -326,8 +383,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler, HookRegister.RaxEax);
         
         Assert.That(hookResult.IsSuccess, Is.True);
@@ -347,8 +403,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
         var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         var pointerPath = movLongNextInstructionAddress.ToString("X");
         
         var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, bytes);
@@ -370,8 +425,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var assembler = new Assembler(64);
         assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress =
-            FindMovLongAddress() + 10;
+        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
         var pointerPath = movLongNextInstructionAddress.ToString("X");
         
         var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, assembler);

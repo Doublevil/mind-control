@@ -114,6 +114,32 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnSystemRead)));
     }
     
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytes(OuterClassPointer, 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytes(OuterClassPointer.ToString("X"), 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
     #endregion
     
     #region ReadBytesPartial
@@ -230,6 +256,32 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Value, Is.EqualTo(4));
         Assert.That(buffer, Is.EqualTo(new byte[] { 0x1, 0x2, 0x3, 0x4, 0, 0, 0, 0 }));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="ReadFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytesPartial(OuterClassPointer, new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(PointerPath,byte[],ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="ReadFailureOnInvalidArguments"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytesPartial(OuterClassPointer.ToString("X"), new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
     }
     
     #endregion
@@ -463,6 +515,106 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         var result = TestProcessMemory!.Read(typeof(string), OuterClassPointer + 0x38);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnUnsupportedType)));
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(PointerPath)"/> method with a pointer path that fails to evaluate.
+    /// It should fail with a <see cref="ReadFailureOnPointerPathEvaluation"/>.
+    /// </summary>
+    [Test]
+    public void ReadWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.Read<long>("bad pointer path");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnPointerPathEvaluation)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a zero pointer.
+    /// It should fail with a <see cref="ReadFailureOnZeroPointer"/>.
+    /// </summary>
+    [Test]
+    public void ReadWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.Read<long>(UIntPtr.Zero);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnZeroPointer)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read<long>(OuterClassPointer);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read<long>(OuterClassPointer.ToString("X"));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,PointerPath)"/> method with a pointer path that fails to evaluate.
+    /// It should fail with a <see cref="ReadFailureOnPointerPathEvaluation"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.Read(typeof(long), "bad pointer path");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnPointerPathEvaluation)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a zero pointer.
+    /// It should fail with a <see cref="ReadFailureOnZeroPointer"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.Read(typeof(long), UIntPtr.Zero);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnZeroPointer)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read(typeof(long), OuterClassPointer);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read(typeof(long), OuterClassPointer.ToString("X"));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
     }
 
     #endregion
@@ -705,6 +857,32 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         Assert.That(failure.Details, Is.Not.Null);
     }
 
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a detached process.
+    /// The method should return a <see cref="FindStringSettingsFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.FindStringSettings(0x1234, InitialStringValue);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(FindStringSettingsFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(PointerPath,string)"/> with a detached process.
+    /// The method should return a <see cref="FindStringSettingsFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.FindStringSettings("1234", InitialStringValue);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(FindStringSettingsFailureOnDetachedProcess)));
+    }
+    
     #endregion
 
     #region ReadRawString
@@ -823,6 +1001,32 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnPointerPathEvaluation)));
         var pathError = ((ReadFailureOnPointerPathEvaluation)result.Error).Details;
         Assert.That(pathError, Is.Not.Null);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,System.Nullable{int},bool)"/> with a detached
+    /// process. Expect the result to be a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadRawString(0x1234, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(PointerPath,Encoding,System.Nullable{int},bool)"/> with a detached
+    /// process. Expect the result to be a <see cref="ReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadRawString("1234", Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnDetachedProcess)));
     }
     
     #endregion
@@ -1089,6 +1293,32 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
         Assert.That(secondResult.Error, Is.TypeOf(typeof(StringReadFailureOnStringTooLong)));
         var failure = (StringReadFailureOnStringTooLong)secondResult.Error;
         Assert.That(failure.LengthPrefixValue, Is.Null); // No prefix, so the value should be null.
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a detached process.
+    /// Expect the result to be a <see cref="StringReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadStringPointer(0x1234, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnDetachedProcess)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(PointerPath,StringSettings)"/> with a detached process.
+    /// Expect the result to be a <see cref="StringReadFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadStringPointer("1234", GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnDetachedProcess)));
     }
     
     #endregion

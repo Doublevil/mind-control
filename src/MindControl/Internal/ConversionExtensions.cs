@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 namespace MindControl.Internal;
@@ -52,24 +51,6 @@ internal static class ConversionExtensions
         Marshal.Copy(pointer, result, 0, result.Length);
         return result;
     }
-    
-    /// <summary>
-    /// Attempts to read an IntPtr from the given BigInteger value.
-    /// </summary>
-    /// <param name="value">Value to read as an IntPtr.</param>
-    public static UIntPtr? ToUIntPtr(this BigInteger value)
-    {
-        if ((IntPtr.Size == 4 && value > uint.MaxValue)
-            || (IntPtr.Size == 8 && value > ulong.MaxValue)
-            || value < 0)
-        {
-            // Don't let arithmetic overflows occur.
-            // The input value is just not addressable.
-            return null;
-        }
-
-        return IntPtr.Size == 4 ? (UIntPtr)(uint)value : (UIntPtr)(ulong)value;
-    }
 
     /// <summary>
     /// Converts the given structure to an array of bytes.
@@ -87,6 +68,10 @@ internal static class ConversionExtensions
         var ptr = Marshal.AllocHGlobal(size);
         try
         {
+            // Copy the struct to the pointer and then into the array.
+            // Note that StructureToPtr may throw an AccessViolationException if the structure is not compatible
+            // (typically because it contains a reference type). This type of exception may cause crashes in certain
+            // cases, even when thrown in try/catch blocks.
             Marshal.StructureToPtr(value, ptr, true);
             Marshal.Copy(ptr, arr, 0, size);
         }

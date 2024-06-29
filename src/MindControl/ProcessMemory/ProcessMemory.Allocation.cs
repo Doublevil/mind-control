@@ -27,6 +27,8 @@ public partial class ProcessMemory
     public Result<MemoryAllocation, AllocationFailure> Allocate(ulong size, bool forExecutableCode,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
+        if (!IsAttached)
+            return new AllocationFailureOnDetachedProcess();
         if (size == 0)
             return new AllocationFailureOnInvalidArguments(
                 "The size of the memory range to allocate must be greater than zero.");
@@ -174,7 +176,7 @@ public partial class ProcessMemory
             }
         }
 
-        // If we reached the end of the memory range and didn't find a suitable free range.
+        // We reached the end of the memory range and didn't find a suitable free range.
         return new AllocationFailureOnNoFreeMemoryFound(actualRange.Value, nextAddress);
     }
     
@@ -196,6 +198,8 @@ public partial class ProcessMemory
     public Result<MemoryReservation, AllocationFailure> Reserve(ulong size, bool requireExecutable,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
+        if (!IsAttached)
+            return new AllocationFailureOnDetachedProcess();
         if (size == 0)
             return new AllocationFailureOnInvalidArguments(
                 "The size of the memory range to reserve must be greater than zero.");
@@ -245,14 +249,26 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="isCode">Set to true if the data is executable code. Defaults to false.</param>
     /// <returns>A result holding either the reserved memory range, or an allocation failure.</returns>
-    public Result<MemoryReservation, AllocationFailure> Store(byte[] data, bool isCode = false)
+    public Result<MemoryReservation, StoreFailure> Store(byte[] data, bool isCode = false)
     {
+        if (!IsAttached)
+            return new StoreFailureOnDetachedProcess();
+        if (data.Length == 0)
+            return new StoreFailureOnInvalidArguments("The data to store must not be empty.");
+        
         var reservedRangeResult = Reserve((ulong)data.Length, isCode);
         if (reservedRangeResult.IsFailure)
-            return reservedRangeResult.Error;
+            return new StoreFailureOnAllocation(reservedRangeResult.Error);
 
         var reservedRange = reservedRangeResult.Value;
-        WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
+        var writeResult = WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
+        if (writeResult.IsFailure)
+        {
+            // If writing the data failed, free the reservation and return the write failure.
+            reservedRange.Dispose();
+            return new StoreFailureOnWrite(writeResult.Error);
+        }
+        
         return reservedRange;
     }
     
@@ -265,15 +281,25 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="allocation">Allocated memory to store the data.</param>
     /// <returns>A result holding either the reservation storing the data, or a reservation failure.</returns>
-    public Result<MemoryReservation, ReservationFailure> Store(byte[] data, MemoryAllocation allocation)
+    public Result<MemoryReservation, StoreFailure> Store(byte[] data, MemoryAllocation allocation)
     {
+        if (!IsAttached)
+            return new StoreFailureOnDetachedProcess();
+        
         uint alignment = Is64Bit ? (uint)8 : 4;
         var reservedRangeResult = allocation.ReserveRange((ulong)data.Length, alignment);
         if (reservedRangeResult.IsFailure)
-            return reservedRangeResult.Error;
+            return new StoreFailureOnReservation(reservedRangeResult.Error);
 
         var reservedRange = reservedRangeResult.Value;
-        WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
+        var writeResult = WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
+        if (writeResult.IsFailure)
+        {
+            // If writing the data failed, free the reservation and return the write failure.
+            reservedRange.Dispose();
+            return new StoreFailureOnWrite(writeResult.Error);
+        }
+        
         return reservedRange;
     }
 
@@ -283,8 +309,9 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>The reservation holding the data.</returns>
-    public Result<MemoryReservation, AllocationFailure> Store<T>(T value)
+    /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
+    /// </returns>
+    public Result<MemoryReservation, StoreFailure> Store<T>(T value)
         => Store(value.ToBytes(), false);
 
     /// <summary>
@@ -297,8 +324,9 @@ public partial class ProcessMemory
     /// <param name="value">Value or structure to store.</param>
     /// <param name="allocation">Range of memory to store the data in.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>The reservation holding the data.</returns>
-    public Result<MemoryReservation, ReservationFailure> Store<T>(T value, MemoryAllocation allocation) where T: struct
+    /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
+    /// </returns>
+    public Result<MemoryReservation, StoreFailure> Store<T>(T value, MemoryAllocation allocation) where T: struct
         => Store(value.ToBytes(), allocation);
     
     /// <summary>
@@ -307,15 +335,18 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="value">String to store.</param>
     /// <param name="settings">String settings to use to write the string.</param>
-    /// <returns>The reservation holding the string.</returns>
-    public Result<MemoryReservation, AllocationFailure> StoreString(string value, StringSettings settings)
+    /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
+    /// </returns>
+    public Result<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings)
     {
+        if (!IsAttached)
+            return new StoreFailureOnDetachedProcess();
         if (!settings.IsValid)
-            return new AllocationFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+            return new StoreFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
         
         var bytes = settings.GetBytes(value);
         if (bytes == null)
-            return new AllocationFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+            return new StoreFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
         
         return Store(bytes, isCode: false);
     }
@@ -329,16 +360,19 @@ public partial class ProcessMemory
     /// <param name="value">String to store.</param>
     /// <param name="settings">String settings to use to write the string.</param>
     /// <param name="allocation">Range of memory to store the string in.</param>
-    /// <returns>The reservation holding the string.</returns>
-    public Result<MemoryReservation, ReservationFailure> StoreString(string value, StringSettings settings,
+    /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
+    /// </returns>
+    public Result<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings,
         MemoryAllocation allocation)
     {
+        if (!IsAttached)
+            return new StoreFailureOnDetachedProcess();
         if (!settings.IsValid)
-            return new ReservationFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+            return new StoreFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
         
         var bytes = settings.GetBytes(value);
         if (bytes == null)
-            return new ReservationFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+            return new StoreFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
         
         return Store(bytes, allocation);
     }

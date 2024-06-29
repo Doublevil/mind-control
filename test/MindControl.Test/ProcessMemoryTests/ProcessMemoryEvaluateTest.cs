@@ -102,6 +102,19 @@ public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
         var error = (PathEvaluationFailureOnBaseModuleNotFound)result.Error;
         Assert.That(error.ModuleName, Is.EqualTo("ThisModuleDoesNotExist.dll"));
     }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.EvaluateMemoryAddress"/> with a detached process.
+    /// The operation is expected to fail with a <see cref="PathEvaluationFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void EvaluateWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory!.EvaluateMemoryAddress(GetPathToMaxAddress());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<PathEvaluationFailureOnDetachedProcess>());
+    }
 }
 
 /// <summary>

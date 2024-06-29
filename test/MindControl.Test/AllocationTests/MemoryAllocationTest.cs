@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using MindControl.Results;
+﻿using MindControl.Results;
 using MindControl.Test.ProcessMemoryTests;
 using NUnit.Framework;
 
@@ -38,7 +37,9 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
         
         // Check that the allocation instance is now disposed and unusable
         Assert.That(_allocation.IsDisposed, Is.True);
-        Assert.Throws<ObjectDisposedException>(() => _allocation.ReserveRange(0x10));
+        var reserveAttemptResult = _allocation.ReserveRange(0x10);
+        Assert.That(reserveAttemptResult.IsSuccess, Is.False);
+        Assert.That(reserveAttemptResult.Error, Is.TypeOf<ReservationFailureOnDisposedAllocation>());
         
         // Check that the allocation has been removed from the list
         Assert.That(TestProcessMemory!.Allocations, Is.Empty);
@@ -82,11 +83,15 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
     
     /// <summary>
     /// Tests the <see cref="MemoryAllocation.ReserveRange"/> method.
-    /// Attempt to reserve 0 bytes. This should throw.
+    /// Attempt to reserve 0 bytes. This should return a <see cref="ReservationFailureOnInvalidArguments"/> result.
     /// </summary>
     [Test]
     public void ReserveRangeWithZeroSizeTest()
-        => Assert.Throws<ArgumentException>(() => _allocation.ReserveRange(0));
+    {
+        var reservationResult = _allocation.ReserveRange(0);
+        Assert.That(reservationResult.IsSuccess, Is.False);
+        Assert.That(reservationResult.Error, Is.TypeOf<ReservationFailureOnInvalidArguments>());
+    }
 
     /// <summary>
     /// Tests the <see cref="MemoryAllocation.ReserveRange"/> method.

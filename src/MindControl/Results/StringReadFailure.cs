@@ -1,45 +1,25 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a string read operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a string read operation to fail.</summary>
 public enum StringReadFailureReason
 {
-    /// <summary>
-    /// Failure when evaluating the pointer path to the target address.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>Failure when evaluating the pointer path to the target address.</summary>
     PointerPathEvaluationFailure,
-    
-    /// <summary>
-    /// The string read operation failed because the settings provided are invalid.
-    /// </summary>
+    /// <summary>The string read operation failed because the settings provided are invalid.</summary>
     InvalidSettings,
-    
-    /// <summary>
-    /// The string read operation failed because the target process is 32-bit, but the target memory address is not
-    /// within the 32-bit address space.
-    /// </summary>
+    /// <summary>The string read operation failed because the target process is 32-bit, but the target memory address is
+    /// not within the 32-bit address space.</summary>
     IncompatibleBitness,
-    
-    /// <summary>
-    /// The string read operation failed because the target pointer is a zero pointer.
-    /// </summary>
+    /// <summary>The string read operation failed because the target pointer is a zero pointer.</summary>
     ZeroPointer,
-    
-    /// <summary>
-    /// The pointer read operation failed.
-    /// </summary>
+    /// <summary>The pointer read operation failed.</summary>
     PointerReadFailure,
-    
-    /// <summary>
-    /// A read operation failed when attempting to read bytes from the actual string.
-    /// </summary>
+    /// <summary>A read operation failed when attempting to read bytes from the actual string.</summary>
     StringBytesReadFailure,
-    
-    /// <summary>
-    /// The length prefix of the string was evaluated to a value exceeding the configured max length, or a null
-    /// terminator was not found within the configured max length.
-    /// </summary>
+    /// <summary>The length prefix of the string was evaluated to a value exceeding the configured max length, or a null
+    /// terminator was not found within the configured max length.</summary>
     StringTooLong
 }
 
@@ -48,6 +28,17 @@ public enum StringReadFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record StringReadFailure(StringReadFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a string read operation when the target process is not attached.
+/// </summary>
+public record StringReadFailureOnDetachedProcess()
+    : StringReadFailure(StringReadFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a string read operation when the pointer path evaluation failed.

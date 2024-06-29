@@ -30,7 +30,7 @@ public class MemoryAllocation
     /// </summary>
     public bool IsDisposed { get; private set; }
     
-    private readonly ProcessMemory? _parentProcessMemory;
+    private readonly ProcessMemory _parentProcessMemory;
     
     /// <summary>
     /// Builds a new <see cref="MemoryAllocation"/> instance.
@@ -52,7 +52,7 @@ public class MemoryAllocation
     public ulong GetTotalReservedSpace()
     {
         if (IsDisposed)
-            throw new ObjectDisposedException(nameof(MemoryAllocation));
+            return 0;
         
         return Reservations.Aggregate<MemoryReservation?, ulong>(0,
             (current, subRange) => current + subRange?.Range.GetSize() ?? 0);
@@ -67,7 +67,7 @@ public class MemoryAllocation
     public ulong GetRemainingSpace()
     {
         if (IsDisposed)
-            throw new ObjectDisposedException(nameof(MemoryAllocation));
+            return 0;
         
         return Range.GetSize() - GetTotalReservedSpace();
     }
@@ -80,7 +80,7 @@ public class MemoryAllocation
     public MemoryRange? GetLargestReservableSpace()
     {
         if (IsDisposed)
-            throw new ObjectDisposedException(nameof(MemoryAllocation));
+            return null;
         
         return GetFreeRanges().OrderByDescending(r => r.GetSize())
             .Cast<MemoryRange?>()
@@ -119,7 +119,7 @@ public class MemoryAllocation
     public MemoryRange? GetNextRangeFittingSize(ulong size, uint? byteAlignment = 8)
     {
         if (IsDisposed)
-            throw new ObjectDisposedException(nameof(MemoryAllocation));
+            return null;
         
         // Adjust the size to fit the alignment
         if (byteAlignment != null && size % byteAlignment.Value > 0)
@@ -151,8 +151,10 @@ public class MemoryAllocation
     /// <returns>A result holding the resulting reservation or a reservation failure.</returns>
     public Result<MemoryReservation, ReservationFailure> ReserveRange(ulong size, uint? byteAlignment = 8)
     {
-        if (IsDisposed)
-            throw new ObjectDisposedException(nameof(MemoryAllocation));
+        if (IsDisposed || !_parentProcessMemory.IsAttached)
+            return new ReservationFailureOnDisposedAllocation();
+        if (size == 0)
+            return new ReservationFailureOnInvalidArguments("The size to reserve must be more than 0 bytes.");
         
         var range = GetNextRangeFittingSize(size, byteAlignment);
         if (range == null)
@@ -171,6 +173,9 @@ public class MemoryAllocation
     /// <param name="rangeToFree">The range of memory to free from reservations in this instance.</param>
     public void FreeRange(MemoryRange rangeToFree)
     {
+        if (IsDisposed)
+            return;
+        
         for (int i = _reservations.Count - 1; i >= 0; i--)
         {
             var currentRange = _reservations[i];
@@ -231,6 +236,6 @@ public class MemoryAllocation
         IsDisposed = true;
         ClearReservations();
         
-        _parentProcessMemory?.Free(this);
+        _parentProcessMemory.Free(this);
     }
 }

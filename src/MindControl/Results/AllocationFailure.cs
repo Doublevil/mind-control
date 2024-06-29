@@ -1,24 +1,17 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a memory allocation operation to fail.
-/// </summary>
+/// <summary>Represents a reason for a memory allocation operation to fail.</summary>
 public enum AllocationFailureReason
 {
-    /// <summary>
-    /// The arguments provided to the allocation operation are invalid.
-    /// </summary>
+    /// <summary>The target process is not attached.</summary>
+    DetachedProcess,
+    /// <summary>The arguments provided to the allocation operation are invalid.</summary>
     InvalidArguments,
-    
-    /// <summary>
-    /// The provided limit range is not within the bounds of the target process applicative memory range.
+    /// <summary>The provided limit range is not within the bounds of the target process applicative memory range.
     /// </summary>
     LimitRangeOutOfBounds,
-    
-    /// <summary>
-    /// No free memory was found in the target process that would be large enough to accomodate the specified size
-    /// within the searched range.
-    /// </summary>
+    /// <summary>No free memory was found in the target process that would be large enough to accomodate the specified
+    /// size within the searched range.</summary>
     NoFreeMemoryFound
 }
 
@@ -27,6 +20,17 @@ public enum AllocationFailureReason
 /// </summary>
 /// <param name="Reason">Reason for the failure.</param>
 public abstract record AllocationFailure(AllocationFailureReason Reason);
+
+/// <summary>
+/// Represents a failure in a memory allocation operation when the target process is not attached.
+/// </summary>
+public record AllocationFailureOnDetachedProcess()
+    : AllocationFailure(AllocationFailureReason.DetachedProcess)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => Failure.DetachedErrorMessage;
+}
 
 /// <summary>
 /// Represents a failure in a memory allocation operation when the provided arguments are invalid.
