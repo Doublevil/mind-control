@@ -100,6 +100,19 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         Assert.That(allocateResult.IsSuccess, Is.False);
         Assert.That(allocateResult.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
     }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Allocate"/> method with a detached process.
+    /// This should return an <see cref="AllocationFailureOnDetachedProcess"/>.
+    /// </summary>
+    [Test]
+    public void AllocateWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var allocateResult = TestProcessMemory.Allocate(0x1000, false);
+        Assert.That(allocateResult.IsSuccess, Is.False);
+        Assert.That(allocateResult.Error, Is.InstanceOf<AllocationFailureOnDetachedProcess>());
+    }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Reserve"/> method.
@@ -534,4 +547,13 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.InstanceOf<StoreFailureOnDetachedProcess>());
     }
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryAllocationTest"/> with a 32-bit version of the target app.
+/// </summary>
+public class ProcessMemoryAllocationTestX86 : ProcessMemoryAllocationTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
 }
