@@ -552,6 +552,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 /// <summary>
 /// Runs the tests from <see cref="ProcessMemoryAllocationTest"/> with a 32-bit version of the target app.
 /// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryAllocationTestX86 : ProcessMemoryAllocationTest
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>

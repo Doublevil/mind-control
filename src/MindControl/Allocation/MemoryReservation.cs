@@ -6,7 +6,7 @@
 /// a process.
 /// Disposing a reservation will free the memory range for other uses.
 /// </summary>
-public class MemoryReservation
+public class MemoryReservation : IDisposable
 {
     /// <summary>
     /// Gets the memory range of this reservation.

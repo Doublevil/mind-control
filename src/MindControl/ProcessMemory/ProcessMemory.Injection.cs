@@ -45,7 +45,7 @@ public partial class ProcessMemory
         var reservation = reservationResult.Value;
         
         // Run LoadLibraryW from inside the target process to have it load the library itself, which is usually safer
-        var threadResult = RunThread("kernel32.dll", "LoadLibraryW", reservation.Address);
+        using var threadResult = RunThread("kernel32.dll", "LoadLibraryW", reservation.Address);
         if (threadResult.IsFailure)
             return new InjectionFailureOnThreadFailure(threadResult.Error);
         
@@ -59,8 +59,6 @@ public partial class ProcessMemory
         var moduleHandle = waitResult.Value;
         if (moduleHandle == 0)
             return new InjectionFailureOnLoadLibraryFailure();
-
-        reservation.Dispose(); // Free the parameter reservation as we don't need it anymore
         
         return Result<InjectionFailure>.Success;
     }

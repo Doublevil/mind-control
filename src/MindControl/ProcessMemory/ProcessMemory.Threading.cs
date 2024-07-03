@@ -21,7 +21,7 @@ public partial class ProcessMemory
     /// the expected way before calling the function. See the documentation for more info.</param>
     /// <returns>A result holding either the thread instance that you can use to wait for the thread to return, or a
     /// <see cref="ThreadFailure"/> error.</returns>
-    public Result<RemoteThread, ThreadFailure> RunThread(UIntPtr functionAddress, UIntPtr? parameter = null)
+    public DisposableResult<RemoteThread, ThreadFailure> RunThread(UIntPtr functionAddress, UIntPtr? parameter = null)
     {
         if (!IsAttached)
             return new ThreadFailureOnDetachedProcess();
@@ -45,7 +45,8 @@ public partial class ProcessMemory
     /// the expected way before calling the function. See the documentation for more info.</param>
     /// <returns>A result holding either the thread instance that you can use to wait for the thread to return, or a
     /// <see cref="ThreadFailure"/> error.</returns>
-    public Result<RemoteThread, ThreadFailure> RunThread(PointerPath functionPointerPath, UIntPtr? parameter = null)
+    public DisposableResult<RemoteThread, ThreadFailure> RunThread(PointerPath functionPointerPath,
+        UIntPtr? parameter = null)
     {
         if (!IsAttached)
             return new ThreadFailureOnDetachedProcess();
@@ -70,7 +71,7 @@ public partial class ProcessMemory
     /// the expected way before calling the function. See the documentation for more info.</param>
     /// <returns>A result holding either the thread instance that you can use to wait for the thread to return, or a
     /// <see cref="ThreadFailure"/> error.</returns>
-    public Result<RemoteThread, ThreadFailure> RunThread(string moduleName, string functionName,
+    public DisposableResult<RemoteThread, ThreadFailure> RunThread(string moduleName, string functionName,
         UIntPtr? parameter = null)
     {
         if (!IsAttached)

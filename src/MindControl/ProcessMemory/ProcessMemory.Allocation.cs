@@ -24,7 +24,7 @@ public partial class ProcessMemory
     /// <param name="limitRange">Specify this parameter to limit the allocation to a specific range of memory.</param>
     /// <param name="nearAddress">If specified, try to allocate as close as possible to this address.</param>
     /// <returns>A result holding either the allocated memory range, or an allocation failure.</returns>
-    public Result<MemoryAllocation, AllocationFailure> Allocate(ulong size, bool forExecutableCode,
+    public DisposableResult<MemoryAllocation, AllocationFailure> Allocate(ulong size, bool forExecutableCode,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         if (!IsAttached)
@@ -195,7 +195,7 @@ public partial class ProcessMemory
     /// <param name="nearAddress">If specified, prioritize allocations by their proximity to this address. If no
     /// matching allocation is found, a new allocation as close as possible to this address will be attempted.</param>
     /// <returns>A result holding either the resulting reservation, or an allocation failure.</returns>
-    public Result<MemoryReservation, AllocationFailure> Reserve(ulong size, bool requireExecutable,
+    public DisposableResult<MemoryReservation, AllocationFailure> Reserve(ulong size, bool requireExecutable,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         if (!IsAttached)
@@ -249,7 +249,7 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="isCode">Set to true if the data is executable code. Defaults to false.</param>
     /// <returns>A result holding either the reserved memory range, or an allocation failure.</returns>
-    public Result<MemoryReservation, StoreFailure> Store(byte[] data, bool isCode = false)
+    public DisposableResult<MemoryReservation, StoreFailure> Store(byte[] data, bool isCode = false)
     {
         if (!IsAttached)
             return new StoreFailureOnDetachedProcess();
@@ -281,7 +281,7 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="allocation">Allocated memory to store the data.</param>
     /// <returns>A result holding either the reservation storing the data, or a reservation failure.</returns>
-    public Result<MemoryReservation, StoreFailure> Store(byte[] data, MemoryAllocation allocation)
+    public DisposableResult<MemoryReservation, StoreFailure> Store(byte[] data, MemoryAllocation allocation)
     {
         if (!IsAttached)
             return new StoreFailureOnDetachedProcess();
@@ -311,7 +311,7 @@ public partial class ProcessMemory
     /// <typeparam name="T">Type of the value or structure.</typeparam>
     /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
     /// </returns>
-    public Result<MemoryReservation, StoreFailure> Store<T>(T value)
+    public DisposableResult<MemoryReservation, StoreFailure> Store<T>(T value)
         => Store(value.ToBytes(), false);
 
     /// <summary>
@@ -326,7 +326,8 @@ public partial class ProcessMemory
     /// <typeparam name="T">Type of the value or structure.</typeparam>
     /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
     /// </returns>
-    public Result<MemoryReservation, StoreFailure> Store<T>(T value, MemoryAllocation allocation) where T: struct
+    public DisposableResult<MemoryReservation, StoreFailure> Store<T>(T value, MemoryAllocation allocation)
+        where T: struct
         => Store(value.ToBytes(), allocation);
     
     /// <summary>
@@ -337,7 +338,7 @@ public partial class ProcessMemory
     /// <param name="settings">String settings to use to write the string.</param>
     /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
     /// </returns>
-    public Result<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings)
+    public DisposableResult<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings)
     {
         if (!IsAttached)
             return new StoreFailureOnDetachedProcess();
@@ -362,7 +363,7 @@ public partial class ProcessMemory
     /// <param name="allocation">Range of memory to store the string in.</param>
     /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
     /// </returns>
-    public Result<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings,
+    public DisposableResult<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings,
         MemoryAllocation allocation)
     {
         if (!IsAttached)

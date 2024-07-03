@@ -6,7 +6,7 @@ namespace MindControl;
 /// Represents a range of memory that has been allocated in a process.
 /// Can be used to safely manage data or code storage using reservations.
 /// </summary>
-public class MemoryAllocation
+public class MemoryAllocation : IDisposable
 {
     /// <summary>
     /// Gets the memory range allocated.

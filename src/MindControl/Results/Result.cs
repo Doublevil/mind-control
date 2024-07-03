@@ -93,7 +93,7 @@ public class Result<TError>
 /// </summary>
 /// <typeparam name="TResult">Type of the result that can be returned in case of success.</typeparam>
 /// <typeparam name="TError">Type of the error that can be returned in case of failure.</typeparam>
-public sealed class Result<TResult, TError> : Result<TError>
+public class Result<TResult, TError> : Result<TError>
 {
     private readonly TResult? _value;
 
@@ -109,13 +109,13 @@ public sealed class Result<TResult, TError> : Result<TError>
     /// Initializes a new successful <see cref="Result{TResult,TError}"/> instance.
     /// </summary>
     /// <param name="value">Result of the operation.</param>
-    private Result(TResult value) { _value = value; }
+    protected Result(TResult value) { _value = value; }
     
     /// <summary>
     /// Initializes a new failed <see cref="Result{TResult,TError}"/> instance.
     /// </summary>
     /// <param name="error">Error that caused the operation to fail.</param>
-    private Result(TError error) : base(error) { }
+    protected Result(TError error) : base(error) { }
     
     /// <summary>
     /// Creates a new successful <see cref="Result{TResult,TError}"/> instance.
@@ -156,14 +156,70 @@ public sealed class Result<TResult, TError> : Result<TError>
         => FromResult(result);
 
     /// <summary>
-    /// Implicitly converts a result value to a successful <see cref="Result{TResult,TError}"/> instance.
+    /// Implicitly converts an error to an unsuccessful <see cref="Result{TResult,TError}"/> instance.
     /// </summary>
-    /// <param name="result">Result value to convert.</param>
-    public static implicit operator Result<TResult, TError>(TError result)
-        => Failure(result);
+    /// <param name="error">Error to convert.</param>
+    public static implicit operator Result<TResult, TError>(TError error)
+        => Failure(error);
     
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
         => IsSuccess ? Value?.ToString() ?? SuccessString : Error?.ToString() ?? FailureString;
 }
+
+/// <summary>
+/// Represents the result of an operation that can either succeed or fail, with a result value in case of success. This
+/// variant is disposable and may hold a disposable result. When a successful instance is disposed, the result will be
+/// too.
+/// </summary>
+/// <typeparam name="TResult">Type of the result that can be returned in case of success.</typeparam>
+/// <typeparam name="TError">Type of the error that can be returned in case of failure.</typeparam>
+public class DisposableResult<TResult, TError> : Result<TResult, TError>, IDisposable where TResult : IDisposable
+{
+    /// <summary>
+    /// Initializes a new successful <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="value">Result of the operation.</param>
+    protected DisposableResult(TResult value) : base(value) { }
+    
+    /// <summary>
+    /// Initializes a new failed <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="error">Error that caused the operation to fail.</param>
+    protected DisposableResult(TError error) : base(error) { }
+    
+    /// <summary>
+    /// Implicitly converts a result value to a successful <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="result">Result value to convert.</param>
+    public static implicit operator DisposableResult<TResult, TError>(TResult result)
+        => FromResult(result);
+
+    /// <summary>
+    /// Implicitly converts an error to an unsuccessful <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="error">Error to convert.</param>
+    public static implicit operator DisposableResult<TResult, TError>(TError error)
+        => Failure(error);
+    
+    /// <summary>
+    /// Creates a new successful <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="result">Result of the operation.</param>
+    public new static DisposableResult<TResult, TError> FromResult(TResult result)
+        => new(result);
+    
+    /// <summary>
+    /// Creates a new failed <see cref="DisposableResult{TResult,TError}"/> instance.
+    /// </summary>
+    /// <param name="error">Error that caused the operation to fail.</param>
+    public new static DisposableResult<TResult, TError> Failure(TError error) => new(error);
+    
+    /// <summary>Disposes the result value if the operation was successful.</summary>
+    public void Dispose()
+    {
+        if (IsSuccess)
+            Value.Dispose();
+    }
+} 
