@@ -374,7 +374,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void WriteWithImpossibleOffsetTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Write(new byte[8], 8, 1), Throws.InstanceOf<ArgumentException>());
     }
     
@@ -386,7 +386,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void WriteWithImpossibleCountTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Write(new byte[8], 0, 9), Throws.InstanceOf<ArgumentException>());
     }
     
@@ -398,7 +398,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void WriteWithImpossibleOffsetAndCountTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Write(new byte[8], 3, 6), Throws.InstanceOf<ArgumentException>());
     }
 
@@ -431,9 +431,19 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void WriteOnUnreadableMemoryTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(UIntPtr.MaxValue);
+        var stream = TestProcessMemory!.GetMemoryStream(UIntPtr.MaxValue);
         Assert.That(() => stream.Write(new byte[8], 0, 8), Throws.InstanceOf<IOException>());
     }
     
     #endregion
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryStreamTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryStreamTestX86 : ProcessMemoryStreamTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
 }

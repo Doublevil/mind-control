@@ -97,3 +97,13 @@ public class ProcessMemoryFindBytesTest : BaseProcessMemoryTest
         Assert.That(range.Contains(results.Single()), Is.True);
     }
 }
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryFindBytesTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryFindBytesTestX86 : ProcessMemoryFindBytesTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
+}

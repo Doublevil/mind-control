@@ -1,4 +1,5 @@
-﻿using MindControl.Code;
+﻿using System.Globalization;
+using MindControl.Code;
 using MindControl.Results;
 using NUnit.Framework;
 
@@ -12,25 +13,25 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
 {
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
-    /// The method is called on a MOV instruction that changes the value of the long value in the target app after the
+    /// The method is called on a MOV instruction that changes the value of the int value in the target app after the
     /// first step.
-    /// After disabling the instruction, we let the program run to the end, and check that the output long value is the
+    /// After disabling the instruction, we let the program run to the end, and check that the output int value is the
     /// original one (it was not modified because we disabled the instruction).
     /// </summary>
     [Test]
     public void DisableCodeAtTest()
     {
-        var movLongAddress = FindMovLongAddress() + 10;
-        var result = TestProcessMemory!.DisableCodeAt(movLongAddress);
+        var movIntAddress = FindMovIntAddress();
+        var result = TestProcessMemory!.DisableCodeAt(movIntAddress);
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Value.Address, Is.EqualTo(movLongAddress));
+        Assert.That(result.Value.Address, Is.EqualTo(movIntAddress));
         Assert.That(result.Value.Length, Is.AtLeast(1)); // We don't care how long it is but we check that it is set.
 
         ProceedUntilProcessEnds();
         
-        // Test that the output long at index 5 is the first value set when the program starts, not the one that was
+        // Test that the output long is the initial value set when the program starts, not the one that was
         // supposed to be set by the disabled instruction.
-        AssertFinalResults(5, "-65746876815103");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
     /// <summary>
@@ -40,35 +41,34 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void DisableCodeAtWithPointerPathTest()
     {
-        var movLongAddress = FindMovLongAddress() + 10;
-        var pointerPath = movLongAddress.ToString("X");
+        var pointerPath = FindMovIntAddress().ToString("X");
         var result = TestProcessMemory!.DisableCodeAt(pointerPath);
         Assert.That(result.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "-65746876815103");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
-    /// The method is called on a series of MOV instruction that changes the value of the long and ulong values in the
+    /// The method is called on a series of MOV instruction that changes the value of the int and uint values in the
     /// target app after the first step.
-    /// After disabling the instructions, we let the program run to the end, and check that the output long and ulong
+    /// After disabling the instructions, we let the program run to the end, and check that the output int and uint
     /// values are the original ones (they were not modified because we disabled the instructions).
     /// </summary>
     [Test]
     public void DisableCodeAtWithMultipleInstructionsTest()
     {
-        var movLongAddress = FindMovLongAddress();
-        var result = TestProcessMemory!.DisableCodeAt(movLongAddress, 5);
+        var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress(), 3);
         Assert.That(result.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
         
-        // Test that the output long at index 5 and ulong at index 6 are the first values set when the program starts,
-        // not the ones that were supposed to be set by the disabled instructions.
-        Assert.That(FinalResults[5], Is.EqualTo("-65746876815103"));
-        Assert.That(FinalResults[6], Is.EqualTo("76354111324644"));
+        // Test that the output int and uint are the first values set when the program starts, instead of the ones that
+        // were supposed to be set by the disabled instructions.
+        Assert.That(FinalResults[IndexOfOutputInt], Is.EqualTo(InitialIntValue.ToString(CultureInfo.InvariantCulture)));
+        Assert.That(FinalResults[IndexOfOutputUInt],
+            Is.EqualTo(InitialUIntValue.ToString(CultureInfo.InvariantCulture)));
     }
     
     /// <summary>
@@ -82,12 +82,11 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void DisableCodeAtRevertTest()
     {
-        var movLongAddress = FindMovLongAddress() + 10;
-        var result = TestProcessMemory!.DisableCodeAt(movLongAddress);
+        var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress());
         result.Value.Revert();
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, ExpectedFinalValues[5]);
+        AssertExpectedFinalResults();
     }
 
     /// <summary>
@@ -111,8 +110,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void DisableCodeAtWithInvalidInstructionCountTest()
     {
-        var movLongAddress = FindMovLongAddress() + 10;
-        var result = TestProcessMemory!.DisableCodeAt(movLongAddress, 0);
+        var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress(), 0);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnInvalidArguments>());
     }
@@ -139,7 +137,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     public void DisableCodeAtWithBadInstructionsTest()
     {
         var address = TestProcessMemory!.Reserve(0x1000, true).Value.Address;
-        TestProcessMemory.WriteBytes(address, new byte[] { 0xFF, 0xFF, 0xFF, 0xFF });
+        TestProcessMemory.WriteBytes(address, new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }); // Write invalid code
         var result = TestProcessMemory.DisableCodeAt(address);
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDecoding>());
@@ -153,7 +151,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     public void DisableCodeWithDetachedProcessTest()
     {
         TestProcessMemory!.Dispose();
-        var result = TestProcessMemory!.DisableCodeAt(FindMovLongAddress());
+        var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress());
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
     }
@@ -166,8 +164,18 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     public void DisableCodeWithPointerPathWithDetachedProcessTest()
     {
         TestProcessMemory!.Dispose();
-        var result = TestProcessMemory!.DisableCodeAt(FindMovLongAddress().ToString("X"));
+        var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress().ToString("X"));
         Assert.That(result.IsSuccess, Is.False);
         Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
     }
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryCodeExtensionsTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryCodeExtensionsTestX86 : ProcessMemoryCodeExtensionsTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
 }
