@@ -13,8 +13,10 @@ public class PointerExtensionsTest
     [TestCase((ulong)0x1000, (ulong)0x2000, ExpectedResult = (ulong)0x1000)]
     [TestCase((ulong)0x2000, (ulong)0x1000, ExpectedResult = (ulong)0x1000)]
     [TestCase((ulong)0x1000, (ulong)0x1000, ExpectedResult = (ulong)0)]
-    [TestCase((ulong)0, ulong.MaxValue, ExpectedResult = ulong.MaxValue)]
-    [TestCase(ulong.MaxValue, (ulong)0, ExpectedResult = ulong.MaxValue)]
+    [TestCase((ulong)0, ulong.MaxValue, ExpectedResult = ulong.MaxValue,
+        TestName = "DistanceToTest(0,ulong.MaxValue)")] // Specifying the name fixes a test duplication bug
+    [TestCase(ulong.MaxValue, (ulong)0, ExpectedResult = ulong.MaxValue,
+        TestName = "DistanceToTest(ulong.MaxValue,0)")] // Specifying the name fixes a test duplication bug
     public ulong DistanceToTest(ulong value1, ulong value2)
     {
         var ptr1 = new UIntPtr(value1);
