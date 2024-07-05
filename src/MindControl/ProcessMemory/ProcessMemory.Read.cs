@@ -352,6 +352,10 @@ public partial class ProcessMemory
     {
         if (!IsAttached)
             return new FindStringSettingsFailureOnDetachedProcess();
+        if (stringPointerAddress == UIntPtr.Zero)
+            return new FindStringSettingsFailureOnZeroPointer();
+        if (!IsBitnessCompatible(stringPointerAddress))
+            return new FindStringSettingsFailureOnIncompatibleBitness(stringPointerAddress);
         if (string.IsNullOrWhiteSpace(expectedString))
             return new FindStringSettingsFailureOnNoSettingsFound();
         
@@ -523,6 +527,10 @@ public partial class ProcessMemory
     {
         if (!IsAttached)
             return new ReadFailureOnDetachedProcess();
+        if (address == UIntPtr.Zero)
+            return new ReadFailureOnZeroPointer();
+        if (!IsBitnessCompatible(address))
+            return new ReadFailureOnIncompatibleBitness(address);
         if (maxLength is < 0)
             return new ReadFailureOnInvalidArguments("The maximum length cannot be negative.");
         if (maxLength == 0)

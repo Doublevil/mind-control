@@ -125,4 +125,30 @@ public class ProcessMemoryEvaluateTestX86 : ProcessMemoryEvaluateTest
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
     protected override bool Is64Bit => false;
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.EvaluateMemoryAddress"/> with a pointer path that starts with an address that is
+    /// not within the 32-bit address space.
+    /// Expect a <see cref="PathEvaluationFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void EvaluateWithX64PathOnX86ProcessTest()
+    {
+        var result = TestProcessMemory!.EvaluateMemoryAddress("1000000000,4");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<PathEvaluationFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.EvaluateMemoryAddress"/> with a pointer path that starts at a module address,
+    /// with the maximum 32-bit offset added to it.
+    /// Expect a <see cref="PathEvaluationFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void EvaluateWithX64ModuleOffsetOnX86ProcessTest()
+    {
+        var result = TestProcessMemory!.EvaluateMemoryAddress($"{MainModuleName}+FFFFFFFF");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<PathEvaluationFailureOnIncompatibleBitness>());
+    }
 }

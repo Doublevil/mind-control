@@ -7,6 +7,9 @@ public enum FindStringSettingsFailureReason
     DetachedProcess,
     /// <summary>Failure when trying to evaluate the given pointer path.</summary>
     PointerPathEvaluation,
+    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
+    /// </summary>
+    IncompatibleBitness,
     /// <summary>Failure when trying to read the given pointer.</summary>
     PointerReadFailure,
     /// <summary>The given pointer is a zero pointer.</summary>
@@ -45,6 +48,20 @@ public record FindStringSettingsFailureOnPointerPathEvaluation(PathEvaluationFai
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
         => $"Failed to evaluate the specified pointer path: {Details}";
+}
+
+/// <summary>
+/// Represents a failure in a string settings search operation when the target process is 32-bit, but the target memory
+/// address is not within the 32-bit address space.
+/// </summary>
+/// <param name="Address">Address that caused the failure.</param>
+public record FindStringSettingsFailureOnIncompatibleBitness(UIntPtr Address)
+    : FindStringSettingsFailure(FindStringSettingsFailureReason.IncompatibleBitness)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+        => $"The address to read, {Address}, is a 64-bit address, but the target process is 32-bit.";
 }
 
 /// <summary>

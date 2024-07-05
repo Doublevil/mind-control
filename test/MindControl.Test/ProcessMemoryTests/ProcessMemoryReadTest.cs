@@ -1334,4 +1334,95 @@ public class ProcessMemoryReadTestX86 : ProcessMemoryReadTest
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
     protected override bool Is64Bit => false;
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,long)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="ReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadBytes((UIntPtr)address, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnIncompatibleBitness)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a 64-bit address on a 32-bit
+    /// process. Expect the result to be a <see cref="ReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadBytesPartial((UIntPtr)address, new byte[8], 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnIncompatibleBitness)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="ReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadGenericOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Read<int>((UIntPtr)address);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnIncompatibleBitness)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read(Type,UIntPtr)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="ReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Read(typeof(int), (UIntPtr)address);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnIncompatibleBitness)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="FindStringSettingsFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.FindStringSettings((UIntPtr)address, "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(FindStringSettingsFailureOnIncompatibleBitness)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,Nullable{int},bool)"/> with a 64-bit address on a
+    /// 32-bit process. Expect the result to be a <see cref="ReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadRawString((UIntPtr)address, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(ReadFailureOnIncompatibleBitness)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a 64-bit address on a 32-bit
+    /// process. Expect the result to be a <see cref="StringReadFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadStringPointer((UIntPtr)address, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf(typeof(StringReadFailureOnIncompatibleBitness)));
+    }
 }

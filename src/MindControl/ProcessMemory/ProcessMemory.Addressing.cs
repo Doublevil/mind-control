@@ -49,6 +49,8 @@ public partial class ProcessMemory
         // Check if the base address is valid
         if (baseAddress == UIntPtr.Zero)
             return new PathEvaluationFailureOnPointerOutOfRange(UIntPtr.Zero, PointerOffset.Zero);
+        if (!IsBitnessCompatible(baseAddress.Value))
+            return new PathEvaluationFailureOnIncompatibleBitness(baseAddress.Value);
         
         // Follow the pointer path offset by offset
         var currentAddress = baseAddress.Value;
