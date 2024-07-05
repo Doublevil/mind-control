@@ -95,12 +95,6 @@ public interface IOperatingSystemService
     /// <returns>A result holding either a pointer to the start of the allocated memory, or a system failure.</returns>
     Result<UIntPtr, SystemFailure> AllocateMemory(IntPtr processHandle, UIntPtr address, int size,
         MemoryAllocationType allocationType, MemoryProtection protection);
-
-    /// <summary>
-    /// Gets the address of the function used to load a library in the current process.
-    /// </summary>
-    /// <returns>A result holding either the address of the function, or a system failure.</returns>
-    Result<UIntPtr, SystemFailure> GetLoadLibraryFunctionAddress();
     
     /// <summary>
     /// Spawns a thread in the specified process, starting at the given address.
@@ -149,11 +143,6 @@ public interface IOperatingSystemService
     /// <param name="baseAddress">Base address of the target memory region.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
     Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress);
-
-    /// <summary>
-    /// Gets the allocation granularity (minimal allocation size) of the system.
-    /// </summary>
-    uint GetAllocationGranularity();
 
     /// <summary>
     /// Gets the page size of the system.

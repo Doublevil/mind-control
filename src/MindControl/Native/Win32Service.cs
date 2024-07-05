@@ -327,13 +327,6 @@ public partial class Win32Service : IOperatingSystemService
     }
 
     /// <summary>
-    /// Gets the address of the function used to load a library in the current process.
-    /// </summary>
-    /// <returns>A result holding either the address of the function, or a system failure.</returns>
-    public Result<UIntPtr, SystemFailure> GetLoadLibraryFunctionAddress()
-        => GetFunctionAddress("kernel32.dll", "LoadLibraryW");
-
-    /// <summary>
     /// Spawns a thread in the specified process, starting at the given address.
     /// </summary>
     /// <param name="processHandle">Handle of the target process.</param>
@@ -440,11 +433,6 @@ public partial class Win32Service : IOperatingSystemService
         var systemInfo = GetSystemInfo();
         return new MemoryRange(systemInfo.MinimumApplicationAddress, systemInfo.MaximumApplicationAddress);
     }
-
-    /// <summary>
-    /// Gets the allocation granularity (minimal allocation size) of the system.
-    /// </summary>
-    public uint GetAllocationGranularity() => GetSystemInfo().AllocationGranularity;
 
     /// <summary>
     /// Gets the page size of the system.
