@@ -82,6 +82,8 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
+        if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
+            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
         if (code.Length == 0)
             return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
 
@@ -151,6 +153,8 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
+        if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
+            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
         if (codeAssembler.Instructions.Count == 0)
             return new HookFailureOnInvalidArguments("The given code assembler must have at least one instruction.");
         
@@ -356,6 +360,8 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
+        if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
+            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
         if (instructionCount < 1)
             return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
         if (code.Length == 0)
@@ -449,6 +455,8 @@ public static class ProcessMemoryHookExtensions
             return new HookFailureOnDetachedProcess();
         if (targetInstructionAddress == UIntPtr.Zero)
             return new HookFailureOnZeroPointer();
+        if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
+            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
         if (instructionCount < 1)
             return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
         if (codeAssembler.Instructions.Count == 0)

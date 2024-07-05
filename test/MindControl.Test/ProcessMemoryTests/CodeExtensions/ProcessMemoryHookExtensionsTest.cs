@@ -763,4 +763,88 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         assembler.mov(ecx, value);
         return assembler;
     }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> with a 64-bit
+    /// address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithByteArrayOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.Hook((UIntPtr)address, bytes,
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> with a 64-bit
+    /// address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void HookWithAssemblerOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var hookResult = TestProcessMemory!.Hook((UIntPtr)address, AssembleAlternativeMovInt(),
+            new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/> with a
+    /// 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.InsertCodeAt((UIntPtr)address, bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var hookResult = TestProcessMemory!.InsertCodeAt((UIntPtr)address, AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void ReplaceCodeAtWithByteArrayOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.ReplaceCodeAt((UIntPtr)address, 1, bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// </summary>
+    [Test]
+    public void ReplaceCodeAtWithAssemblerOnX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var hookResult = TestProcessMemory!.ReplaceCodeAt((UIntPtr)address, 1, AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+    }
 }

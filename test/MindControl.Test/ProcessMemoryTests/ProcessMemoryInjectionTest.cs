@@ -105,4 +105,16 @@ public class ProcessMemoryInjectionTestX86 : ProcessMemoryInjectionTest
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
     protected override bool Is64Bit => false;
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.InjectLibrary(string)"/> with a 64-bit library on a 32-bit process.
+    /// Expect a <see cref="InjectionFailureOnLoadLibraryFailure"/>.
+    /// </summary>
+    [Test]
+    public void InjectX64LibraryOnX86ProcessTest()
+    {
+        var result = TestProcessMemory!.InjectLibrary(GetInjectedLibraryPath(true));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<InjectionFailureOnLoadLibraryFailure>());
+    }
 }

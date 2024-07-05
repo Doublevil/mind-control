@@ -173,4 +173,44 @@ public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
     protected override bool Is64Bit => false;
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> on a 32-bit target app
+    /// with a 64-bit address. Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// </summary>
+    [Test]
+    public void WriteGenericOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Write((UIntPtr)address, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.WriteBytes(UIntPtr,Span{byte},Nullable{MemoryProtectionStrategy})"/> on a 32-bit
+    /// target app with a 64-bit address. Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// </summary>
+    [Test]
+    public void WriteBytesOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.WriteBytes((UIntPtr)address, new byte[8]);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> on a 32-bit target app
+    /// with a reachable address, but a value with a pointer type that goes beyond the 32-bit address space.
+    /// Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// </summary>
+    [Test]
+    public void WriteX64PointerOnX86Test()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Write(OuterClassPointer, (UIntPtr)address);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+    }
 }

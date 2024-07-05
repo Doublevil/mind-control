@@ -11,6 +11,9 @@ public enum HookFailureReason
     DetachedProcess,
     /// <summary>The given pointer path could not be successfully evaluated.</summary>
     PathEvaluationFailure,
+    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
+    /// </summary>
+    IncompatibleBitness,
     /// <summary>The target address is a zero pointer.</summary>
     ZeroPointer,
     /// <summary>The arguments provided to the hook operation are invalid.</summary>
@@ -54,6 +57,20 @@ public record HookFailureOnPathEvaluation(PathEvaluationFailure Details)
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => $"Failed to evaluate the given pointer path: {Details}";
+}
+
+/// <summary>
+/// Represents a failure that occurred in a hook operation when the target process is 32-bit, but the target memory
+/// address is not within the 32-bit address space.
+/// </summary>
+/// <param name="Address">Address that caused the failure.</param>
+public record HookFailureOnIncompatibleBitness(UIntPtr Address)
+    : HookFailure(HookFailureReason.IncompatibleBitness)
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+        => $"The address to read, {Address}, is a 64-bit address, but the target process is 32-bit.";
 }
 
 /// <summary>

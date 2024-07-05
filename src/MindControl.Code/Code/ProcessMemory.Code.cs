@@ -105,6 +105,8 @@ public static class ProcessMemoryCodeExtensions
             return new CodeWritingFailureOnDetachedProcess();
         if (address == UIntPtr.Zero)
             return new CodeWritingFailureOnZeroPointer();
+        if (!processMemory.Is64Bit && address.ToUInt64() > uint.MaxValue)
+            return new CodeWritingFailureOnIncompatibleBitness(address);
         if (instructionCount < 1)
             return new CodeWritingFailureOnInvalidArguments(
                 "The number of instructions to replace must be at least 1.");

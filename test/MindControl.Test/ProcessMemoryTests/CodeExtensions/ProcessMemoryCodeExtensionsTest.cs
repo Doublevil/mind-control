@@ -178,4 +178,17 @@ public class ProcessMemoryCodeExtensionsTestX86 : ProcessMemoryCodeExtensionsTes
 {
     /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
     protected override bool Is64Bit => false;
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> with an x64 address on
+    /// an x86 process. Expects a <see cref="CodeWritingFailureOnIncompatibleBitness"/>.
+    /// </summary>
+    [Test]
+    public void DisableCodeAtX64AddressOnX86ProcessTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.DisableCodeAt(new UIntPtr(address));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnIncompatibleBitness>());
+    }
 }
