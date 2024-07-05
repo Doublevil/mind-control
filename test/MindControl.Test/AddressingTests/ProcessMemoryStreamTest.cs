@@ -66,7 +66,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void LengthTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Length, Throws.InstanceOf<NotSupportedException>());
     }
 
@@ -77,7 +77,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void SetLengthTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.SetLength(0), Throws.InstanceOf<NotSupportedException>());
         Assert.That(() => stream.SetLength(32), Throws.InstanceOf<NotSupportedException>());
         Assert.That(() => stream.SetLength(256), Throws.InstanceOf<NotSupportedException>());
@@ -114,7 +114,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void FlushTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Flush(), Throws.Nothing);
     }
     
@@ -160,7 +160,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void SeekFromEndTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Seek(8, SeekOrigin.End), Throws.InstanceOf<NotSupportedException>());
     }
     
@@ -176,7 +176,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void SimpleReadTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer + 0x28);
+        using var stream = TestProcessMemory!.GetMemoryStream(GetPointerPathForValueAtIndex(IndexOfOutputULong)).Value;
         var buffer = new byte[8];
         int byteCount = stream.Read(buffer, 0, 8);
         ulong readValue = MemoryMarshal.Read<ulong>(buffer);
@@ -194,7 +194,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void MultipleReadTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer + 0x20);
+        using var stream = TestProcessMemory!.GetMemoryStream(GetPointerPathForValueAtIndex(IndexOfOutputLong)).Value;
         var buffer = new byte[8];
         int firstByteCount = stream.Read(buffer, 0, 8);
         long firstValue = MemoryMarshal.Read<long>(buffer);
@@ -217,7 +217,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void ReadWithOffsetTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer + 0x28);
+        using var stream = TestProcessMemory!.GetMemoryStream(GetPointerPathForValueAtIndex(IndexOfOutputULong)).Value;
         var buffer = new byte[12];
         int byteCount = stream.Read(buffer, 4, 8); // Use an offset of 4
         ulong readValue = MemoryMarshal.Read<ulong>(buffer.AsSpan(4)); // Read value from index 4
@@ -235,7 +235,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void ReadWithImpossibleOffsetTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Read(new byte[8], 8, 1), Throws.InstanceOf<ArgumentException>());
     }
     
@@ -247,7 +247,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void ReadWithImpossibleCountTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Read(new byte[8], 0, 9), Throws.InstanceOf<ArgumentException>());
     }
     
@@ -259,7 +259,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     [Test]
     public void ReadWithImpossibleOffsetAndCountTest()
     {
-        using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
+        var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
         Assert.That(() => stream.Read(new byte[8], 3, 6), Throws.InstanceOf<ArgumentException>());
     }
 
@@ -419,7 +419,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
         Assert.That(writeResult.IsSuccess, Is.True);
 
         // Attempt to write 8 bytes from the target address, which is 4 bytes before the end of the isolated segment.
-        using var stream = TestProcessMemory.GetMemoryStream(targetAddress);
+        var stream = TestProcessMemory.GetMemoryStream(targetAddress);
         Assert.That(() => stream.Write(new byte[8], 0, 8), Throws.InstanceOf<IOException>());
     }
 

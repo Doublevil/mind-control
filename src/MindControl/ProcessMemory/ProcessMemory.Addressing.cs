@@ -87,7 +87,7 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Pointer path to the starting address of the stream.</param>
     /// <returns>A result holding either the created process memory stream, or a path evaluation failure.</returns>
-    public Result<ProcessMemoryStream, PathEvaluationFailure> GetMemoryStream(PointerPath pointerPath)
+    public DisposableResult<ProcessMemoryStream, PathEvaluationFailure> GetMemoryStream(PointerPath pointerPath)
     {
         var addressResult = EvaluateMemoryAddress(pointerPath);
         if (addressResult.IsFailure)

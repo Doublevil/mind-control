@@ -1,4 +1,6 @@
-﻿using Iced.Intel;
+﻿using System.Globalization;
+using Iced.Intel;
+using static Iced.Intel.AssemblerRegisters;
 using MindControl.Code;
 using MindControl.Hooks;
 using MindControl.Results;
@@ -12,123 +14,132 @@ namespace MindControl.Test.ProcessMemoryTests.CodeExtensions;
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTest
 {
+    protected const int AlternativeOutputIntValue = 123456;
+    
+    /// <summary>Builds an assembler that moves the alternative output int value in the class instance field.</summary>
+    protected virtual Assembler AssembleAlternativeMovInt()
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(__dword_ptr[rcx+0x38], AlternativeOutputIntValue);
+        return assembler;
+    }
+
+    /// <summary>Builds an assembler that moves the given value in register RCX/ECX.</summary>
+    protected virtual Assembler AssembleRcxMov(uint value)
+    {
+        var assembler = new Assembler(64);
+        assembler.mov(rcx, value);
+        return assembler;
+    }
+    
     #region Hook
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
-    /// The hook replaces a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
-    /// long value in the target app, with a new MOV instruction that assigns a different value.
+    /// The hook replaces the MOV instruction that assigns the output int value in the target app with an alternative
+    /// MOV instruction that assigns a different value.
     /// No registers are preserved.
     /// After hooking, we let the program run, and check that the output long value is the one written by the hook.
     /// </summary>
     [Test]
     public void HookAndReplaceMovWithByteArrayTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-
-        // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
-        var hookResult = TestProcessMemory!.Hook(movLongAddress, bytes,
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var movIntAddress = FindMovIntAddress();
+        
+        var hookResult = TestProcessMemory!.Hook(movIntAddress, bytes,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         
         Assert.That(hookResult.IsSuccess, Is.True);
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
-        Assert.That(hookResult.Value.Address, Is.EqualTo(movLongAddress));
+        Assert.That(hookResult.Value.Address, Is.EqualTo(movIntAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
         
         ProceedUntilProcessEnds();
         
-        // After execution, the long in the output at index 5 must reflect the new value written by the hook.
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
-    /// The hook targets a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
-    /// long value in the target app, and inserts a new MOV instruction that assigns a different value after the
-    /// instruction.
-    /// However, we specify that the <see cref="HookRegister.RaxEax"/> should be preserved.
-    /// After hooking, we let the program run, and check the output. The long value must be the expected, original one,
-    /// because we specified that the RAX register should be isolated.
+    /// The hook inserts a MOV instruction that changes RCX/ECX to the address of an empty section of memory before the
+    /// MOV instruction that assigns the output int value in the target app, which uses RCX/ECX. We specify that we do
+    /// not want to preserve any register.
+    /// After hooking, we let the program run, and check the output. The int value must be the initial one, because the
+    /// original instruction should write its new value in the empty section of memory specified by our injected code
+    /// instead. 
     /// </summary>
     [Test]
-    public void HookAndInsertMovWithRegisterIsolationWithByteArrayTest()
+    public void HookAndInsertMovWithoutRegisterIsolationTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
+        var reservation = TestProcessMemory!.Reserve(0x1000, false, MemoryRange.Full32BitRange).Value;
+        var bytes = AssembleRcxMov(reservation.Address.ToUInt32()).AssembleToBytes().Value;
         
-        var movLongAddress = FindMovLongAddress();
-
-        // Hook the instruction that writes the long value to RAX, to append code that writes another value.
-        // Specify that the RAX register should be isolated.
-        var hookResult = TestProcessMemory!.Hook(movLongAddress, bytes,
-            new HookOptions(HookExecutionMode.ExecuteOriginalInstructionFirst, HookRegister.RaxEax));
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), bytes,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst));
         Assert.That(hookResult.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
         
-        // After execution, all values should be the expected ones.
+        Assert.That(FinalResults[IndexOfOutputInt], Is.EqualTo(InitialIntValue.ToString()));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
+    /// The hook inserts a MOV instruction that changes RCX/ECX to 0 before the MOV instruction that assigns the output
+    /// int value in the target app, which uses RCX/ECX. We specify that we want to preserve the RCX/ECX register.
+    /// After hooking, we let the program run, and check the output. The output int value must be the expected one,
+    /// because the RCX/ECX register is isolated (reverted to its original state after the injected code).
+    /// </summary>
+    [Test]
+    public void HookAndInsertMovWithRegisterIsolationWithByteArrayTest()
+    {
+        var bytes = AssembleRcxMov(0).AssembleToBytes().Value;
+        
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), bytes,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, HookRegister.RcxEcx));
+        Assert.That(hookResult.IsSuccess, Is.True);
+        
+        ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> method.
-    /// The hook replaces a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
-    /// long value in the target app, with a new MOV instruction that assigns a different value.
-    /// No registers are preserved.
-    /// After hooking, we let the program run, and check that the output long value is the one written by the hook.
+    /// Equivalent of <see cref="HookAndReplaceMovWithByteArrayTest"/>, but using an assembler to build the hook code.
     /// </summary>
     [Test]
     public void HookAndReplaceMovWithAssemblerTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
-
-        // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
-        var hookResult = TestProcessMemory!.Hook(movLongAddress, assembler,
+        var assembler = AssembleAlternativeMovInt();
+        var targetInstructionAddress = FindMovIntAddress();
+        var hookResult = TestProcessMemory!.Hook(targetInstructionAddress, assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         
         Assert.That(hookResult.IsSuccess, Is.True);
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
-        Assert.That(hookResult.Value.Address, Is.EqualTo(movLongAddress));
+        Assert.That(hookResult.Value.Address, Is.EqualTo(targetInstructionAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
         
         ProceedUntilProcessEnds();
-        
-        // After execution, the long in the output at index 5 must reflect the new value written by the hook.
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> method.
-    /// The hook targets a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
-    /// long value in the target app, and inserts a new MOV instruction that assigns a different value after the
-    /// instruction.
-    /// However, we specify that the <see cref="HookRegister.RaxEax"/> should be preserved.
-    /// After hooking, we let the program run, and check the output. The long value must be the expected, original one,
-    /// because we specified that the RAX register should be isolated.
+    /// Equivalent of <see cref="HookAndInsertMovWithRegisterIsolationWithByteArrayTest"/>, but using an assembler to
+    /// build the hook code.
     /// </summary>
     [Test]
     public void HookAndInsertMovWithRegisterIsolationWithAssemblerTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
+        var assembler = AssembleRcxMov(0);
         
-        var movLongAddress = FindMovLongAddress();
-
-        // Hook the instruction that writes the long value to RAX, to append code that writes another value.
-        // Specify that the RAX register should be isolated.
-        var hookResult = TestProcessMemory!.Hook(movLongAddress, assembler,
-            new HookOptions(HookExecutionMode.ExecuteOriginalInstructionFirst, HookRegister.RaxEax));
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), assembler,
+            new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, HookRegister.RcxEcx));
         Assert.That(hookResult.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
-        
-        // After execution, all values should be the expected ones.
         AssertExpectedFinalResults();
     }
 
@@ -170,9 +181,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void HookWithBadPathWithAssemblerTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var hookResult = TestProcessMemory!.Hook(new PointerPath("bad pointer path"), assembler,
+        var hookResult = TestProcessMemory!.Hook(new PointerPath("bad pointer path"), AssembleAlternativeMovInt(),
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
@@ -187,8 +196,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void HookWithEmptyCodeArrayTest()
     {
-        var address = FindMovLongAddress();
-        var hookResult = TestProcessMemory!.Hook(address, [],
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), [],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
@@ -202,9 +210,8 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void HookWithEmptyAssemblerTest()
     {
-        var address = FindMovLongAddress();
-        var assembler = new Assembler(64);
-        var hookResult = TestProcessMemory!.Hook(address, assembler,
+        var assembler = new Assembler(Is64Bit ? 64 : 32);
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
@@ -217,7 +224,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void HookWithDetachedProcessTest()
     {
-        var assembler = new Assembler(64);
+        var assembler = new Assembler(Is64Bit ? 64 : 32);
         assembler.ret();
         TestProcessMemory!.Dispose();
         var hookResult = TestProcessMemory!.Hook(0x1234, assembler,
@@ -233,7 +240,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     [Test]
     public void HookWithPointerPathWithDetachedProcessTest()
     {
-        var assembler = new Assembler(64);
+        var assembler = new Assembler(Is64Bit ? 64 : 32);
         assembler.ret();
         TestProcessMemory!.Dispose();
         var hookResult = TestProcessMemory!.Hook("1234", assembler,
@@ -272,26 +279,21 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
-    /// The hook replaces a 10-bytes MOV instruction that feeds the RAX register with a new value to be assigned to the
-    /// long value in the target app, with a new MOV instruction that assigns a different value.
-    /// After hooking, we revert the hook.
-    /// We then let the program run, and check that the output long value is the original, expected one.
+    /// The hook is equivalent to the one built in <see cref="HookAndReplaceMovWithByteArrayTest"/>, but we revert it
+    /// right after building it.
+    /// We then let the program run, and check that the output is the normal, expected one.
     /// </summary>
     [Test]
     public void HookRevertTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-
-        // Hook the instruction that writes the long value to RAX, and replace it with code that writes another value.
-        var hookResult = TestProcessMemory!.Hook(movLongAddress, bytes,
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        
+        var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), bytes,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         hookResult.Value.Revert(); // Revert the hook to restore the original code.
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, ExpectedFinalValues[5]);
+        AssertExpectedFinalResults();
     }
     
     #endregion
@@ -299,522 +301,466 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     #region InsertCodeAt
 
     /// <summary>
-    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>
-    /// method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. This should change the output long value.
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
+    /// Inserts a MOV instruction that changes RCX/ECX before the MOV instruction that assigns the output int value in
+    /// the target app. The output int value must be the initial one.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
+        var reservation = TestProcessMemory!.Reserve(0x1000, false, MemoryRange.Full32BitRange).Value;
+        var bytes = AssembleRcxMov(reservation.Address.ToUInt32()).AssembleToBytes().Value;
+        var targetInstructionAddress = FindMovIntAddress();
         
-        // Insert the code right after our target MOV instruction.
-        // That way, the RAX register will be set to the value we want before it's used to write the new long value.
-        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, bytes);
+        var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionAddress, bytes);
         Assert.That(hookResult.IsSuccess, Is.True);
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
-        Assert.That(hookResult.Value.Address, Is.EqualTo(movLongNextInstructionAddress));
+        Assert.That(hookResult.Value.Address, Is.EqualTo(targetInstructionAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
         
         ProceedUntilProcessEnds();
-        
-        // After execution, the long in the output at index 5 must reflect the new value written by the hook.
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>
-    /// method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. However, we specify that RAX should be preserved.
-    /// The output long value must be the original one, because the RAX register is isolated.
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
+    /// Inserts a MOV instruction that changes RCX/ECX before the MOV instruction that assigns the output int value in
+    /// the target app, with RCX/ECX preservation. The output should be the normal, expected one (injected code should
+    /// not affect the original instructions because the register is preserved).
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithIsolationTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
+        var bytes = AssembleRcxMov(0).AssembleToBytes().Value;
         
-        // Insert the code right after our target MOV instruction.
-        // That way, the RAX register will be set to the value we want before it's used to write the new long value.
-        // But because we specify that the RAX register should be preserved, after the hook, the RAX register will
-        // be restored to its original value.
-        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, bytes, HookRegister.RaxEax);
-        
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), bytes, HookRegister.RcxEcx);
         Assert.That(hookResult.IsSuccess, Is.True);
+        
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
-    /// method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. This should change the output long value.
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="InsertCodeAtWithByteArrayTest"/>, but using an assembler instead of a byte array.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
-        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler);
+        var reservation = TestProcessMemory!.Reserve(0x1000, false, MemoryRange.Full32BitRange).Value;
+        var assembler = AssembleRcxMov(reservation.Address.ToUInt32());
         
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), assembler);
         Assert.That(hookResult.IsSuccess, Is.True);
+        
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
-    /// method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. However, we specify that RAX should be preserved.
-    /// The output long value must be the original one, because the RAX register is isolated.
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="InsertCodeAtWithByteArrayWithIsolationTest"/>, but using an assembler.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithIsolationTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
-        var hookResult = TestProcessMemory!.InsertCodeAt(movLongNextInstructionAddress, assembler, HookRegister.RaxEax);
-        
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), AssembleRcxMov(0), HookRegister.RcxEcx);
         Assert.That(hookResult.IsSuccess, Is.True);
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
     }
     
     /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/> method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. This should change the output long value.
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/>.
+    /// Equivalent of <see cref="InsertCodeAtWithByteArrayTest"/>, but using a pointer path instead of an address.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
-        var pointerPath = movLongNextInstructionAddress.ToString("X");
+        var reservation = TestProcessMemory!.Reserve(0x1000, false, MemoryRange.Full32BitRange).Value;
+        var bytes = AssembleRcxMov(reservation.Address.ToUInt32()).AssembleToBytes().Value;
+        PointerPath targetInstructionPath = FindMovIntAddress().ToString("X");
         
-        var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, bytes);
+        var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionPath, bytes);
         Assert.That(hookResult.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>
-    /// method.
-    /// Inserts a new MOV instruction that assigns a different value after the instruction that writes a long value to
-    /// the RAX register. This should change the output long value.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="InsertCodeAtWithAssemblerTest"/>, but using a pointer path instead of an address.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongNextInstructionAddress = FindMovLongAddress() + 10;
-        var pointerPath = movLongNextInstructionAddress.ToString("X");
+        var reservation = TestProcessMemory!.Reserve(0x1000, false, MemoryRange.Full32BitRange).Value;
+        var assembler = AssembleRcxMov(reservation.Address.ToUInt32());
+        var targetInstructionPath = FindMovIntAddress().ToString("X");
         
-        var hookResult = TestProcessMemory!.InsertCodeAt(pointerPath, assembler);
+        var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionPath, assembler);
         Assert.That(hookResult.IsSuccess, Is.True);
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890");
+        AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
     }
 
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/>.
+    /// Specifies a pointer path that does not evaluate to a valid address.
+    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithBadPointerTest()
+    {
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.InsertCodeAt("bad pointer path", bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
+    }
+    
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>.
+    /// Specifies a pointer path that does not evaluate to a valid address.
+    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithBadPointerTest()
+    {
+        var hookResult = TestProcessMemory!.InsertCodeAt("bad pointer path", AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
+    /// Specifies an address of 0. Expects a <see cref="HookFailureOnZeroPointer"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithZeroPointerTest()
+    {
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.InsertCodeAt(0, bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnZeroPointer>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
+    /// Specifies an address of 0. Expects a <see cref="HookFailureOnZeroPointer"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithZeroPointerTest()
+    {
+        var hookResult = TestProcessMemory!.InsertCodeAt(0, AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnZeroPointer>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
+    /// Disposes the process memory instance and then call the method with valid parameters.
+    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithAddressWithDisposedInstanceTest()
+    {
+        TestProcessMemory!.Dispose();
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/>.
+    /// Disposes the process memory instance and then call the method with valid parameters.
+    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithByteArrayWithPointerPathWithDisposedInstanceTest()
+    {
+        TestProcessMemory!.Dispose();
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress().ToString("X"), bytes);
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
+    /// Disposes the process memory instance and then call the method with valid parameters.
+    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithAddressWithDisposedInstanceTest()
+    {
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>.
+    /// Disposes the process memory instance and then call the method with valid parameters.
+    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// </summary>
+    [Test]
+    public void InsertCodeAtWithAssemblerWithPointerPathWithDisposedInstanceTest()
+    {
+        TestProcessMemory!.Dispose();
+        var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress().ToString("X"),
+            AssembleAlternativeMovInt());
+        Assert.That(hookResult.IsSuccess, Is.False);
+        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+    }
+    
     #endregion
     
     #region ReplaceCodeAt
     
     /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Only one instruction is replaced.
-    /// Expects the result to be a CodeChange (because the new code is expected to fit in place of the replaced code),
-    /// and the program output long value to be the one written by the new MOV instruction.
+    /// Tests <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
+    /// Replaces the MOV instruction that assigns the output int value in the target app with an alternative MOV
+    /// instruction that assigns a different value. After replacing, we let the program run, and check that the output
+    /// int value is the one written by the replacement code.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
+        var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, bytes);
+        Assert.That(replaceResult.IsSuccess, Is.True);
+        // Check that the result is a CodeChange and not a hook, because the new instructions should fit. 
+        Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the injected code.
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
     /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Two instructions are replaced.
-    /// Expects the result to be a CodeChange (because the new code is expected to fit in place of the replaced code),
-    /// and the program output long value to be the original initial value, because the next instruction that actually
-    /// changes the long value is replaced too, and the replacing code just moves a value to RAX, without actually
-    /// writing that value anywhere.
+    /// Tests <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
+    /// Replaces the MOV instruction that assigns the output int value and the next 2 instructions in the target app
+    /// with an alternative MOV instruction that assigns a different value. After replacing, we let the program run, and
+    /// check that the output int value is the one written by the replacement code, but also that the output uint value
+    /// that should have been written right after the target instruction is the initial, untouched one. 
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayOnMultipleInstructionsTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 2, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
+        var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 3, bytes);
+        Assert.That(replaceResult.IsSuccess, Is.True);
+        Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "-65746876815103"); // The initial value of the target long
+        Assert.That(FinalResults[IndexOfOutputInt],
+            Is.EqualTo(AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture)));
+        Assert.That(FinalResults[IndexOfOutputUInt],
+            Is.EqualTo(InitialUIntValue.ToString(CultureInfo.InvariantCulture)));
     }
     
     /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value, plus an instruction that sets RCX to zero. Only one instruction is
-    /// replaced. However, we specify that 4 registers should be preserved, including RCX, which is used by the next
-    /// original instruction to write the value at the right address. RAX is not preserved.
-    /// Expects the result to be a CodeHook (because of the register pop and push instructions, the new code should not
-    /// fit in place of the replaced code), and the program output long value to be the new value written to RAX.
-    /// Setting RCX to zero should not affect the output because that register should be preserved.
+    /// Tests <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
+    /// Replaces the MOV instruction that assigns the output int value in the target app with an alternative MOV
+    /// instruction that assigns a different value, and specify that we want to preserve register RAX. Because the
+    /// replaced instruction is the same as the replacement instruction, it would normally fit and not trigger a hook.
+    /// However, because we have register preservation code that adds a couple bytes to the replacement code, it cannot
+    /// fit anymore. This means a hook should be performed, and so we should get a CodeHook result.
+    /// After replacing, we let the program run, and check that the output int value is the one written by the
+    /// replacement code.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithPreservedRegistersTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)123);
-        assembler.mov(new AssemblerRegister64(Register.RCX), (ulong)0);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-        
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, bytes,
-            HookRegister.Flags, HookRegister.RcxEcx, HookRegister.RdxEdx, HookRegister.R8);
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, bytes, HookRegister.RaxEax);
         Assert.That(hookResult.IsSuccess, Is.True);
         Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "123");
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new sequence
-    /// of MOV instructions that assign a different value to the same register. Only one instruction is replaced, but
-    /// the replacing code is expected to be larger than the original instruction.
-    /// Expects the result to be a CodeHook (because the new code should not fit in place of the replaced code), and the
-    /// program output long value to be the one written by the new MOV instruction.
-    /// </summary>
-    [Test]
-    public void ReplaceCodeAtWithByteArrayWithLargerCodeTest()
-    {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)9991234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)8881234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)7771234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-        
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
-        
-        ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the hook.
-    }
-    
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,byte[],HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Only one instruction is replaced.
-    /// Expects the output long value to be the one written by the new MOV instruction.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,byte[],HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithByteArrayTest"/>, but using a pointer path instead of an address.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-        PointerPath pointerPath = movLongAddress.ToString("X");
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        PointerPath targetPath = FindMovIntAddress().ToString("X");
         
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(pointerPath, 1, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        var replaceResult = TestProcessMemory!.ReplaceCodeAt(targetPath, 1, bytes);
+        Assert.That(replaceResult.IsSuccess, Is.True);
+        Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the hook.
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Only one instruction is replaced.
-    /// Expects the result to be a CodeChange (because the new code is expected to fit in place of the replaced code),
-    /// and the program output long value to be the one written by the new MOV instruction.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithByteArrayTest"/>, but using an assembler instead of a byte array.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
+        var assembler = AssembleAlternativeMovInt();
         
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
+        var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, assembler);
+        Assert.That(replaceResult.IsSuccess, Is.True); 
+        Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the injected code.
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Two instructions are replaced.
-    /// Expects the result to be a CodeChange (because the new code is expected to fit in place of the replaced code),
-    /// and the program output long value to be the original initial value, because the next instruction that actually
-    /// changes the long value is replaced too, and the replacing code just moves a value to RAX, without actually
-    /// writing that value anywhere.
-    /// </summary>
-    [Test]
-    public void ReplaceCodeAtWithAssemblerOnMultipleInstructionsTest()
-    {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
-        
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 2, assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
-        
-        ProceedUntilProcessEnds();
-        AssertFinalResults(5, "-65746876815103"); // The initial value of the target long
-    }
-    
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value, plus an instruction that sets RCX to zero. Only one instruction is
-    /// replaced. However, we specify that 4 registers should be preserved, including RCX, which is used by the next
-    /// original instruction to write the value at the right address. RAX is not preserved.
-    /// Expects the result to be a CodeHook (because of the register pop and push instructions, the new code should not
-    /// fit in place of the replaced code), and the program output long value to be the new value written to RAX.
-    /// Setting RCX to zero should not affect the output because that register should be preserved.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithByteArrayWithPreservedRegistersTest"/>, but using an assembler instead
+    /// of a byte array.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithPreservedRegistersTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)123);
-        assembler.mov(new AssemblerRegister64(Register.RCX), (ulong)0);
-        var movLongAddress = FindMovLongAddress();
-        
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, assembler,
-            HookRegister.Flags, HookRegister.RcxEcx, HookRegister.RdxEdx, HookRegister.R8);
+        var assembler = AssembleAlternativeMovInt();
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, assembler, HookRegister.RaxEax);
         Assert.That(hookResult.IsSuccess, Is.True);
         Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "123");
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new sequence
-    /// of MOV instructions that assign a different value to the same register. Only one instruction is replaced, but
-    /// the replacing code is expected to be larger than the original instruction.
-    /// Expects the result to be a CodeHook (because the new code should not fit in place of the replaced code), and the
-    /// program output long value to be the one written by the new MOV instruction.
-    /// </summary>
-    [Test]
-    public void ReplaceCodeAtWithAssemblerWithLargerCodeTest()
-    {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)9991234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)8881234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)7771234560);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
-        
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
-        Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
-        
-        ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the hook.
-    }
-    
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,Assembler,HookRegister[])"/>
-    /// method.
-    /// Replace the code at the target MOV instruction that writes a long value to the RAX register with a new MOV
-    /// instruction that assigns a different value. Only one instruction is replaced.
-    /// Expects the output long value to be the one written by the new MOV instruction.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithAssemblerTest"/>, but using a pointer path instead of an address.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
-        PointerPath pointerPath = movLongAddress.ToString("X");
+        var assembler = AssembleAlternativeMovInt();
+        PointerPath targetPath = FindMovIntAddress().ToString("X");
         
-        // Replace the code at the target MOV instruction.
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(pointerPath, 1, assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        var replaceResult = TestProcessMemory!.ReplaceCodeAt(targetPath, 1, assembler);
+        Assert.That(replaceResult.IsSuccess, Is.True); 
+        Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
-        AssertFinalResults(5, "1234567890"); // The new value written by the hook.
+        AssertFinalResults(IndexOfOutputInt, AlternativeOutputIntValue.ToString(CultureInfo.InvariantCulture));
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,byte[],HookRegister[])"/>
-    /// method, calling it with a pointer path that does not evaluate to a valid address, but otherwise valid
-    /// parameters.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,byte[],HookRegister[])"/>.
+    /// Use a pointer path that does not evaluate to a valid address, but otherwise valid parameters.
     /// Expects the result to be a <see cref="HookFailureOnPathEvaluation"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithBadPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        PointerPath pointerPath = "bad pointer path";
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(pointerPath, 1, bytes);
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.ReplaceCodeAt("bad pointer path", 1, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,Assembler,HookRegister[])"/>
-    /// method, calling it with a pointer path that does not evaluate to a valid address, but otherwise valid
-    /// parameters.
-    /// Expects the result to be a <see cref="HookFailureOnPathEvaluation"/>.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithByteArrayWithBadPointerPathTest"/>, but using an assembler instead of
+    /// a byte array.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithBadPointerPathTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        PointerPath pointerPath = "bad pointer path";
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(pointerPath, 1, assembler);
+        var hookResult = TestProcessMemory!.ReplaceCodeAt("bad pointer path", 1, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method, calling it with an empty code array, but otherwise valid parameters.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
+    /// Specify an empty code array, but otherwise valid parameters.
     /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithNoCodeTest()
     {
-        var movLongAddress = FindMovLongAddress();
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, []);
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, []);
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method, calling it with an empty assembler, but otherwise valid parameters.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>.
+    /// Specify an empty assembler, but otherwise valid parameters.
     /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithNoCodeTest()
     {
-        var movLongAddress = FindMovLongAddress();
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 1, new Assembler(64));
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, new Assembler(Is64Bit ? 64 : 32));
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// method, calling it with a number of instructions to replace of 0, but otherwise valid parameters.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
+    /// Specifies a number of instructions to replace of 0, but otherwise valid parameters.
     /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithZeroInstructionTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var bytes = assembler.AssembleToBytes().Value;
-        var movLongAddress = FindMovLongAddress();
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 0, bytes);
+        var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 0, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
     }
     
-    /// <summary>
-    /// Tests the
-    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// method, calling it with a number of instructions to replace of 0, but otherwise valid parameters.
-    /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
+    /// <summary>Tests
+    /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>.
+    /// Equivalent of <see cref="ReplaceCodeAtWithByteArrayWithZeroInstructionTest"/>, but using an assembler instead of
+    /// a byte array.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithZeroInstructionTest()
     {
-        var assembler = new Assembler(64);
-        assembler.mov(new AssemblerRegister64(Register.RAX), (ulong)1234567890);
-        var movLongAddress = FindMovLongAddress();
-        var hookResult = TestProcessMemory!.ReplaceCodeAt(movLongAddress, 0, assembler);
+        var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 0, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
         Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
     }
     
     #endregion
+}
+
+/// <summary>
+/// Runs the <see cref="ProcessMemoryHookExtensionsTest"/> tests with a 32-bit target process.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
+
+    /// <summary>Builds an assembler that moves the alternative output int value in the class instance field.</summary>
+    protected override Assembler AssembleAlternativeMovInt()
+    {
+        var assembler = new Assembler(32);
+        assembler.mov(__dword_ptr[ecx+0x28], AlternativeOutputIntValue);
+        return assembler;
+    }
+
+    /// <summary>Builds an assembler that moves the given value in register RCX/ECX.</summary>
+    protected override Assembler AssembleRcxMov(uint value)
+    {
+        var assembler = new Assembler(32);
+        assembler.mov(ecx, value);
+        return assembler;
+    }
 }
