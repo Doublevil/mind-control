@@ -1,9 +1,43 @@
 ﻿using NUnit.Framework;
+using MindControl.Results;
 
 namespace MindControl.Test.ProcessMemoryTests;
 
 /// <summary>
 /// Tests the features of the <see cref="ProcessMemory"/> class related to attaching to a process.
+/// This class does not inherit from <see cref="BaseProcessMemoryTest"/> and thus does not start a target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryInstancelessAttachTest
+{
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.OpenProcessByName"/> when no process with the given name is found.
+    /// Expects a <see cref="AttachFailureOnTargetProcessNotFound"/> result.
+    /// </summary>
+    [Test]
+    public void OpenProcessByNameWithNoMatchTest()
+    {
+        var result = ProcessMemory.OpenProcessByName("ThisProcessDoesNotExist");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<AttachFailureOnTargetProcessNotFound>());
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.OpenProcessById"/> with a PID that does not match any running process.
+    /// Expects a <see cref="AttachFailureOnTargetProcessNotFound"/> result.
+    /// </summary>
+    [Test]
+    public void OpenProcessByInvalidPidTest()
+    {
+        var result = ProcessMemory.OpenProcessById(-1);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Error, Is.InstanceOf<AttachFailureOnTargetProcessNotFound>());
+    }
+}
+
+/// <summary>
+/// Tests the features of the <see cref="ProcessMemory"/> class related to attaching to a process.
+/// This class inherits from <see cref="BaseProcessMemoryTest"/> and thus does start a target app.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ProcessMemoryAttachTest : BaseProcessMemoryTest

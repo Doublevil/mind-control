@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MindControl.Native;
+using MindControl.Results;
 
 namespace MindControl;
 
@@ -24,13 +25,13 @@ public partial class ProcessMemory : IDisposable
     /// <summary>
     /// Gets a boolean indicating if the process is 64-bit.
     /// </summary>
-    public bool Is64Bit { get; private set; }
+    public bool Is64Bit { get; }
     
     /// <summary>
     /// Gets the handle of the attached process.
     /// Use this if you need to manually call Win32 API functions.
     /// </summary>
-    public IntPtr ProcessHandle { get; private set; }
+    public IntPtr ProcessHandle { get; }
 
     /// <summary>
     /// Gets or sets the default way this instance deals with memory protection.
@@ -46,24 +47,26 @@ public partial class ProcessMemory : IDisposable
 
     /// <summary>
     /// Attaches to a process with the given name and returns the resulting <see cref="ProcessMemory"/> instance.
-    /// If multiple processes with the specified name are running, one of them will be targeted arbitrarily.
+    /// If multiple processes with the specified name are running, a
+    /// <see cref="AttachFailureOnMultipleTargetProcessesFound"/> will be returned.
     /// When there is any risk of this happening, it is recommended to use <see cref="OpenProcessById"/> instead.
     /// </summary>
     /// <param name="processName">Name of the process to open.</param>
-    /// <returns>The attached process instance resulting from the operation.</returns>
-    /// <exception cref="ProcessException">Thrown when no running process with the given name can be found.</exception>
-    public static ProcessMemory OpenProcessByName(string processName)
+    /// <returns>A result holding either the attached process instance, or an error.</returns>
+    public static Result<ProcessMemory, AttachFailure> OpenProcessByName(string processName)
     {
         var matches = Process.GetProcessesByName(processName);
         if (matches.Length == 0)
-            throw new ProcessException($"No running process with the name \"{processName}\" could be found.");
-
-        // If we have multiple results, we need to dispose those that we will not be using.
-        // Arbitrarily, we will use the first result. So we dispose everything starting from index 1.
-        for (var i = 1; i < matches.Length; i++)
-            matches[i].Dispose();
+            return new AttachFailureOnTargetProcessNotFound();
+        if (matches.Length > 1)
+        {
+            var pids = matches.Select(p => p.Id).ToArray();
+            foreach (var process in matches)
+                process.Dispose();
+            return new AttachFailureOnMultipleTargetProcessesFound(pids);
+        }
         
-        return OpenProcess(matches.First(), true);
+        return OpenProcess(matches.First(), true, new Win32Service());
     }
 
     /// <summary>
@@ -71,21 +74,39 @@ public partial class ProcessMemory : IDisposable
     /// instance.
     /// </summary>
     /// <param name="pid">Identifier of the process to attach to.</param>
-    /// <returns>The attached process instance resulting from the operation.</returns>
-    public static ProcessMemory OpenProcessById(int pid)
+    /// <returns>A result holding either the attached process instance, or an error.</returns>
+    public static Result<ProcessMemory, AttachFailure> OpenProcessById(int pid)
     {
-        var process = Process.GetProcessById(pid);
-        if (process == null)
-            throw new ProcessException(pid, $"No running process with the PID {pid} could be found.");
-        return OpenProcess(process, true);
+        try
+        {
+            var process = Process.GetProcessById(pid);
+            return OpenProcess(process, true, new Win32Service());
+        }
+        catch (ArgumentException)
+        {
+            // Process.GetProcessById throws an ArgumentException when the PID does not match any process.
+            return new AttachFailureOnTargetProcessNotFound();
+        }
     }
 
     /// <summary>
     /// Attaches to the given process, and returns the resulting <see cref="ProcessMemory"/> instance.
     /// </summary>
     /// <param name="target">Process to attach to.</param>
-    /// <returns>The attached process instance resulting from the operation.</returns>
-    public static ProcessMemory OpenProcess(Process target) => OpenProcess(target, false);
+    /// <returns>A result holding either the attached process instance, or an error.</returns>
+    public static Result<ProcessMemory, AttachFailure> OpenProcess(Process target)
+        => OpenProcess(target, false, new Win32Service());
+    
+    /// <summary>
+    /// Attaches to the given process, and returns the resulting <see cref="ProcessMemory"/> instance. This variant
+    /// allows you to specify an implementation of <see cref="IOperatingSystemService"/> to use instead of the default
+    /// implementation. Unless you have very specific needs, use another overload of this method.
+    /// </summary>
+    /// <param name="target">Process to attach to.</param>
+    /// <param name="osService">Service that provides system-specific process-oriented features.</param>
+    /// <returns>A result holding either the attached process instance, or an error.</returns>
+    public static Result<ProcessMemory, AttachFailure> OpenProcess(Process target, IOperatingSystemService osService)
+        => OpenProcess(target, false, osService);
 
     /// <summary>
     /// Attaches to the given process, and returns the resulting <see cref="ProcessMemory"/> instance.
@@ -93,23 +114,31 @@ public partial class ProcessMemory : IDisposable
     /// <param name="target">Process to attach to.</param>
     /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
     /// <paramref name="target"/>, meaning it has the responsibility to dispose it.</param>
-    /// <returns>The attached process instance resulting from the operation.</returns>
-    private static ProcessMemory OpenProcess(Process target, bool ownsProcessInstance)
+    /// <param name="osService">Service that provides system-specific process-oriented features.</param>
+    /// <returns>A result holding either the attached process instance, or an error.</returns>
+    internal static Result<ProcessMemory, AttachFailure> OpenProcess(Process target, bool ownsProcessInstance,
+        IOperatingSystemService osService)
     {
         if (target.HasExited)
-            throw new ProcessException(target.Id, $"Process {target.Id} has exited.");
+            return new AttachFailureOnTargetProcessNotRunning();
 
-        return new ProcessMemory(target, ownsProcessInstance);
+        // Determine target bitness
+        var is64BitResult = osService.IsProcess64Bit(target.Id);
+        if (is64BitResult.IsFailure)
+            return new AttachFailureOnSystemError(is64BitResult.Error);
+        var is64Bit = is64BitResult.Value;
+        if (is64Bit && IntPtr.Size != 8)
+            return new AttachFailureOnIncompatibleBitness();
+        
+        // Open the process with the required access flags
+        var openResult = osService.OpenProcess(target.Id);
+        if (openResult.IsFailure)
+            return new AttachFailureOnSystemError(openResult.Error);
+        var processHandle = openResult.Value;
+        
+        // Build the instance with the handle and bitness information
+        return new ProcessMemory(target, ownsProcessInstance, processHandle, is64Bit, osService);
     }
-    
-    /// <summary>
-    /// Builds a new instance that attaches to the given process.
-    /// </summary>
-    /// <param name="process">Target process.</param>
-    /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
-    /// <paramref name="process"/>, meaning it has the responsibility to dispose it.</param>
-    public ProcessMemory(Process process, bool ownsProcessInstance)
-        : this(process, ownsProcessInstance, new Win32Service()) {}
 
     /// <summary>
     /// Builds a new instance that attaches to the given process.
@@ -119,40 +148,23 @@ public partial class ProcessMemory : IDisposable
     /// <param name="process">Target process.</param>
     /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
     /// <paramref name="process"/>, meaning it has the responsibility to dispose it.</param>
+    /// <param name="processHandle">Handle of the target process, open with specific access flags to allow memory
+    /// manipulation.</param>
+    /// <param name="is64Bit">Indicates if the target process is 64-bit.</param>
     /// <param name="osService">Service that provides system-specific process-oriented features.</param>
-    private ProcessMemory(Process process, bool ownsProcessInstance, IOperatingSystemService osService)
+    private ProcessMemory(Process process, bool ownsProcessInstance, IntPtr processHandle, bool is64Bit,
+        IOperatingSystemService osService)
     {
         _process = process;
         _osService = osService;
         _ownsProcessInstance = ownsProcessInstance;
-        Attach();
-    }
-    
-    /// <summary>
-    /// Attaches to the process.
-    /// </summary>
-    private void Attach()
-    {
-        try
-        {
-            Is64Bit = _osService.IsProcess64Bit(_process.Id).GetValueOrDefault(defaultValue: true);
-            
-            if (Is64Bit && !Environment.Is64BitOperatingSystem)
-                throw new ProcessException(_process.Id, "A 32-bit program cannot attach to a 64-bit process.");
-            
-            _process.EnableRaisingEvents = true;
-            _process.Exited += OnProcessExited;
-            var openResult = _osService.OpenProcess(_process.Id);
-            openResult.ThrowOnError();
-            ProcessHandle = openResult.Value;
-
-            IsAttached = true;
-        }
-        catch (Exception e)
-        {
-            Detach();
-            throw new ProcessException(_process.Id, $"Failed to attach to the process {_process.Id}. Check the internal exception for more information. Common causes include insufficient privileges (administrator rights might be required) or trying to attach to a x64 process with a x86 program.", e);
-        }
+        ProcessHandle = processHandle;
+        Is64Bit = is64Bit;
+        IsAttached = true;
+        
+        // Make sure this instance gets notified when the process exits
+        _process.EnableRaisingEvents = true;
+        _process.Exited += OnProcessExited;
     }
     
     /// <summary>

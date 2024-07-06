@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MindControl.Native;
 
 namespace MindControl;
 
@@ -107,7 +108,8 @@ public class ProcessTracker : IDisposable
     private ProcessMemory? AttemptToAttachProcess()
     {
         var process = GetTargetProcess();
-        return process == null ? null : new ProcessMemory(process, ownsProcessInstance: true);
+        return process == null ? null :
+            ProcessMemory.OpenProcess(process, true, new Win32Service()).GetValueOrDefault();
     }
     
     /// <summary>
@@ -127,9 +129,7 @@ public class ProcessTracker : IDisposable
                 // If we found multiple processes, take one (arbitrarily, the lowest by ID) and dispose the others.
                 var target = processes.MinBy(p => p.Id);
                 foreach (var process in processes.Except(new [] { target }))
-                {
                     process?.Dispose();
-                }
                 return target;
         }
     }

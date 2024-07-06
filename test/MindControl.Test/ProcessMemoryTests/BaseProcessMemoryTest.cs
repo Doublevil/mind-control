@@ -41,7 +41,7 @@ public class BaseProcessMemoryTest
         if (!UIntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out OuterClassPointer))
             throw new Exception($"Could not read the outer class pointer output by the app: \"{line}\".");
         
-        TestProcessMemory = ProcessMemory.OpenProcess(_targetProcess);
+        TestProcessMemory = ProcessMemory.OpenProcess(_targetProcess).Value;
     }
 
     /// <summary>

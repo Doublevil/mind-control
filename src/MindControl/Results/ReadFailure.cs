@@ -99,8 +99,7 @@ public record ReadFailureOnSystemRead(SystemFailure Details)
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"Failed to read at the target address: {Details}";
+    public override string ToString() => $"Failed to read at the target address: {Details}";
 }
 
 /// <summary>
