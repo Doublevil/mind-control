@@ -1,46 +1,10 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>
-/// Represents a reason for a memory write operation to fail.
-/// </summary>
-public enum WriteFailureReason
-{
-    /// <summary>The target process is not attached.</summary>
-    DetachedProcess,
-    /// <summary>Failure when evaluating the pointer path to the target memory.</summary>
-    PointerPathEvaluationFailure,
-    /// <summary>The arguments provided to the memory read operation are invalid.</summary>
-    InvalidArguments,
-    /// <summary>The type to write is not supported.</summary>
-    UnsupportedType,
-    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
-    /// </summary>
-    IncompatibleBitness,
-    /// <summary>The target address is a zero pointer.</summary>
-    ZeroPointer,
-    /// <summary>Failure when invoking the system API to remove the protection properties of the target memory space.
-    /// </summary>
-    SystemProtectionRemovalFailure,
-    /// <summary>Failure when invoking the system API to restore the protection properties of the target memory space
-    /// after writing.</summary>
-    SystemProtectionRestorationFailure,
-    /// <summary>Failure when invoking the system API to write bytes in memory.</summary>
-    SystemWriteFailure,
-    /// <summary>Failure when trying to convert the value to write to an array of bytes to write in memory.</summary>
-    ConversionFailure
-}
+/// <summary>Represents a failure in a memory write operation.</summary>
+public abstract record WriteFailure;
 
-/// <summary>
-/// Represents a failure in a memory write operation.
-/// </summary>
-/// <param name="Reason">Reason for the failure.</param>
-public abstract record WriteFailure(WriteFailureReason Reason);
-
-/// <summary>
-/// Represents a failure in a memory write operation when the target process is not attached.
-/// </summary>
-public record WriteFailureOnDetachedProcess()
-    : WriteFailure(WriteFailureReason.DetachedProcess)
+/// <summary>Represents a failure in a memory write operation when the target process is not attached.</summary>
+public record WriteFailureOnDetachedProcess : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -51,21 +15,28 @@ public record WriteFailureOnDetachedProcess()
 /// Represents a failure in a memory write operation when evaluating the pointer path to the target memory.
 /// </summary>
 /// <param name="Details">Details about the failure.</param>
-public record WriteFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
-    : WriteFailure(WriteFailureReason.PointerPathEvaluationFailure)
+public record WriteFailureOnPointerPathEvaluation(PathEvaluationFailure Details) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"Failed to evaluate the specified pointer path: {Details}";
+    public override string ToString() => $"Failed to evaluate the specified pointer path: {Details}";
 }
 
 /// <summary>
-/// Represents a failure in a memory write operation when the arguments provided are invalid.
+/// Represents a failure in a memory write operation when resolving the address in the target process.
 /// </summary>
+/// <param name="Details">Details about the failure.</param>
+/// <typeparam name="T">Type of the underlying failure.</typeparam>
+public record WriteFailureOnAddressResolution<T>(T Details) : WriteFailure
+{
+    /// <summary>Returns a string that represents the current object.</summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString() => $"Failed to resolve the address: {Details}";
+}
+
+/// <summary>Represents a failure in a memory write operation when the arguments provided are invalid.</summary>
 /// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
-public record WriteFailureOnInvalidArguments(string Message)
-    : WriteFailure(WriteFailureReason.InvalidArguments)
+public record WriteFailureOnInvalidArguments(string Message) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -76,8 +47,7 @@ public record WriteFailureOnInvalidArguments(string Message)
 /// Represents a failure in a memory write operation when the value to write cannot be converted to an array of bytes.
 /// </summary>
 /// <param name="Type">Type that caused the failure.</param>
-public record WriteFailureOnUnsupportedType(Type Type)
-    : WriteFailure(WriteFailureReason.UnsupportedType)
+public record WriteFailureOnUnsupportedType(Type Type) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -89,8 +59,7 @@ public record WriteFailureOnUnsupportedType(Type Type)
 /// is not within the 32-bit address space.
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
-public record WriteFailureOnIncompatibleBitness(UIntPtr Address)
-    : WriteFailure(WriteFailureReason.IncompatibleBitness)
+public record WriteFailureOnIncompatibleBitness(UIntPtr Address) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -98,11 +67,8 @@ public record WriteFailureOnIncompatibleBitness(UIntPtr Address)
         => $"The pointer to write, {Address}, is too large for a 32-bit process. If you want to write an 8-byte value and not a memory address, use a ulong instead.";
 }
 
-/// <summary>
-/// Represents a failure in a memory write operation when the address to write is a zero pointer.
-/// </summary>
-public record WriteFailureOnZeroPointer()
-    : WriteFailure(WriteFailureReason.ZeroPointer)
+/// <summary>Represents a failure in a memory write operation when the address to write is a zero pointer.</summary>
+public record WriteFailureOnZeroPointer : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -115,8 +81,7 @@ public record WriteFailureOnZeroPointer()
 /// </summary>
 /// <param name="Address">Address where the operation failed.</param>
 /// <param name="Details">Details about the failure.</param>
-public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailure Details)
-    : WriteFailure(WriteFailureReason.SystemProtectionRemovalFailure)
+public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailure Details) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -130,8 +95,7 @@ public record WriteFailureOnSystemProtectionRemoval(UIntPtr Address, SystemFailu
 /// </summary>
 /// <param name="Address">Address where the operation failed.</param>
 /// <param name="Details">Details about the failure.</param>
-public record WriteFailureOnSystemProtectionRestoration(UIntPtr Address, SystemFailure Details)
-    : WriteFailure(WriteFailureReason.SystemProtectionRestorationFailure)
+public record WriteFailureOnSystemProtectionRestoration(UIntPtr Address, SystemFailure Details) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -144,13 +108,11 @@ public record WriteFailureOnSystemProtectionRestoration(UIntPtr Address, SystemF
 /// </summary>
 /// <param name="Address">Address where the write operation failed.</param>
 /// <param name="Details">Details about the failure.</param>
-public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Details)
-    : WriteFailure(WriteFailureReason.SystemWriteFailure)
+public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Details) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"Failed to write at the address {Address}: {Details}";
+    public override string ToString() => $"Failed to write at the address {Address}: {Details}";
 }
 
 /// <summary>
@@ -159,8 +121,7 @@ public record WriteFailureOnSystemWrite(UIntPtr Address, SystemFailure Details)
 /// </summary>
 /// <param name="Type">Type that caused the failure.</param>
 /// <param name="ConversionException">Exception that occurred during the conversion.</param>
-public record WriteFailureOnConversion(Type Type, Exception ConversionException)
-    : WriteFailure(WriteFailureReason.ConversionFailure)
+public record WriteFailureOnConversion(Type Type, Exception ConversionException) : WriteFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>

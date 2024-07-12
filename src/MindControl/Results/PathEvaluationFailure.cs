@@ -1,31 +1,10 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>Represents a reason for a path evaluation operation to fail.</summary>
-public enum PathEvaluationFailureReason
-{
-    /// <summary>The target process is not attached.</summary>
-    DetachedProcess,
-    /// <summary>The target process is 32-bit, but the path is not compatible with a 32-bit address space.</summary>
-    IncompatibleBitness,
-    /// <summary>The module specified in the pointer path was not found.</summary>
-    BaseModuleNotFound,
-    /// <summary>A pointer in the path is a zero pointer or otherwise out of the target process address space.</summary>
-    PointerOutOfRange,
-    /// <summary>Failure when attempting to read a pointer from the path.</summary>
-    PointerReadFailure
-}
+/// <summary>Represents a failure in a path evaluation operation.</summary>
+public abstract record PathEvaluationFailure;
 
-/// <summary>
-/// Represents a failure in a path evaluation operation.
-/// </summary>
-/// <param name="Reason">Reason for the failure.</param>
-public abstract record PathEvaluationFailure(PathEvaluationFailureReason Reason);
-
-/// <summary>
-/// Represents a failure in a path evaluation operation when the target process is not attached.
-/// </summary>
-public record PathEvaluationFailureOnDetachedProcess()
-    : PathEvaluationFailure(PathEvaluationFailureReason.DetachedProcess)
+/// <summary>Represents a failure in a path evaluation operation when the target process is not attached.</summary>
+public record PathEvaluationFailureOnDetachedProcess : PathEvaluationFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -38,8 +17,7 @@ public record PathEvaluationFailureOnDetachedProcess()
 /// </summary>
 /// <param name="PreviousAddress">Address where the value causing the issue was read. May be null if the first address
 /// in the path caused the failure.</param>
-public record PathEvaluationFailureOnIncompatibleBitness(UIntPtr? PreviousAddress = null)
-    : PathEvaluationFailure(PathEvaluationFailureReason.IncompatibleBitness)
+public record PathEvaluationFailureOnIncompatibleBitness(UIntPtr? PreviousAddress = null) : PathEvaluationFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -52,8 +30,7 @@ public record PathEvaluationFailureOnIncompatibleBitness(UIntPtr? PreviousAddres
 /// found.
 /// </summary>
 /// <param name="ModuleName">Name of the module that was not found.</param>
-public record PathEvaluationFailureOnBaseModuleNotFound(string ModuleName)
-    : PathEvaluationFailure(PathEvaluationFailureReason.BaseModuleNotFound)
+public record PathEvaluationFailureOnBaseModuleNotFound(string ModuleName) : PathEvaluationFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -69,7 +46,7 @@ public record PathEvaluationFailureOnBaseModuleNotFound(string ModuleName)
 /// in the path caused the failure.</param>
 /// <param name="Offset">Offset that caused the failure.</param>
 public record PathEvaluationFailureOnPointerOutOfRange(UIntPtr? PreviousAddress, PointerOffset Offset)
-    : PathEvaluationFailure(PathEvaluationFailureReason.PointerOutOfRange)
+    : PathEvaluationFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -82,8 +59,7 @@ public record PathEvaluationFailureOnPointerOutOfRange(UIntPtr? PreviousAddress,
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
 /// <param name="Details">Details about the failure.</param>
-public record PathEvaluationFailureOnPointerReadFailure(UIntPtr Address, ReadFailure Details)
-    : PathEvaluationFailure(PathEvaluationFailureReason.PointerReadFailure)
+public record PathEvaluationFailureOnPointerReadFailure(UIntPtr Address, ReadFailure Details) : PathEvaluationFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>

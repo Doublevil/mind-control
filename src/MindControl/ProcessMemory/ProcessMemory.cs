@@ -189,6 +189,10 @@ public partial class ProcessMemory : IDisposable
     {
         if (IsAttached)
         {
+            // Dispose all anchors to prevent them from accessing memory after detaching
+            foreach (var anchor in _anchors)
+                anchor.Dispose();
+            
             IsAttached = false;
             _process.Exited -= OnProcessExited;
             ProcessDetached?.Invoke(this, EventArgs.Empty);

@@ -1,36 +1,12 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>Represents a reason for a string settings search operation to fail.</summary>
-public enum FindStringSettingsFailureReason
-{
-    /// <summary>The target process is not attached.</summary>
-    DetachedProcess,
-    /// <summary>Failure when trying to evaluate the given pointer path.</summary>
-    PointerPathEvaluation,
-    /// <summary>The target process is 32-bit, but the target memory address is not within the 32-bit address space.
-    /// </summary>
-    IncompatibleBitness,
-    /// <summary>Failure when trying to read the given pointer.</summary>
-    PointerReadFailure,
-    /// <summary>The given pointer is a zero pointer.</summary>
-    ZeroPointer,
-    /// <summary>Failure when trying to read bytes at the address pointed by the given pointer.</summary>
-    StringReadFailure,
-    /// <summary>No adequate settings were found to read the given string from the specified pointer.</summary>
-    NoSettingsFound
-}
-
-/// <summary>
-/// Represents a failure in a string settings search operation.
-/// </summary>
-/// <param name="Reason">Reason for the failure.</param>
-public abstract record FindStringSettingsFailure(FindStringSettingsFailureReason Reason);
+/// <summary>Represents a failure in a string settings search operation.</summary>
+public abstract record FindStringSettingsFailure;
 
 /// <summary>
 /// Represents a failure in a string settings search operation when the target process is not attached.
 /// </summary>
-public record FindStringSettingsFailureOnDetachedProcess()
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.DetachedProcess)
+public record FindStringSettingsFailureOnDetachedProcess : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -42,7 +18,7 @@ public record FindStringSettingsFailureOnDetachedProcess()
 /// </summary>
 /// <param name="Details">Underlying path evaluation failure details.</param>
 public record FindStringSettingsFailureOnPointerPathEvaluation(PathEvaluationFailure Details)
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.PointerPathEvaluation)
+    : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -55,8 +31,7 @@ public record FindStringSettingsFailureOnPointerPathEvaluation(PathEvaluationFai
 /// address is not within the 32-bit address space.
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
-public record FindStringSettingsFailureOnIncompatibleBitness(UIntPtr Address)
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.IncompatibleBitness)
+public record FindStringSettingsFailureOnIncompatibleBitness(UIntPtr Address) : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -68,8 +43,7 @@ public record FindStringSettingsFailureOnIncompatibleBitness(UIntPtr Address)
 /// Represents a failure in a string settings search operation when failing to read the value of the given pointer.
 /// </summary>
 /// <param name="Details">Underlying read failure details.</param>
-public record FindStringSettingsFailureOnPointerReadFailure(ReadFailure Details)
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.PointerReadFailure)
+public record FindStringSettingsFailureOnPointerReadFailure(ReadFailure Details) : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -80,8 +54,7 @@ public record FindStringSettingsFailureOnPointerReadFailure(ReadFailure Details)
 /// <summary>
 /// Represents a failure in a string settings search operation when the given pointer is a zero pointer.
 /// </summary>
-public record FindStringSettingsFailureOnZeroPointer()
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.ZeroPointer)
+public record FindStringSettingsFailureOnZeroPointer : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -93,8 +66,7 @@ public record FindStringSettingsFailureOnZeroPointer()
 /// given pointer.
 /// </summary>
 /// <param name="Details">Underlying read failure details.</param>
-public record FindStringSettingsFailureOnStringReadFailure(ReadFailure Details)
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.StringReadFailure)
+public record FindStringSettingsFailureOnStringReadFailure(ReadFailure Details) : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
@@ -106,8 +78,7 @@ public record FindStringSettingsFailureOnStringReadFailure(ReadFailure Details)
 /// Represents a failure in a string settings search operation when no adequate settings were found to read the given
 /// string from the specified pointer.
 /// </summary>
-public record FindStringSettingsFailureOnNoSettingsFound()
-    : FindStringSettingsFailure(FindStringSettingsFailureReason.NoSettingsFound)
+public record FindStringSettingsFailureOnNoSettingsFound : FindStringSettingsFailure
 {
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
