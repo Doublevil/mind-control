@@ -35,6 +35,6 @@ public class GenericMemoryAdapter<TValue, TResolveFailure>(IAddressResolver<TRes
         if (addressResult.IsFailure)
             return new WriteFailureOnAddressResolution<TResolveFailure>(addressResult.Error);
         
-        return processMemory.Write(addressResult.Value, value);
+        return processMemory.Write(addressResult.Value, value, MemoryProtectionStrategy.Ignore);
     }
 }

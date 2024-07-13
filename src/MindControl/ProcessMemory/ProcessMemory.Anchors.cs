@@ -81,7 +81,7 @@ public partial class ProcessMemory
     /// <param name="address">Address of the string pointer in memory.</param>
     /// <param name="stringSettings">Settings to read the string.</param>
     /// <returns>An anchor for the value at the specified address.</returns>
-    public ValueAnchor<string, StringReadFailure, NotSupportedFailure> RegisterStringAnchor(UIntPtr address,
+    public ValueAnchor<string, StringReadFailure, NotSupportedFailure> RegisterStringPointerAnchor(UIntPtr address,
         StringSettings stringSettings)
     {
         var memoryAdapter = new StringPointerMemoryAdapter<string>(new LiteralAddressResolver(address), stringSettings);
@@ -98,8 +98,8 @@ public partial class ProcessMemory
     /// <param name="pointerPath">Pointer path to the address of the string pointer in memory.</param>
     /// <param name="stringSettings">Settings to read the string.</param>
     /// <returns>An anchor for the value at the specified address.</returns>
-    public ValueAnchor<string, StringReadFailure, NotSupportedFailure> RegisterStringAnchor(PointerPath pointerPath,
-        StringSettings stringSettings)
+    public ValueAnchor<string, StringReadFailure, NotSupportedFailure> RegisterStringPointerAnchor(
+        PointerPath pointerPath, StringSettings stringSettings)
     {
         var memoryAdapter = new StringPointerMemoryAdapter<PathEvaluationFailure>(
             new PointerPathResolver(pointerPath), stringSettings);
