@@ -6,7 +6,7 @@ namespace MindControl;
 // This partial class implements methods related to anchors
 public partial class ProcessMemory
 {
-    private readonly List<IValueAnchor> _anchors = new();
+    private readonly List<IDisposable> _anchors = new();
     
     /// <summary>
     /// Builds and returns an anchor for a value of type <typeparamref name="T"/> at the specified address. Anchors
@@ -108,7 +108,15 @@ public partial class ProcessMemory
         return anchor;
     }
     
+    public TAnchor RegisterAnchor<TAnchor, TValue, TReadFailure, TWriteFailure>(
+        Func<ProcessMemory, TAnchor> anchorFactory) where TAnchor: IValueAnchor<TValue, TReadFailure, TWriteFailure>
+    {
+        var anchor = anchorFactory(this);
+        _anchors.Add(anchor);
+        return anchor;
+    }
+    
     /// <summary>Removes an anchor from the list of anchors. Designed to be called by the anchor on disposal.</summary>
     /// <param name="anchor">Anchor to remove from the list of anchors.</param>
-    internal void RemoveAnchor(IValueAnchor anchor) => _anchors.Remove(anchor);
+    internal void RemoveAnchor(IDisposable anchor) => _anchors.Remove(anchor);
 }
