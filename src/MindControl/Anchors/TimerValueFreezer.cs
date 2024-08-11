@@ -1,39 +1,40 @@
-﻿using MindControl.Results;
-using MindControl.State;
+﻿using MindControl.State;
 
 namespace MindControl.Anchors;
 
-/// <summary>
-/// Provides methods to freeze a value in memory for a specific duration.
-/// This implementation uses a timer to write the value to memory at regular intervals.
-/// </summary>
-public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure>(TValue value, TimeSpan timerInterval)
-    : IValueFreezer<TValue, TReadFailure, TWriteFailure>
-{
-    private IValueAnchor<TValue, TReadFailure, TWriteFailure>? _anchor;
-    private PrecisionTimer? _timer;
-    
-    /// <summary>Event raised when a freeze operation fails.</summary>
-    public event EventHandler<FreezeFailureEventArgs<ValueAnchorFailure>>? FreezeFailed;
+/// <summary>Event arguments used when a freeze operation fails.</summary>
+/// <param name="Failure">Failure that occurred when trying to freeze the value.</param>
+/// <typeparam name="TFailure">Type of the failure.</typeparam>
+public class FreezeFailureEventArgs<TFailure>(TFailure Failure) : EventArgs;
 
-    /// <summary>Gets a boolean value indicating if a value is currently being frozen.</summary>
-    public bool IsFreezing => _timer != null;
+/// <summary>
+/// Provides methods to freeze a value in memory, using a timer to write the value at regular intervals.
+/// </summary>
+public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposable
+{
+    private readonly PrecisionTimer _timer;
+    private readonly ValueAnchor<TValue, TReadFailure, TWriteFailure> _anchor;
+    private readonly TValue _value;
+    private bool _isTicking;
+    private bool _disposed;
+
+    /// <summary>Event raised when a freeze operation fails.</summary>
+    public event EventHandler<FreezeFailureEventArgs<TWriteFailure>>? FreezeFailed;
     
-    /// <summary>Freezes the memory area that the anchor is attached to, preventing its value from changing, until
-    /// either this instance is disposed, or <see cref="Unfreeze"/> is called.</summary>
+    /// <summary>
+    /// Freezes a value in memory, using a timer to write the value at regular intervals.
+    /// </summary>
     /// <param name="anchor">Anchor holding the memory value to freeze.</param>
-    /// <returns>A result indicating success or failure.</returns>
-    public Result<string> StartFreezing(IValueAnchor<TValue, TReadFailure, TWriteFailure> anchor)
+    /// <param name="value">Value to freeze in memory.</param>
+    /// <param name="timerInterval">Interval at which the value should be written to memory.</param>
+    public TimerValueFreezer(ValueAnchor<TValue, TReadFailure, TWriteFailure> anchor, TValue value,
+        TimeSpan timerInterval)
     {
-        if (IsFreezing)
-            return "This instance is already freezing a value.";
-        
         _anchor = anchor;
+        _value = value;
         _timer = new PrecisionTimer(timerInterval);
         _timer.Tick += OnTimerTick;
         _timer.Start();
-        
-        return Result<string>.Success;
     }
 
     /// <summary>
@@ -42,29 +43,44 @@ public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure>(TValue value
     /// </summary>
     private void OnTimerTick(object? sender, EventArgs e)
     {
-        if (_anchor == null)
-            return;
-        
-        var result = _anchor.Write(value);
-        if (result.IsFailure)
-            FreezeFailed?.Invoke(this, new FreezeFailureEventArgs<ValueAnchorFailure>(result.Error));
-    }
-
-    /// <summary>Interrupts freezing if <see cref="StartFreezing"/> had been previously called.</summary>
-    public void Unfreeze()
-    {
-        if (!IsFreezing)
+        if (_isTicking)
             return;
 
-        _timer?.Stop();
-        _timer = null;
-        _anchor = null;
+        _isTicking = true;
+        try
+        {
+            var result = _anchor.Write(_value);
+            if (result.IsFailure)
+                FreezeFailed?.Invoke(this, new FreezeFailureEventArgs<TWriteFailure>(result.Error));
+        }
+        finally
+        {
+            _isTicking = false;
+        }
     }
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged
     /// resources.</summary>
     public void Dispose()
     {
-        Unfreeze();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>Disposes the timer and unsubscribes from the tick event.</summary>
+    /// <param name="disposing">Whether the object is being disposed.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            _timer.Stop();
+            _timer.Tick -= OnTimerTick;
+            FreezeFailed = null;
+        }
+
+        _disposed = true;
     }
 }

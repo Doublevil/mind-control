@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using MindControl.Anchors;
 using MindControl.Results;
 using NUnit.Framework;
 
@@ -11,41 +12,41 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     #region Primitive type anchors
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterAnchor{T}(UIntPtr)"/> with the static address of the int value in the
-    /// target app and reads the value. The result should be the initial int value.
+    /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with the static address of the int value in the target
+    /// app and reads the value. The result should be the initial int value.
     /// </summary>
     [Test]
     public void ReadIntAtStaticAddressTest()
     {
-        using var anchor = TestProcessMemory!.RegisterAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
         Assert.That(readResult.Value, Is.EqualTo(InitialIntValue));
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterAnchor{T}(PointerPath)"/> with a pointer path to the int value in the
-    /// target app and reads the value. The result should be the initial int value.
+    /// Tests <see cref="ProcessMemory.GetAnchor{T}(PointerPath)"/> with a pointer path to the int value in the target
+    /// app and reads the value. The result should be the initial int value.
     /// </summary>
     [Test]
     public void ReadIntAtPointerPathTest()
     {
-        using var anchor = TestProcessMemory!.RegisterAnchor<int>(GetPointerPathForValueAtIndex(IndexOfOutputInt));
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetPointerPathForValueAtIndex(IndexOfOutputInt));
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
         Assert.That(readResult.Value, Is.EqualTo(InitialIntValue));
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterAnchor{T}(UIntPtr)"/> with the static address of the int value in the
-    /// target app. Before the app outputs values, writes a new int value. The output should contain the value written.
+    /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with the static address of the int value in the target
+    /// app. Before the app outputs values, writes a new int value. The output should contain the value written.
     /// </summary>
     [Test]
     public void WriteIntTest()
     {
         ProceedToNextStep();
         int newValue = 1234567;
-        using var anchor = TestProcessMemory!.RegisterAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
         var writeResult = anchor.Write(newValue);
         Assert.That(writeResult.IsSuccess, Is.True);
         ProceedToNextStep();
@@ -53,29 +54,91 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
 
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterAnchor{T}(UIntPtr)"/> with an address of 1, which is not readable.
+    /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with an address of 1, which is not readable.
     /// When trying to read the value, the result should be a <see cref="ReadFailureOnSystemRead"/>.
     /// </summary>
     [Test]
     public void ReadIntWithOutOfRangeAddressTest()
     {
-        using var anchor = TestProcessMemory!.RegisterAnchor<int>(1);
+        var anchor = TestProcessMemory!.GetAnchor<int>(1);
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.False);
         Assert.That(readResult.Error, Is.InstanceOf<ReadFailureOnSystemRead>());
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterAnchor{T}(UIntPtr)"/> with an address of 1, which is not writeable.
+    /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with an address of 1, which is not writeable.
     /// When trying to write the value, the result should be a <see cref="WriteFailureOnSystemWrite"/>.
     /// </summary>
     [Test]
     public void WriteIntWithOutOfRangeAddressTest()
     {
-        using var anchor = TestProcessMemory!.RegisterAnchor<int>(1);
+        var anchor = TestProcessMemory!.GetAnchor<int>(1);
         var writeResult = anchor.Write(1234567);
         Assert.That(writeResult.IsSuccess, Is.False);
         Assert.That(writeResult.Error, Is.InstanceOf<WriteFailureOnSystemWrite>());
+    }
+    
+    /// <summary>
+    /// Tests the Freeze method of the ValueAnchor.
+    /// Before the app outputs values, freezes the int value to 1234567. The output should contain the frozen value,
+    /// even though the app changes the value before outputting it.
+    /// </summary>
+    [Test]
+    public void FreezeIntTest()
+    {
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        using var freezer = anchor.Freeze(1234567);
+        ProceedToNextStep();
+        Thread.Sleep(100); // Make sure the freezer has time to write the value to make the test consistent
+        ProceedToNextStep();
+        AssertFinalResults(IndexOfOutputInt, "1234567");
+    }
+
+    /// <summary>
+    /// Tests the Dispose method of the default freezer implementation.
+    /// Before the app outputs values, freezes the int value to 1234567, and immediately dispose the freezer. The output
+    /// should contain the expected output value of the target app.
+    /// </summary>
+    [Test]
+    public void FreezeIntAndDisposeFreezerTest()
+    {
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        var freezer = anchor.Freeze(1234567);
+        freezer.Dispose();
+        ProceedToNextStep();
+        ProceedToNextStep();
+        AssertExpectedFinalResults();
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ThreadValueFreezer{TValue,TReadFailure,TWriteFailure}"/> (the thread-based freezer
+    /// implementation).
+    /// </summary>
+    [Test]
+    public void FreezeIntThreadTest()
+    {
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        using var freezer = new ThreadValueFreezer<int, ReadFailure, WriteFailure>(anchor, 1234567);
+        ProceedToNextStep();
+        Thread.Sleep(100); // Make sure the freezer has time to write the value to make the test consistent
+        ProceedToNextStep();
+        AssertFinalResults(IndexOfOutputInt, "1234567");
+    }
+    
+    /// <summary>
+    /// Tests the Dispose method of <see cref="ThreadValueFreezer{TValue,TReadFailure,TWriteFailure}"/> (the
+    /// thread-based freezer implementation).
+    /// </summary>
+    [Test]
+    public void FreezeIntThreadAndDisposeTest()
+    {
+        var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
+        var freezer = new ThreadValueFreezer<int, ReadFailure, WriteFailure>(anchor, 1234567);
+        freezer.Dispose();
+        ProceedToNextStep();
+        ProceedToNextStep();
+        AssertExpectedFinalResults();
     }
     
     #endregion
@@ -83,28 +146,28 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     #region Byte array anchors
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterByteArrayAnchor(UIntPtr,int)"/> with the static address of the output
-    /// byte array in the target app and reads the value. The result should be the initial byte array.
+    /// Tests <see cref="ProcessMemory.GetByteArrayAnchor(UIntPtr,int)"/> with the static address of the output byte
+    /// array in the target app and reads the value. The result should be the initial byte array.
     /// </summary>
     [Test]
     public void ReadBytesAtStaticAddressTest()
     {
         var address = TestProcessMemory!.EvaluateMemoryAddress(
             GetPointerPathForValueAtIndex(IndexOfOutputByteArray)).Value;
-        using var anchor = TestProcessMemory.RegisterByteArrayAnchor(address, InitialByteArrayValue.Length);
+        var anchor = TestProcessMemory.GetByteArrayAnchor(address, InitialByteArrayValue.Length);
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
         Assert.That(readResult.Value, Is.EqualTo(InitialByteArrayValue));
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterByteArrayAnchor(PointerPath,int)"/> with a pointer path to the output
-    /// byte array in the target app and reads the value. The result should be the initial byte array.
+    /// Tests <see cref="ProcessMemory.GetByteArrayAnchor(PointerPath,int)"/> with a pointer path to the output byte
+    /// array in the target app and reads the value. The result should be the initial byte array.
     /// </summary>
     [Test]
     public void ReadBytesAtPointerPathTest()
     {
-        using var anchor = TestProcessMemory!.RegisterByteArrayAnchor(
+        var anchor = TestProcessMemory!.GetByteArrayAnchor(
             GetPointerPathForValueAtIndex(IndexOfOutputByteArray), InitialByteArrayValue.Length);
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
@@ -112,16 +175,16 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterByteArrayAnchor(PointerPath,int)"/> with a pointer path to the output
-    /// byte array in the target app. Before the app outputs values, writes a new value. The output should contain the
-    /// new value.
+    /// Tests <see cref="ProcessMemory.GetByteArrayAnchor(PointerPath,int)"/> with a pointer path to the output byte
+    /// array in the target app. Before the app outputs values, writes a new value. The output should contain the new
+    /// value.
     /// </summary>
     [Test]
     public void WriteBytesTest()
     {
         ProceedToNextStep();
         var newValue = new byte[] { 14, 24, 34, 44 };
-        using var anchor = TestProcessMemory!.RegisterByteArrayAnchor(
+        var anchor = TestProcessMemory!.GetByteArrayAnchor(
             GetPointerPathForValueAtIndex(IndexOfOutputByteArray), InitialByteArrayValue.Length);
         var writeResult = anchor.Write(newValue);
         Assert.That(writeResult.IsSuccess, Is.True);
@@ -134,13 +197,13 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     #region String anchors
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterStringPointerAnchor(UIntPtr,StringSettings)"/> with the static address of
-    /// the output string pointer in the target app and reads the value. The result should be the initial string.
+    /// Tests <see cref="ProcessMemory.GetStringPointerAnchor(UIntPtr,StringSettings)"/> with the static address of the
+    /// output string pointer in the target app and reads the value. The result should be the initial string.
     /// </summary>
     [Test]
     public void ReadStringPointerAtStaticAddressTest()
     {
-        using var anchor = TestProcessMemory!.RegisterStringPointerAnchor(
+        var anchor = TestProcessMemory!.GetStringPointerAnchor(
             GetAddressForValueAtIndex(IndexOfOutputString), GetDotNetStringSettings());
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
@@ -148,13 +211,13 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterStringPointerAnchor(PointerPath,StringSettings)"/> with a pointer path to
+    /// Tests <see cref="ProcessMemory.GetStringPointerAnchor(PointerPath,StringSettings)"/> with a pointer path to
     /// the output string pointer in the target app and reads the value. The result should be the initial string.
     /// </summary>
     [Test]
     public void ReadStringPointerAtPointerPathTest()
     {
-        using var anchor = TestProcessMemory!.RegisterStringPointerAnchor(
+        var anchor = TestProcessMemory!.GetStringPointerAnchor(
             GetPointerPathForValueAtIndex(IndexOfOutputString), GetDotNetStringSettings());
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.True);
@@ -162,18 +225,17 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.RegisterStringPointerAnchor(UIntPtr,StringSettings)"/> with the static address of
-    /// the output string pointer in the target app. Before the app outputs values, writes a new value. The operation
-    /// should fail because it is not supported.
+    /// Tests <see cref="ProcessMemory.GetStringPointerAnchor(UIntPtr,StringSettings)"/> with the static address of the
+    /// output string pointer in the target app. Before the app outputs values, writes a new value. The operation should
+    /// fail because it is not supported.
     /// </summary>
     [Test]
     public void WriteStringPointerTest()
     {
         ProceedToNextStep();
-        var newValue = "Hello, world!";
-        using var anchor = TestProcessMemory!.RegisterStringPointerAnchor(
+        var anchor = TestProcessMemory!.GetStringPointerAnchor(
             GetAddressForValueAtIndex(IndexOfOutputString), GetDotNetStringSettings());
-        var writeResult = anchor.Write(newValue);
+        var writeResult = anchor.Write("Hello, world!");
         Assert.That(writeResult.IsSuccess, Is.False);
     }
     
