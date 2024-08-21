@@ -43,4 +43,24 @@ public class ValueAnchor<TValue, TReadFailure, TWriteFailure>
         return new TimerValueFreezer<TValue, TReadFailure, TWriteFailure>(this, value,
             TimeSpan.FromSeconds(1 / 150f));
     }
+    
+    /// <summary>
+    /// Provides a <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> instance that periodically reads the
+    /// value from the anchor and raises events when the value changes, until it is disposed.
+    /// </summary>
+    /// <param name="refreshInterval">Target time interval between each read operation in the watcher.</param>
+    /// <returns>A <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> instance that periodically reads the
+    /// value from the anchor and raises events when the value changes, until it is disposed.</returns>
+    public ValueWatcher<TValue, TReadFailure, TWriteFailure> Watch(TimeSpan refreshInterval)
+        => new(this, refreshInterval);
+    
+    /// <summary>
+    /// Provides a <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> instance that periodically reads the
+    /// value from the anchor and raises events when the value changes, until it is disposed.
+    /// </summary>
+    /// <param name="updatesPerSecond">Target number of reads per second of the watcher.</param>
+    /// <returns>A <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> instance that periodically reads the
+    /// value from the anchor and raises events when the value changes, until it is disposed.</returns>
+    public ValueWatcher<TValue, TReadFailure, TWriteFailure> Watch(int updatesPerSecond)
+        => new(this, TimeSpan.FromSeconds(1f / updatesPerSecond));
 }
