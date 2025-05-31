@@ -29,7 +29,8 @@
       <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
     </ItemGroup>
 
-    <Target Name="PostBuild" AfterTargets="Build" DependsOnTargets="Build">
+    <Target Name="PostBuild" AfterTargets="Build" DependsOnTargets="Build"
+            Condition="'$(AUTOMATED_BUILD)' != 'true'">
         <!-- Build the TargetApp in Any CPU & x86 and output it to the right folder -->
         <MSBuild Projects="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj"
                  Properties="Configuration=Release;Platform=Any CPU;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x64\"
