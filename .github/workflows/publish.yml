@@ -111,3 +111,24 @@ jobs:
           foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
               dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
+  publish_docs:
+    if: github.event_name == 'release'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+  
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+  
+      - name: Build documentation
+        run: docfx docs/docfx.json
+  
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_site
+          publish_branch: gh-pages
