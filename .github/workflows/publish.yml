@@ -77,8 +77,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
+      - name: Restore NuGet packages
+        run: dotnet restore
       
-      # Build the InjectedLibrary C++ project that is required by the test project.
+      # Build the InjectedLibrary C++ project required by the test project.
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
       - name: Build the C++ injection test DLL
