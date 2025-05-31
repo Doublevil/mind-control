@@ -3,7 +3,7 @@
 namespace MindControl.Anchors;
 
 /// <summary>
-/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/>
+/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue}"/>
 /// changes.
 /// </summary>
 /// <param name="previousValue">Last known value before the change.</param>
@@ -19,7 +19,7 @@ public class ValueChangedEventArgs<TValue>(TValue? previousValue, TValue newValu
 }
 
 /// <summary>
-/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/>
+/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue}"/>
 /// becomes unreadable (causes a read failure). This may happen when the target process frees or rearranges its memory,
 /// or when the related <see cref="ProcessMemory"/> instance is detached.
 /// </summary>
@@ -31,7 +31,7 @@ public class ValueLostEventArgs<TValue>(TValue lastKnownValue) : EventArgs
 }
 
 /// <summary>
-/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/>
+/// Event arguments used when a value observed by a <see cref="ValueWatcher{TValue}"/>
 /// is successfully read after being lost.
 /// </summary>
 /// <param name="newValue">New value freshly read.</param>
@@ -46,11 +46,9 @@ public class ValueReacquiredEventArgs<TValue>(TValue newValue) : EventArgs
 /// Uses a timer to periodically read a value from a given anchor and raise events when the value changes.
 /// </summary>
 /// <typeparam name="TValue">Type of the value held by the anchor.</typeparam>
-/// <typeparam name="TReadFailure">Type of the failure that can occur when reading the value.</typeparam>
-/// <typeparam name="TWriteFailure">Type of the failure that can occur when writing the value.</typeparam>
-public class ValueWatcher<TValue, TReadFailure, TWriteFailure> : IDisposable
+public class ValueWatcher<TValue> : IDisposable
 {
-    private readonly ValueAnchor<TValue, TReadFailure, TWriteFailure> _anchor;
+    private readonly ValueAnchor<TValue> _anchor;
     private readonly PrecisionTimer _timer;
     private bool _isDisposed;
     private readonly SemaphoreSlim _updateLock = new(1, 1);
@@ -88,10 +86,7 @@ public class ValueWatcher<TValue, TReadFailure, TWriteFailure> : IDisposable
     /// </summary>
     /// <param name="anchor">The anchor holding the value to watch.</param>
     /// <param name="refreshInterval">Target time interval between each read operation.</param>
-    /// <typeparam name="TValue">Type of the value held by the anchor.</typeparam>
-    /// <typeparam name="TReadFailure">Type of the failure that can occur when reading the value.</typeparam>
-    /// <typeparam name="TWriteFailure">Type of the failure that can occur when writing the value.</typeparam>
-    public ValueWatcher(ValueAnchor<TValue, TReadFailure, TWriteFailure> anchor, TimeSpan refreshInterval)
+    public ValueWatcher(ValueAnchor<TValue> anchor, TimeSpan refreshInterval)
     {
         _anchor = anchor;
         LastChangeTime = DateTime.Now;

@@ -43,7 +43,7 @@ public class RemoteModule
     /// </summary>
     /// <returns>A result holding either a dictionary containing the names and addresses of the exported functions, or
     /// an error message in case the export table could not be read.</returns>
-    public Result<Dictionary<string, UIntPtr>, string> ReadExportTable()
+    public Result<Dictionary<string, UIntPtr>> ReadExportTable()
     {
         var peParser = new PeParser(_processMemory, (UIntPtr)_internalModule.BaseAddress);
         return peParser.ReadExportTable();

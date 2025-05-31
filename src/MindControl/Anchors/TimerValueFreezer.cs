@@ -1,25 +1,29 @@
-﻿using MindControl.State;
+﻿using MindControl.Results;
+using MindControl.State;
 
 namespace MindControl.Anchors;
 
 /// <summary>Event arguments used when a freeze operation fails.</summary>
-/// <param name="Failure">Failure that occurred when trying to freeze the value.</param>
-/// <typeparam name="TFailure">Type of the failure.</typeparam>
-public class FreezeFailureEventArgs<TFailure>(TFailure Failure) : EventArgs;
+/// <param name="failure">Failure that occurred when trying to freeze the value.</param>
+public class FreezeFailureEventArgs(Failure failure) : EventArgs
+{
+    /// <summary>Gets the failure that occurred when trying to freeze the value.</summary>
+    public Failure Failure { get; } = failure;
+}
 
 /// <summary>
 /// Provides methods to freeze a value in memory, using a timer to write the value at regular intervals.
 /// </summary>
-public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposable
+public class TimerValueFreezer<TValue> : IDisposable
 {
     private readonly PrecisionTimer _timer;
-    private readonly ValueAnchor<TValue, TReadFailure, TWriteFailure> _anchor;
+    private readonly ValueAnchor<TValue> _anchor;
     private readonly TValue _value;
     private bool _isTicking;
     private bool _disposed;
 
     /// <summary>Event raised when a freeze operation fails.</summary>
-    public event EventHandler<FreezeFailureEventArgs<TWriteFailure>>? FreezeFailed;
+    public event EventHandler<FreezeFailureEventArgs>? FreezeFailed;
     
     /// <summary>
     /// Freezes a value in memory, using a timer to write the value at regular intervals.
@@ -27,8 +31,7 @@ public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposabl
     /// <param name="anchor">Anchor holding the memory value to freeze.</param>
     /// <param name="value">Value to freeze in memory.</param>
     /// <param name="timerInterval">Interval at which the value should be written to memory.</param>
-    public TimerValueFreezer(ValueAnchor<TValue, TReadFailure, TWriteFailure> anchor, TValue value,
-        TimeSpan timerInterval)
+    public TimerValueFreezer(ValueAnchor<TValue> anchor, TValue value, TimeSpan timerInterval)
     {
         _anchor = anchor;
         _value = value;
@@ -51,7 +54,7 @@ public class TimerValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposabl
         {
             var result = _anchor.Write(_value);
             if (result.IsFailure)
-                FreezeFailed?.Invoke(this, new FreezeFailureEventArgs<TWriteFailure>(result.Error));
+                FreezeFailed?.Invoke(this, new FreezeFailureEventArgs(result.Failure));
         }
         finally
         {

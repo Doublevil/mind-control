@@ -1,36 +1,15 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>Represents a failure in a memory allocation operation.</summary>
-public abstract record AllocationFailure;
-
-/// <summary>Represents a failure in a memory allocation operation when the target process is not attached.</summary>
-public record AllocationFailureOnDetachedProcess : AllocationFailure
-{
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString() => Failure.DetachedErrorMessage;
-}
-
-/// <summary>Represents a failure in a memory allocation operation when the provided arguments are invalid.</summary>
-/// <param name="Message">Message that describes how the arguments fail to meet expectations.</param>
-public record AllocationFailureOnInvalidArguments(string Message) : AllocationFailure
-{
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString() => $"The arguments provided are invalid: {Message}";
-}
-
 /// <summary>
 /// Represents a failure in a memory allocation operation when the provided limit range is not within the bounds of the
 /// target process applicative memory range.
 /// </summary>
 /// <param name="ApplicativeMemoryRange">Applicative memory range of the target process.</param>
-public record AllocationFailureOnLimitRangeOutOfBounds(MemoryRange ApplicativeMemoryRange) : AllocationFailure
+public record LimitRangeOutOfBoundsFailure(MemoryRange ApplicativeMemoryRange)
+    : Failure($"The provided limit range is not within the bounds of the target process applicative memory range ({ApplicativeMemoryRange}).")
 {
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"The provided limit range is not within the bounds of the target process applicative memory range ({ApplicativeMemoryRange}).";
+    /// <summary>Applicative memory range of the target process.</summary>
+    public MemoryRange ApplicativeMemoryRange { get; init; } = ApplicativeMemoryRange;
 }
 
 /// <summary>
@@ -39,11 +18,9 @@ public record AllocationFailureOnLimitRangeOutOfBounds(MemoryRange ApplicativeMe
 /// </summary>
 /// <param name="SearchedRange">Searched range in the target process.</param>
 /// <param name="LastRegionAddressSearched">Last memory region address searched in the target process.</param>
-public record AllocationFailureOnNoFreeMemoryFound(MemoryRange SearchedRange, UIntPtr LastRegionAddressSearched)
-    : AllocationFailure
+public record NoFreeMemoryFailure(MemoryRange SearchedRange, UIntPtr LastRegionAddressSearched)
+    : Failure($"No free memory range large enough to accomodate the specified size was found in the target process within the searched range ({SearchedRange}).")
 {
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"No free memory range large enough to accomodate the specified size was found in the target process within the searched range ({SearchedRange}).";
+    /// <summary>Searched range in the target process.</summary>
+    public MemoryRange SearchedRange { get; init; } = SearchedRange;
 }

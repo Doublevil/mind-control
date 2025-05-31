@@ -9,9 +9,9 @@
 public class PointerPath
 {
     /// <summary>
-    /// Stores data parsed and computed internally from a pointer path expression.
+    /// Stores the properties of a pointer path expression that are used in computations.
     /// </summary>
-    private readonly struct ExpressionParsedData
+    private readonly struct ExpressionInternalData
     {
         /// <summary>
         /// Gets the base module name.
@@ -39,34 +39,36 @@ public class PointerPath
         /// </summary>
         public bool IsStrictly64Bit => BaseModuleOffset.Is64Bit || PointerOffsets.Any(offset => offset.Is64Bit);
     }
+
+    private string? _expression;
     
     /// <summary>
     /// Gets the pointer path expression. Some examples include "myprocess.exe+001F468B,1B,0,A0",
     /// or "1F07A314", or "1F07A314+A0", or "1F07A314-A0,4".
     /// </summary>
-    public string Expression { get; }
+    public string Expression => _expression ??= BuildExpression();
 
-    private readonly ExpressionParsedData _parsedData;
+    private readonly ExpressionInternalData _internalData;
 
     /// <summary>
     /// Gets the base module name.
     /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets "myprocess.exe".
     /// For expression with no module name, like "01F4684-4,18", gets a null value.
     /// </summary>
-    public string? BaseModuleName => _parsedData.BaseModuleName;
+    public string? BaseModuleName => _internalData.BaseModuleName;
 
     /// <summary>
     /// Gets the offset of the base module name.
     /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets 0x1F4680.
     /// For expressions without a module offset, like "01F4684-4,18" or "myprocess.exe", gets 0.
     /// </summary>
-    public PointerOffset BaseModuleOffset => _parsedData.BaseModuleOffset;
+    public PointerOffset BaseModuleOffset => _internalData.BaseModuleOffset;
 
     /// <summary>
     /// Gets the collection of pointer offsets to follow sequentially in order to evaluate the memory address.
     /// For example, for the expression "myprocess.exe+01F4684-4,18+4,C", gets [0x1C, 0xC].
     /// </summary>
-    public PointerOffset[] PointerOffsets => _parsedData.PointerOffsets;
+    public PointerOffset[] PointerOffsets => _internalData.PointerOffsets;
 
     /// <summary>
     /// Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bit
@@ -75,7 +77,7 @@ public class PointerPath
     /// For the expression "app.dll+00000000F04AA121", this boolean would be False.
     /// Note that evaluating a 32-bit-compatible address may still end up overflowing.
     /// </summary>
-    public bool IsStrictly64Bit => _parsedData.IsStrictly64Bit;
+    public bool IsStrictly64Bit => _internalData.IsStrictly64Bit;
     
     /// <summary>
     /// Builds a pointer path from the given expression.
@@ -84,7 +86,7 @@ public class PointerPath
     /// or "1F07A314", or "1F07A314+A0", or "1F07A314-A0,4".</param>
     /// <exception cref="ArgumentException">Thrown when the expression is not valid.</exception>
     public PointerPath(string expression) : this(expression, Parse(expression)) {}
-
+    
     /// <summary>
     /// Builds a pointer path from the given expression and parsed data.
     /// </summary>
@@ -92,12 +94,49 @@ public class PointerPath
     /// or "1F07A314", or "1F07A314+A0", or "1F07A314-A0,4".</param>
     /// <param name="parsedData">An instance containing data that was already parsed from the expression.</param>
     /// <exception cref="ArgumentException">Thrown when the expression is not valid.</exception>
-    private PointerPath(string expression, ExpressionParsedData? parsedData)
+    private PointerPath(string expression, ExpressionInternalData? parsedData)
     {
-        Expression = expression;
-        _parsedData = parsedData ?? throw new ArgumentException(
+        _expression = expression;
+        _internalData = parsedData ?? throw new ArgumentException(
             $"The provided expression \"{expression}\" is not valid. Please check the expression syntax guide for more information.",
             nameof(expression));
+    }
+
+    /// <summary>
+    /// Builds a pointer path from a pointer and a series of offsets.
+    /// </summary>
+    /// <param name="basePointerAddress">Address of the base pointer, which is the first address to evaluate.
+    /// For example, in "1F07A314,4,1C", this would be 0x1F07A314.</param>
+    /// <param name="pointerOffsets">Collection of offsets to follow sequentially in order to evaluate the
+    /// final memory address. For example, in "1F07A314,4,1C", this would be [0x4, 0x1C].</param>
+    public PointerPath(UIntPtr basePointerAddress, params long[] pointerOffsets)
+    {
+        _internalData = new ExpressionInternalData
+        {
+            BaseModuleName = null,
+            BaseModuleOffset = PointerOffset.Zero,
+            PointerOffsets = new[] { new PointerOffset(basePointerAddress.ToUInt64(), false) }
+                .Concat(pointerOffsets.Select(o => new PointerOffset((ulong)Math.Abs(o), o < 0))).ToArray()
+        };
+    }
+    
+    /// <summary>
+    /// Builds a pointer path from a base module name, a base module offset, and a series of offsets.
+    /// </summary>
+    /// <param name="baseModuleName">Name of the base module, where the starting pointer is found. For example, in
+    /// "mygame.exe+3FF0,4,1C", this would be "mygame.exe" (without the quotes).</param>
+    /// <param name="baseModuleOffset">Offset applied to the base module to get the address of the first pointer to
+    /// evaluate. For example, in "mygame.exe+3FF0,4,1C", this would be 0x3FF0.</param>
+    /// <param name="pointerOffsets">Collection of offsets to follow sequentially in order to evaluate the
+    /// final memory address. For example, in "mygame.exe+3FF0,4,1C", this would be [0x4, 0x1C].</param>
+    public PointerPath(string baseModuleName, UIntPtr baseModuleOffset, params long[] pointerOffsets)
+    {
+        _internalData = new ExpressionInternalData
+        {
+            BaseModuleName = baseModuleName,
+            BaseModuleOffset = new PointerOffset(baseModuleOffset.ToUInt64(), false),
+            PointerOffsets = pointerOffsets.Select(o => new PointerOffset((ulong)Math.Abs(o), o < 0)).ToArray()
+        };
     }
 
     /// <summary>
@@ -142,7 +181,7 @@ public class PointerPath
     /// </summary>
     /// <param name="expression">Expression to parse.</param>
     /// <returns>the parsed data container when successful, or null if the expression is not valid.</returns>
-    private static ExpressionParsedData? Parse(string expression)
+    private static ExpressionInternalData? Parse(string expression)
     {
         // A note about the parsing code:
         // It is designed to be fast and to allocate the strict minimum amount of memory.
@@ -166,11 +205,11 @@ public class PointerPath
         // If the whole expression was the module name, we can return the parsed data
         if (hasModule && readCount == expression.Length)
         {
-            return new ExpressionParsedData
+            return new ExpressionInternalData
             {
                 BaseModuleName = baseModuleName,
                 BaseModuleOffset = PointerOffset.Zero,
-                PointerOffsets = Array.Empty<PointerOffset>()
+                PointerOffsets = []
             };
         }
 
@@ -212,7 +251,7 @@ public class PointerPath
             index += readCount;
         }
         
-        return new ExpressionParsedData
+        return new ExpressionInternalData
         {
             BaseModuleName = hasModule ? baseModuleName : null,
             BaseModuleOffset = baseModuleOffset ?? PointerOffset.Zero,
@@ -258,7 +297,7 @@ public class PointerPath
 
         // The module name is not quoted. If there is a module name, it will end either with a +/- operator, a ',', or
         // the end of the string.
-        int endIndex = expression.IndexOfAny(new[] { '-', '+', ',' });
+        int endIndex = expression.IndexOfAny(['-', '+', ',']);
         if (endIndex == -1)
             endIndex = expression.Length;
 
@@ -386,6 +425,14 @@ public class PointerPath
             >= 'a' and <= 'f' => (byte)(c - 'a' + 10),
             _ => 255
         };
+    }
+    
+    /// <summary>Builds the expression string from the properties. Used when the pointer path is built from pointers and
+    /// not parsed from a string expression.</summary>
+    private string BuildExpression()
+    {
+        var offsetString = string.Join(',', PointerOffsets.Select(o => o.ToString()));
+        return BaseModuleName != null ? $"\"{BaseModuleName}\"+{BaseModuleOffset},{offsetString}" : offsetString;
     }
 
     /// <summary>Returns a string that represents the current object.</summary>

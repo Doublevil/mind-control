@@ -137,7 +137,7 @@ public partial class ProcessMemory
     {
         // Read the whole memory range and place it in a byte array.
         byte[] rangeMemory = _osService.ReadProcessMemory(ProcessHandle, range.Start, range.GetSize())
-            .GetValueOrDefault() ?? Array.Empty<byte>();
+            .ValueOrDefault() ?? Array.Empty<byte>();
         
         int maxIndex = rangeMemory.Length - bytePattern.Length;
         

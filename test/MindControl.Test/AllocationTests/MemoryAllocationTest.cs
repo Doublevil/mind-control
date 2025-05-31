@@ -39,7 +39,7 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
         Assert.That(_allocation.IsDisposed, Is.True);
         var reserveAttemptResult = _allocation.ReserveRange(0x10);
         Assert.That(reserveAttemptResult.IsSuccess, Is.False);
-        Assert.That(reserveAttemptResult.Error, Is.TypeOf<ReservationFailureOnDisposedAllocation>());
+        Assert.That(reserveAttemptResult.Failure, Is.TypeOf<DisposedAllocationFailure>());
         
         // Check that the allocation has been removed from the list
         Assert.That(TestProcessMemory!.Allocations, Is.Empty);
@@ -83,14 +83,14 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
     
     /// <summary>
     /// Tests the <see cref="MemoryAllocation.ReserveRange"/> method.
-    /// Attempt to reserve 0 bytes. This should return a <see cref="ReservationFailureOnInvalidArguments"/> result.
+    /// Attempt to reserve 0 bytes. This should return a <see cref="InvalidArgumentFailure"/> result.
     /// </summary>
     [Test]
     public void ReserveRangeWithZeroSizeTest()
     {
         var reservationResult = _allocation.ReserveRange(0);
         Assert.That(reservationResult.IsSuccess, Is.False);
-        Assert.That(reservationResult.Error, Is.TypeOf<ReservationFailureOnInvalidArguments>());
+        Assert.That(reservationResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
     {
         var result = _allocation.ReserveRange(0x1001);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<ReservationFailureOnNoSpaceAvailable>());
+        Assert.That(result.Failure, Is.TypeOf<InsufficientSpaceFailure>());
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
         _allocation.ReserveRange(0x100);
         var result = _allocation.ReserveRange(0x1000);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<ReservationFailureOnNoSpaceAvailable>());
+        Assert.That(result.Failure, Is.TypeOf<InsufficientSpaceFailure>());
     }
     
     /// <summary>

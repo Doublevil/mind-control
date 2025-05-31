@@ -47,23 +47,23 @@ public partial class ProcessMemory : IDisposable
 
     /// <summary>
     /// Attaches to a process with the given name and returns the resulting <see cref="ProcessMemory"/> instance.
-    /// If multiple processes with the specified name are running, a
-    /// <see cref="AttachFailureOnMultipleTargetProcessesFound"/> will be returned.
+    /// If multiple processes with the specified name are running, a <see cref="MultipleTargetProcessesFailure"/> will
+    /// be returned.
     /// When there is any risk of this happening, it is recommended to use <see cref="OpenProcessById"/> instead.
     /// </summary>
     /// <param name="processName">Name of the process to open.</param>
-    /// <returns>A result holding either the attached process instance, or an error.</returns>
-    public static Result<ProcessMemory, AttachFailure> OpenProcessByName(string processName)
+    /// <returns>A result holding either the attached process instance, or a failure.</returns>
+    public static Result<ProcessMemory> OpenProcessByName(string processName)
     {
         var matches = Process.GetProcessesByName(processName);
         if (matches.Length == 0)
-            return new AttachFailureOnTargetProcessNotFound();
+            return new TargetProcessNotFoundFailure();
         if (matches.Length > 1)
         {
             var pids = matches.Select(p => p.Id).ToArray();
             foreach (var process in matches)
                 process.Dispose();
-            return new AttachFailureOnMultipleTargetProcessesFound(pids);
+            return new MultipleTargetProcessesFailure(pids);
         }
         
         return OpenProcess(matches.First(), true, new Win32Service());
@@ -74,8 +74,8 @@ public partial class ProcessMemory : IDisposable
     /// instance.
     /// </summary>
     /// <param name="pid">Identifier of the process to attach to.</param>
-    /// <returns>A result holding either the attached process instance, or an error.</returns>
-    public static Result<ProcessMemory, AttachFailure> OpenProcessById(int pid)
+    /// <returns>A result holding either the attached process instance, or a failure.</returns>
+    public static Result<ProcessMemory> OpenProcessById(int pid)
     {
         try
         {
@@ -85,7 +85,7 @@ public partial class ProcessMemory : IDisposable
         catch (ArgumentException)
         {
             // Process.GetProcessById throws an ArgumentException when the PID does not match any process.
-            return new AttachFailureOnTargetProcessNotFound();
+            return new TargetProcessNotFoundFailure();
         }
     }
 
@@ -93,8 +93,8 @@ public partial class ProcessMemory : IDisposable
     /// Attaches to the given process, and returns the resulting <see cref="ProcessMemory"/> instance.
     /// </summary>
     /// <param name="target">Process to attach to.</param>
-    /// <returns>A result holding either the attached process instance, or an error.</returns>
-    public static Result<ProcessMemory, AttachFailure> OpenProcess(Process target)
+    /// <returns>A result holding either the attached process instance, or a failure.</returns>
+    public static Result<ProcessMemory> OpenProcess(Process target)
         => OpenProcess(target, false, new Win32Service());
     
     /// <summary>
@@ -104,8 +104,8 @@ public partial class ProcessMemory : IDisposable
     /// </summary>
     /// <param name="target">Process to attach to.</param>
     /// <param name="osService">Service that provides system-specific process-oriented features.</param>
-    /// <returns>A result holding either the attached process instance, or an error.</returns>
-    public static Result<ProcessMemory, AttachFailure> OpenProcess(Process target, IOperatingSystemService osService)
+    /// <returns>A result holding either the attached process instance, or a failure.</returns>
+    public static Result<ProcessMemory> OpenProcess(Process target, IOperatingSystemService osService)
         => OpenProcess(target, false, osService);
 
     /// <summary>
@@ -115,25 +115,25 @@ public partial class ProcessMemory : IDisposable
     /// <param name="ownsProcessInstance">Indicates if this instance should take ownership of the
     /// <paramref name="target"/>, meaning it has the responsibility to dispose it.</param>
     /// <param name="osService">Service that provides system-specific process-oriented features.</param>
-    /// <returns>A result holding either the attached process instance, or an error.</returns>
-    internal static Result<ProcessMemory, AttachFailure> OpenProcess(Process target, bool ownsProcessInstance,
+    /// <returns>A result holding either the attached process instance, or a failure.</returns>
+    internal static Result<ProcessMemory> OpenProcess(Process target, bool ownsProcessInstance,
         IOperatingSystemService osService)
     {
         if (target.HasExited)
-            return new AttachFailureOnTargetProcessNotRunning();
+            return new TargetProcessNotRunningFailure();
 
         // Determine target bitness
         var is64BitResult = osService.IsProcess64Bit(target.Id);
         if (is64BitResult.IsFailure)
-            return new AttachFailureOnSystemError(is64BitResult.Error);
+            return is64BitResult.Failure;
         var is64Bit = is64BitResult.Value;
         if (is64Bit && IntPtr.Size != 8)
-            return new AttachFailureOnIncompatibleBitness();
+            return new IncompatibleBitnessProcessFailure();
         
         // Open the process with the required access flags
         var openResult = osService.OpenProcess(target.Id);
         if (openResult.IsFailure)
-            return new AttachFailureOnSystemError(openResult.Error);
+            return openResult.Failure;
         var processHandle = openResult.Value;
         
         // Build the instance with the handle and bitness information
@@ -178,8 +178,19 @@ public partial class ProcessMemory : IDisposable
     /// Gets a new instance of <see cref="Process"/> representing the attached process.
     /// The returned instance is owned by the caller and should be disposed when no longer needed.
     /// </summary>
-    public Process GetAttachedProcessInstance() => Process.GetProcessById(_process.Id);
-    
+    public DisposableResult<Process> GetAttachedProcessInstance()
+    {
+        try
+        {
+            return Process.GetProcessById(_process.Id);
+        }
+        catch (Exception)
+        {
+            // The process is no longer running
+            return new TargetProcessNotRunningFailure();
+        }
+    }
+
     #region Dispose
     
     /// <summary>

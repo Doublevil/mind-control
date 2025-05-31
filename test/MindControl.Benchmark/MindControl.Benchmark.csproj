@@ -15,10 +15,15 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
     <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.12"/>
-    <PackageReference Include="Memory.dll.x64" Version="1.2.27" />
+<!--    <PackageReference Include="Memory.dll.x64" Version="1.2.27" />-->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MindControl\MindControl.csproj" />
     <ProjectReference Include="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Memory">
+      <HintPath>bin\Debug\net8.0\Memory.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

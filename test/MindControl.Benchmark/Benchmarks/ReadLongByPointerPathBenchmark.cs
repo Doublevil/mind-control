@@ -58,6 +58,29 @@ public class ReadLongByPointerPathBenchmark
         return result;
     }
     
+    [Benchmark(Description = "MindControl 100xRead<long>")]
+    public void MindControl100xReadGenericTypeReuse()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            long result = _setup.MindControlProcessMemory.Read<long>(_pointerPath).Value;
+            if (result != -1)
+                throw new Exception("Unexpected result");
+        }
+    }
+    
+    [Benchmark(Description = "MindControl 100xRead<long> (module path)")]
+    public void MindControl100xReadGenericModulePath()
+    {
+        var modulePath = new PointerPath("MindControl.Test.TargetApp.dll+8");
+        for (int i = 0; i < 100; i++)
+        {
+            long result = _setup.MindControlProcessMemory.Read<long>(modulePath).Value;
+            if (result == 0)
+                throw new Exception("Unexpected result");
+        }
+    }
+    
     [Benchmark(Description = "Memory.dll ReadLong", Baseline = true)]
     public long MemoryReadLong()
     {
@@ -74,5 +97,27 @@ public class ReadLongByPointerPathBenchmark
         if (result != -1)
             throw new Exception("Unexpected result");
         return result;
+    }
+    
+    [Benchmark(Description = "Memory.dll 100xReadMemory<long>")]
+    public void Memory100xReadGeneric()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            var result = _setup.MemoryDllMem.ReadMemory<long>(_pathString);
+            if (result != -1)
+                throw new Exception("Unexpected result");
+        }
+    }
+    
+    [Benchmark(Description = "Memory.dll 100xReadMemory<long> (module path)")]
+    public void Memory100xReadGenericWithModule()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            var result = _setup.MemoryDllMem.ReadMemory<long>("MindControl.Test.TargetApp.dll+8");
+            if (result != -1)
+                throw new Exception("Unexpected result");
+        }
     }
 }

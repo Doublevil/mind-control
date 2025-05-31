@@ -38,7 +38,7 @@ public class ByteSearchPattern
     {
         var parseResult = ParsePatternString(patternString);
         if (parseResult.IsFailure)
-            throw new ArgumentException(parseResult.Error.ToString(), nameof(patternString));
+            throw new ArgumentException(parseResult.Failure.ToString(), nameof(patternString));
         
         _originalPatternString = patternString;
         (byte[] byteArray, byte[] mask) = parseResult.Value;
@@ -66,13 +66,12 @@ public class ByteSearchPattern
     /// of hexadecimal bytes, optionally separated by spaces. Each character, excluding spaces, can be a specific value
     /// (0-F) or a wildcard "?" character, indicating that the value to look for at this position could be any value.
     /// An example would be "1F ?? 4B 00 ?6". Read the documentation for more information.</param>
-    /// <returns>A result holding either the parsed <see cref="ByteSearchPattern"/>, or an instance of
-    /// <see cref="InvalidBytePatternFailure"/> detailing the reason for the failure.</returns>
-    public static Result<ByteSearchPattern, InvalidBytePatternFailure> TryParse(string patternString)
+    /// <returns>A result holding either the parsed <see cref="ByteSearchPattern"/>, or a failure.</returns>
+    public static Result<ByteSearchPattern> TryParse(string patternString)
     {
         var parseResult = ParsePatternString(patternString);
         if (parseResult.IsFailure)
-            return parseResult.Error;
+            return parseResult.Failure;
 
         (byte[] byteArray, byte[] mask) = parseResult.Value;
         return new ByteSearchPattern(patternString, byteArray, mask);
@@ -82,9 +81,9 @@ public class ByteSearchPattern
     /// Parses a pattern string into a byte array and a mask array.
     /// </summary>
     /// <param name="patternString">Pattern string to parse.</param>
-    /// <returns>A tuple containing the byte array and the mask array parsed from the pattern string, or an instance of
-    /// <see cref="InvalidBytePatternFailure"/> detailing the reason for the failure.</returns>
-    private static Result<Tuple<byte[], byte[]>, InvalidBytePatternFailure> ParsePatternString(
+    /// <returns>A tuple containing the byte array and the mask array parsed from the pattern string, or a failure.
+    /// </returns>
+    private static Result<Tuple<byte[], byte[]>> ParsePatternString(
         string patternString)
     {
         if (string.IsNullOrWhiteSpace(patternString))

@@ -109,7 +109,7 @@ public class ProcessTracker : IDisposable
     {
         var process = GetTargetProcess();
         return process == null ? null :
-            ProcessMemory.OpenProcess(process, true, new Win32Service()).GetValueOrDefault();
+            ProcessMemory.OpenProcess(process, true, new Win32Service()).ValueOrDefault();
     }
     
     /// <summary>

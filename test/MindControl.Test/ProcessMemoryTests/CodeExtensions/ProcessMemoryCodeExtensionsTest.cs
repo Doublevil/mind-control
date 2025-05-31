@@ -92,46 +92,44 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
     /// The method is called with a zero pointer.
-    /// Expects a <see cref="CodeWritingFailureOnZeroPointer"/>.
+    /// Expects a <see cref="ZeroPointerFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeAtWithZeroAddressTest()
     {
         var result = TestProcessMemory!.DisableCodeAt(UIntPtr.Zero);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnZeroPointer>());
+        Assert.That(result.Failure, Is.TypeOf<ZeroPointerFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
     /// The method is called with an instruction count of zero.
-    /// Expects a <see cref="CodeWritingFailureOnInvalidArguments"/>.
+    /// Expects a <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeAtWithInvalidInstructionCountTest()
     {
         var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress(), 0);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,PointerPath,int)"/> method.
-    /// The method is called with a pointer path that does not point to a valid address.
-    /// Expects a <see cref="CodeWritingFailureOnPathEvaluation"/>.
+    /// The method is called with a pointer path that does not point to a valid address. Expects a failure.
     /// </summary>
     [Test]
     public void DisableCodeAtWithBadPointerPathTest()
     {
         var result = TestProcessMemory!.DisableCodeAt("bad pointer path");
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnPathEvaluation>());
     }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method.
     /// The method is called on a freshly allocated memory address that holds only FF bytes instead of valid code.
-    /// Expects a <see cref="CodeWritingFailureOnDecoding"/>.
+    /// Expects a <see cref="CodeDecodingFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeAtWithBadInstructionsTest()
@@ -140,12 +138,12 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
         TestProcessMemory.WriteBytes(address, new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }); // Write invalid code
         var result = TestProcessMemory.DisableCodeAt(address);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDecoding>());
+        Assert.That(result.Failure, Is.TypeOf<CodeDecodingFailure>());
     }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> method with a
-    /// detached process. Expects a <see cref="CodeWritingFailureOnDetachedProcess"/>.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeWithDetachedProcessTest()
@@ -153,12 +151,12 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress());
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,PointerPath,int)"/> method with a
-    /// detached process. Expects a <see cref="CodeWritingFailureOnDetachedProcess"/>.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeWithPointerPathWithDetachedProcessTest()
@@ -166,7 +164,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress().ToString("X"));
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
 }
 
@@ -181,7 +179,7 @@ public class ProcessMemoryCodeExtensionsTestX86 : ProcessMemoryCodeExtensionsTes
 
     /// <summary>
     /// Tests <see cref="ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory,UIntPtr,int)"/> with an x64 address on
-    /// an x86 process. Expects a <see cref="CodeWritingFailureOnIncompatibleBitness"/>.
+    /// an x86 process. Expects a <see cref="IncompatibleBitnessPointerFailure"/>.
     /// </summary>
     [Test]
     public void DisableCodeAtX64AddressOnX86ProcessTest()
@@ -189,6 +187,6 @@ public class ProcessMemoryCodeExtensionsTestX86 : ProcessMemoryCodeExtensionsTes
         var address = (ulong)uint.MaxValue + 1;
         var result = TestProcessMemory!.DisableCodeAt(new UIntPtr(address));
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<CodeWritingFailureOnIncompatibleBitness>());
+        Assert.That(result.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
 }

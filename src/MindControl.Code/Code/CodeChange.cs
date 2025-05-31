@@ -37,5 +37,6 @@ public class CodeChange
     /// <summary>
     /// Reverts the code alteration, writing the original bytes back to the code section.
     /// </summary>
-    public Result<WriteFailure> Revert() => _processMemory.WriteBytes(Address, _originalBytes);
+    /// <returns>A result indicating either a success or a failure.</returns>
+    public Result Revert() => _processMemory.WriteBytes(Address, _originalBytes);
 }

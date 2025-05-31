@@ -21,15 +21,15 @@ public static class ProcessMemoryCodeExtensions
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="assembler">Assembler holding the instructions to store.</param>
     /// <param name="nearAddress"></param>
-    /// <returns>A result holding either the reservation where the code has been written, or an allocation failure.
-    /// </returns>
-    public static Result<MemoryReservation, StoreFailure> StoreCode(this ProcessMemory processMemory,
+    /// <returns>A result holding either the reservation where the code has been written, or a failure.</returns>
+    public static Result<MemoryReservation> StoreCode(this ProcessMemory processMemory,
         Assembler assembler, UIntPtr? nearAddress = null)
     {
         if (!processMemory.IsAttached)
-            return new StoreFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (!assembler.Instructions.Any())
-            return new StoreFailureOnInvalidArguments("The given assembler has no instructions to assemble.");
+            return new InvalidArgumentFailure(nameof(assembler),
+                "The given assembler has no instructions to assemble.");
         
         // The length of the assembled code will vary depending on where we store it (because of relative operands).
         // So the problem is, we need a memory reservation to assemble the code, but we need to assemble the code to
@@ -39,15 +39,15 @@ public static class ProcessMemoryCodeExtensions
         var codeMaxLength = assembler.Instructions.Count * MaxInstructionLength;
         var reservationResult = processMemory.Reserve((ulong)codeMaxLength, true, nearAddress: nearAddress);
         if (reservationResult.IsFailure)
-            return new StoreFailureOnAllocation(reservationResult.Error);
+            return reservationResult.Failure;
 
         var reservation = reservationResult.Value;
         
         // Once we have the reservation, we can assemble it, using its address as a base address.
         var assemblyResult = assembler.AssembleToBytes(reservation.Address);
         if (assemblyResult.IsFailure)
-            return new StoreFailureOnInvalidArguments(
-                $"The given assembler failed to assemble the code: {assemblyResult.Error}");
+            return new InvalidArgumentFailure(nameof(assembler),
+                $"The given assembler failed to assemble the code: {assemblyResult.Failure}");
         
         // Shrink the reservation to the actual size of the assembled code to avoid wasting memory as much as possible.
         var assembledCode = assemblyResult.Value;
@@ -58,7 +58,7 @@ public static class ProcessMemoryCodeExtensions
         if (writeResult.IsFailure)
         {
             reservation.Dispose();
-            return new StoreFailureOnWrite(writeResult.Error);
+            return writeResult.Failure;
         }
 
         return reservation;
@@ -71,20 +71,20 @@ public static class ProcessMemoryCodeExtensions
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="pointerPath">Path to the address of the first instruction to replace.</param>
     /// <param name="instructionCount">Number of consecutive instructions to replace. Default is 1.</param>
-    /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a code writing
-    /// failure.</returns>
-    public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a failure.
+    /// </returns>
+    public static Result<CodeChange> DisableCodeAt(this ProcessMemory processMemory,
         PointerPath pointerPath, int instructionCount = 1)
     {
         if (!processMemory.IsAttached)
-            return new CodeWritingFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (instructionCount < 1)
-            return new CodeWritingFailureOnInvalidArguments(
+            return new InvalidArgumentFailure(nameof(instructionCount),
                 "The number of instructions to replace must be at least 1.");
         
         var addressResult = processMemory.EvaluateMemoryAddress(pointerPath);
         if (addressResult.IsFailure)
-            return new CodeWritingFailureOnPathEvaluation(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.DisableCodeAt(addressResult.Value, instructionCount);
     }
@@ -96,19 +96,19 @@ public static class ProcessMemoryCodeExtensions
     /// <param name="processMemory">Process memory instance to use.</param>
     /// <param name="address">Address of the first instruction to replace.</param>
     /// <param name="instructionCount">Number of consecutive instructions to replace. Default is 1.</param>
-    /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a code writing
-    /// failure.</returns>
-    public static Result<CodeChange, CodeWritingFailure> DisableCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance, allowing you to revert modifications, or a failure.
+    /// </returns>
+    public static Result<CodeChange> DisableCodeAt(this ProcessMemory processMemory,
         UIntPtr address, int instructionCount = 1)
     {
         if (!processMemory.IsAttached)
-            return new CodeWritingFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new CodeWritingFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!processMemory.Is64Bit && address.ToUInt64() > uint.MaxValue)
-            return new CodeWritingFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         if (instructionCount < 1)
-            return new CodeWritingFailureOnInvalidArguments(
+            return new InvalidArgumentFailure(nameof(instructionCount),
                 "The number of instructions to replace must be at least 1.");
         
         // For convenience, this method uses an instruction count, not a byte count.
@@ -124,20 +124,20 @@ public static class ProcessMemoryCodeExtensions
         {
             var instruction = decoder.Decode();
             if (instruction.IsInvalid)
-                return new CodeWritingFailureOnDecoding(decoder.LastError);
+                return new CodeDecodingFailure(decoder.LastError);
 
             fullLength += (ulong)instruction.Length;
         }
         
         var originalBytesResult = processMemory.ReadBytes(address, (int)fullLength);
         if (originalBytesResult.IsFailure)
-            return new CodeWritingFailureOnReadFailure(originalBytesResult.Error);
+            return originalBytesResult.Failure;
         
         var nopInstructions = new byte[fullLength];
         nopInstructions.AsSpan().Fill(NopByte);
         var writeResult = processMemory.WriteBytes(address, nopInstructions, MemoryProtectionStrategy.Remove);
         if (writeResult.IsFailure)
-            return new CodeWritingFailureOnWriteFailure(writeResult.Error);
+            return writeResult.Failure;
         
         return new CodeChange(processMemory, address, originalBytesResult.Value);
     }

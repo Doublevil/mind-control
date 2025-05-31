@@ -1,0 +1,68 @@
+﻿@using MindControl.Samples.SlimeRancherDemo
+@inject SlimeRancherDemoService SlimeRancherService
+
+@switch (CurrentGameState.State)
+{
+    case GameRunState.NotRunning:
+        <p>The game is not running.</p>
+        break;
+    case GameRunState.InMenu:
+        <p>The game is running, but no game is currently loaded.</p>
+        break;
+    case GameRunState.InGame:
+    default:
+        <div class="field-container">
+            <div class="field">
+                <label for="health">Health</label>
+                <input type="range" min="0" max="@PlayerState?.MaxHealth" value="@((int?)PlayerState?.CurrentHealth)"
+                       class="slider" style="accent-color: red" id="health" @oninput="OnHealthModified">
+            </div>
+            <div class="field">
+                <label for="stamina">Stamina</label>
+                <input type="range" min="0" max="@PlayerState?.MaxStamina" value="@((int?)PlayerState?.CurrentStamina)"
+                       class="slider" id="stamina" @oninput="OnStaminaModified" />
+            </div>
+            <div class="field">
+                <label for="coins">Coins</label>
+                <input type="number" value="@PlayerState?.CoinCount" id="coins" @oninput="OnCoinsModified" />
+            </div>
+        </div>
+        <br/>
+        <input type="button" value="Toggle infinite stamina" @onclick="() => SlimeRancherService.ToggleInfiniteStamina()"/>
+        break;
+}
+
+@code {
+    private GameState CurrentGameState => SlimeRancherService.CurrentGameState;
+    private PlayerState? PlayerState => SlimeRancherService.CurrentGameState.Player;
+
+    protected override void OnInitialized() => SlimeRancherService.GameStateUpdated += OnGameStateUpdated;
+    private void OnGameStateUpdated(object? sender, GameState e) => InvokeAsync(StateHasChanged);
+
+    private void OnStaminaModified(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int stamina))
+            return;
+        
+        var newPlayerState = PlayerState.GetValueOrDefault() with { CurrentStamina = stamina };
+        SlimeRancherService.SetPlayerState(newPlayerState);
+    }
+    
+    private void OnHealthModified(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int health))
+            return;
+        
+        var newPlayerState = PlayerState.GetValueOrDefault() with { CurrentHealth = health };
+        SlimeRancherService.SetPlayerState(newPlayerState);
+    }
+    
+    private void OnCoinsModified(ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out int coins))
+            return;
+        
+        var newPlayerState = PlayerState.GetValueOrDefault() with { CoinCount = coins };
+        SlimeRancherService.SetPlayerState(newPlayerState);
+    }
+}

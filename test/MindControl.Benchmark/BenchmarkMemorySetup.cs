@@ -58,7 +58,7 @@ public class BenchmarkMemorySetup : IDisposable
         if (!UIntPtr.TryParse(line, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var outerClassPointer))
             throw new Exception($"Could not read the outer class pointer output by the app: \"{line}\".");
         
-        var mindControlProcessMemory = ProcessMemory.OpenProcessById(targetProcess.Id);
+        var mindControlProcessMemory = ProcessMemory.OpenProcessById(targetProcess.Id).Value;
         var memoryDllMem = new Mem();
         memoryDllMem.OpenProcess(targetProcess.Id);
         

@@ -12,14 +12,14 @@ public interface IOperatingSystemService
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
     /// <returns>A result holding either the handle of the opened process, or a system failure.</returns>
-    Result<IntPtr, SystemFailure> OpenProcess(int pid);
+    Result<IntPtr> OpenProcess(int pid);
 
     /// <summary>
     /// Returns a value indicating if the process with the given identifier is a 64-bit process or not.
     /// </summary>
     /// <param name="pid">Identifier of the target process.</param>
     /// <returns>A result holding either a boolean indicating if the process is 64-bit, or a system failure.</returns>
-    Result<bool, SystemFailure> IsProcess64Bit(int pid);
+    Result<bool> IsProcess64Bit(int pid);
 
     /// <summary>
     /// Reads a targeted range of the memory of a specified process.
@@ -29,7 +29,7 @@ public interface IOperatingSystemService
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>A result holding either an array of bytes containing the data read from the process memory, or a
     /// system failure.</returns>
-    Result<byte[], SystemFailure> ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length);
+    Result<byte[]> ReadProcessMemory(IntPtr processHandle, UIntPtr baseAddress, ulong length);
 
     /// <summary>
     /// Reads a targeted range of the memory of a specified process into the given buffer. Supports partial reads, in
@@ -44,7 +44,7 @@ public interface IOperatingSystemService
     /// <param name="length">Length of the memory range to read.</param>
     /// <returns>A result holding either the number of bytes actually read from memory, or a system failure when no byte
     /// were successfully read.</returns>
-    Result<ulong, SystemFailure> ReadProcessMemoryPartial(IntPtr processHandle, UIntPtr baseAddress, byte[] buffer,
+    Result<ulong> ReadProcessMemoryPartial(IntPtr processHandle, UIntPtr baseAddress, byte[] buffer,
         int offset, ulong length);
     
     /// <summary>
@@ -60,7 +60,7 @@ public interface IOperatingSystemService
     /// changed, or a system failure.</returns>
     /// <exception cref="ArgumentException">The process handle is invalid (zero pointer).</exception>
     /// <exception cref="ArgumentOutOfRangeException">The target address is invalid (zero pointer).</exception>
-    Result<MemoryProtection, SystemFailure> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bit,
+    Result<MemoryProtection> ReadAndOverwriteProtection(IntPtr processHandle, bool is64Bit,
         UIntPtr targetAddress, MemoryProtection newProtection);
 
     /// <summary>
@@ -71,7 +71,7 @@ public interface IOperatingSystemService
     /// <param name="targetAddress">Base address in the memory of the process to which data will be written.</param>
     /// <param name="value">Bytes to write in the process memory.</param>
     /// <returns>A result indicating either a success or a system failure.</returns>
-    Result<SystemFailure> WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, Span<byte> value);
+    Result WriteProcessMemory(IntPtr processHandle, UIntPtr targetAddress, Span<byte> value);
     
     /// <summary>
     /// Allocates memory in the specified process. The address is determined automatically by the operating system.
@@ -81,7 +81,7 @@ public interface IOperatingSystemService
     /// <param name="allocationType">Type of memory allocation.</param>
     /// <param name="protection">Protection flags of the memory to allocate.</param>
     /// <returns>A result holding either a pointer to the start of the allocated memory, or a system failure.</returns>
-    Result<UIntPtr, SystemFailure> AllocateMemory(IntPtr processHandle, int size, MemoryAllocationType allocationType,
+    Result<UIntPtr> AllocateMemory(IntPtr processHandle, int size, MemoryAllocationType allocationType,
         MemoryProtection protection);
 
     /// <summary>
@@ -93,7 +93,7 @@ public interface IOperatingSystemService
     /// <param name="allocationType">Type of memory allocation.</param>
     /// <param name="protection">Protection flags of the memory to allocate.</param>
     /// <returns>A result holding either a pointer to the start of the allocated memory, or a system failure.</returns>
-    Result<UIntPtr, SystemFailure> AllocateMemory(IntPtr processHandle, UIntPtr address, int size,
+    Result<UIntPtr> AllocateMemory(IntPtr processHandle, UIntPtr address, int size,
         MemoryAllocationType allocationType, MemoryProtection protection);
     
     /// <summary>
@@ -103,7 +103,7 @@ public interface IOperatingSystemService
     /// <param name="startAddress">Address of the start routine to be executed by the thread.</param>
     /// <param name="parameterAddress">Address of any parameter to be passed to the start routine.</param>
     /// <returns>A result holding either the handle of the thread, or a system failure.</returns>
-    Result<IntPtr, SystemFailure> CreateRemoteThread(IntPtr processHandle, UIntPtr startAddress,
+    Result<IntPtr> CreateRemoteThread(IntPtr processHandle, UIntPtr startAddress,
         UIntPtr parameterAddress);
 
     /// <summary>
@@ -113,7 +113,7 @@ public interface IOperatingSystemService
     /// <param name="timeout">Maximum time to wait for the thread to finish.</param>
     /// <returns>A result holding either the exit code of the thread, or a thread failure when the operation failed.
     /// </returns>
-    Result<uint, ThreadFailure> WaitThread(IntPtr threadHandle, TimeSpan timeout);
+    Result<uint> WaitThread(IntPtr threadHandle, TimeSpan timeout);
 
     /// <summary>
     /// Frees the memory allocated in the specified process for a region or a placeholder.
@@ -122,14 +122,14 @@ public interface IOperatingSystemService
     /// <param name="regionBaseAddress">Base address of the region or placeholder to free, as returned by the allocation
     /// methods.</param>
     /// <returns>A result indicating either a success or a system failure.</returns>
-    Result<SystemFailure> ReleaseMemory(IntPtr processHandle, UIntPtr regionBaseAddress);
+    Result ReleaseMemory(IntPtr processHandle, UIntPtr regionBaseAddress);
 
     /// <summary>
     /// Closes the given handle.
     /// </summary>
     /// <param name="handle">Handle to close.</param>
     /// <returns>A result indicating either a success or a system failure.</returns>
-    Result<SystemFailure> CloseHandle(IntPtr handle);
+    Result CloseHandle(IntPtr handle);
     
     /// <summary>
     /// Gets the range of memory addressable by applications in the current system.
@@ -142,7 +142,7 @@ public interface IOperatingSystemService
     /// <param name="processHandle">Handle of the target process.</param>
     /// <param name="baseAddress">Base address of the target memory region.</param>
     /// <returns>A result holding either the metadata of the target memory region, or a system failure.</returns>
-    Result<MemoryRangeMetadata, SystemFailure> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress);
+    Result<MemoryRangeMetadata> GetRegionMetadata(IntPtr processHandle, UIntPtr baseAddress);
 
     /// <summary>
     /// Gets the page size of the system.

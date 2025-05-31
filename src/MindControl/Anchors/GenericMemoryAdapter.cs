@@ -8,19 +8,17 @@ namespace MindControl.Anchors;
 /// </summary>
 /// <param name="addressResolver">Resolver that provides the address of the value in memory.</param>
 /// <typeparam name="TValue">Type of the value to read and write.</typeparam>
-/// <typeparam name="TResolveFailure">Type of the failure that can occur when resolving the address of the value.
-/// </typeparam>
-public class GenericMemoryAdapter<TValue, TResolveFailure>(IAddressResolver<TResolveFailure> addressResolver)
-    : IMemoryAdapter<TValue, ReadFailure, WriteFailure> where TValue : struct
+public class GenericMemoryAdapter<TValue>(IAddressResolver addressResolver)
+    : IMemoryAdapter<TValue> where TValue : struct
 {
     /// <summary>Reads the value in the memory of the target process.</summary>
     /// <param name="processMemory">Instance of <see cref="ProcessMemory"/> attached to the target process.</param>
     /// <returns>A result holding either the value read from memory, or a failure.</returns>
-    public Result<TValue, ReadFailure> Read(ProcessMemory processMemory)
+    public Result<TValue> Read(ProcessMemory processMemory)
     {
         var addressResult = addressResolver.ResolveFor(processMemory);
         if (addressResult.IsFailure)
-            return new ReadFailureOnAddressResolution<TResolveFailure>(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.Read<TValue>(addressResult.Value);
     }
@@ -29,11 +27,11 @@ public class GenericMemoryAdapter<TValue, TResolveFailure>(IAddressResolver<TRes
     /// <param name="processMemory">Instance of <see cref="ProcessMemory"/> attached to the target process.</param>
     /// <param name="value">Value to write to memory.</param>
     /// <returns>A result indicating success or failure.</returns>
-    public Result<WriteFailure> Write(ProcessMemory processMemory, TValue value)
+    public Result Write(ProcessMemory processMemory, TValue value)
     {
         var addressResult = addressResolver.ResolveFor(processMemory);
         if (addressResult.IsFailure)
-            return new WriteFailureOnAddressResolution<TResolveFailure>(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.Write(addressResult.Value, value, MemoryProtectionStrategy.Ignore);
     }

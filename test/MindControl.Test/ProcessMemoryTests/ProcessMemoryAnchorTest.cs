@@ -55,7 +55,7 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with an address of 1, which is not readable.
-    /// When trying to read the value, the result should be a <see cref="ReadFailureOnSystemRead"/>.
+    /// When trying to read the value, the result should be a <see cref="OperatingSystemCallFailure"/>.
     /// </summary>
     [Test]
     public void ReadIntWithOutOfRangeAddressTest()
@@ -63,12 +63,12 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
         var anchor = TestProcessMemory!.GetAnchor<int>(1);
         var readResult = anchor.Read();
         Assert.That(readResult.IsSuccess, Is.False);
-        Assert.That(readResult.Error, Is.InstanceOf<ReadFailureOnSystemRead>());
+        Assert.That(readResult.Failure, Is.InstanceOf<OperatingSystemCallFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.GetAnchor{T}(UIntPtr)"/> with an address of 1, which is not writeable.
-    /// When trying to write the value, the result should be a <see cref="WriteFailureOnSystemWrite"/>.
+    /// When trying to write the value, the result should be a <see cref="OperatingSystemCallFailure"/>.
     /// </summary>
     [Test]
     public void WriteIntWithOutOfRangeAddressTest()
@@ -76,7 +76,7 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
         var anchor = TestProcessMemory!.GetAnchor<int>(1);
         var writeResult = anchor.Write(1234567);
         Assert.That(writeResult.IsSuccess, Is.False);
-        Assert.That(writeResult.Error, Is.InstanceOf<WriteFailureOnSystemWrite>());
+        Assert.That(writeResult.Failure, Is.InstanceOf<OperatingSystemCallFailure>());
     }
     
     /// <summary>
@@ -112,14 +112,13 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests <see cref="ThreadValueFreezer{TValue,TReadFailure,TWriteFailure}"/> (the thread-based freezer
-    /// implementation).
+    /// Tests <see cref="ThreadValueFreezer{TValue}"/> (the thread-based freezer implementation).
     /// </summary>
     [Test]
     public void FreezeIntThreadTest()
     {
         var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
-        using var freezer = new ThreadValueFreezer<int, ReadFailure, WriteFailure>(anchor, 1234567);
+        using var freezer = new ThreadValueFreezer<int>(anchor, 1234567);
         ProceedToNextStep();
         Thread.Sleep(100); // Make sure the freezer has time to write the value to make the test consistent
         ProceedToNextStep();
@@ -127,18 +126,36 @@ public class ProcessMemoryAnchorTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the Dispose method of <see cref="ThreadValueFreezer{TValue,TReadFailure,TWriteFailure}"/> (the
-    /// thread-based freezer implementation).
+    /// Tests the Dispose method of <see cref="ThreadValueFreezer{TValue}"/> (the thread-based freezer implementation).
     /// </summary>
     [Test]
     public void FreezeIntThreadAndDisposeTest()
     {
         var anchor = TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
-        var freezer = new ThreadValueFreezer<int, ReadFailure, WriteFailure>(anchor, 1234567);
+        var freezer = new ThreadValueFreezer<int>(anchor, 1234567);
         freezer.Dispose();
         ProceedToNextStep();
         ProceedToNextStep();
         AssertExpectedFinalResults();
+    }
+
+    /// <summary>
+    /// Freezes an unreadable value, and check that the freezer raises the
+    /// <see cref="TimerValueFreezer{TValue}.FreezeFailed"/> event.
+    /// </summary>
+    [Test]
+    public void FreezeFailureTest()
+    {
+        var anchor = TestProcessMemory!.GetAnchor<int>(1);
+        using var freezer = anchor.Freeze(1234567);
+
+        List<Failure> failures = [];
+        freezer.FreezeFailed += (_, args) =>
+        {
+            failures.Add(args.Failure);
+        };
+        Thread.Sleep(3000);
+        Assert.That(failures, Has.Count.GreaterThan(0));
     }
     
     #endregion

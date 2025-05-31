@@ -113,11 +113,11 @@ public readonly record struct MemoryRange
     {
         // This range is entirely contained in the range to subtract: no range left
         if (rangeToExclude.Contains(this))
-            return Array.Empty<MemoryRange>();
+            return [];
 
         // No overlap between the two ranges: the original range is returned, untouched
         if (!rangeToExclude.Overlaps(this))
-            return new[] { this };
+            return [this];
         
         // There is an overlap: either one or two ranges will be returned, depending on the overlap
         var results = new List<MemoryRange>();

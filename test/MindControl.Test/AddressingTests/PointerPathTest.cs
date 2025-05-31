@@ -420,4 +420,27 @@ public class PointerPathTest
             Assert.That(result.IsStrictly64Bit, Is.EqualTo(testCase.Expect64BitOnly), testCase.Explanation);
         });
     }
+
+    /// <summary>
+    /// Builds a pointer path from direct pointers (as opposed to an expression), and gets the expression from it.
+    /// Checks that the expression matches expectations.
+    /// </summary>
+    [Test]
+    public void GetExpressionFromDirectPointerPathTest()
+    {
+        var pointerPath = new PointerPath(new UIntPtr(0x1F016644), 0x4, -0x1C);
+        Assert.That(pointerPath.Expression, Is.EqualTo("1F016644,4,-1C"));
+    }
+    
+    /// <summary>
+    /// Builds a pointer path from a module name, a module offset, and a sequence of pointer offsets, and gets the
+    /// expression from it.
+    /// Checks that the expression matches expectations.
+    /// </summary>
+    [Test]
+    public void GetExpressionFromDirectPointerPathWithModuleNameTest()
+    {
+        var pointerPath = new PointerPath("mygame.exe", 0xC16, 0x4, -0x1C);
+        Assert.That(pointerPath.Expression, Is.EqualTo("\"mygame.exe\"+C16,4,-1C"));
+    }
 }

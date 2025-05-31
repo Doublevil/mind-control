@@ -41,7 +41,7 @@ public class RemoteModuleTest : BaseProcessMemoryTest
     {
         var module = TestProcessMemory!.GetModule("kernel32.dll") ?? throw new Exception("Module not found");
         var exportTable = module.ReadExportTable();
-        Assert.That(exportTable.IsSuccess, Is.True, () => exportTable.Error);
+        Assert.That(exportTable.IsSuccess, Is.True, () => exportTable.Failure.ToString());
         Assert.That(exportTable.Value, Has.Count.GreaterThan(1000));
         Assert.That(exportTable.Value.ContainsKey("LoadLibraryW"));
         Assert.That(exportTable.Value.Values.Select(t => module.GetRange().Contains(t)), Is.All.True);

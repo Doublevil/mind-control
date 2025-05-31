@@ -85,46 +85,48 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a zero pointer.
-    /// Expect a <see cref="WriteFailureOnZeroPointer"/> error.
+    /// Expect a <see cref="ZeroPointerFailure"/> error.
     /// </summary>
     [Test]
     public void WriteAtZeroPointerTest()
     {
         var result = TestProcessMemory!.Write(UIntPtr.Zero, 8);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnZeroPointer>());
+        Assert.That(result.Failure, Is.InstanceOf<ZeroPointerFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a null value.
-    /// Expect a <see cref="WriteFailureOnInvalidArguments"/> error.
+    /// Expect a <see cref="InvalidArgumentFailure"/> error.
     /// </summary>
     [Test]
     public void WriteNullValueTest()
     {
         var result = TestProcessMemory!.Write(OuterClassPointer, (int?)null);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with an unsupported
-    /// type. Expect a <see cref="WriteFailureOnUnsupportedType"/> error.
+    /// type. Expect a <see cref="UnsupportedTypeWriteFailure"/> error.
     /// </summary>
     [Test]
     public void WriteUnsupportedTypeTest()
     {
         var result = TestProcessMemory!.Write(OuterClassPointer, new object());
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnUnsupportedType>());
+        Assert.That(result.Failure, Is.InstanceOf<UnsupportedTypeWriteFailure>());
     }
 
+    #pragma warning disable 0649
     /// <summary>Defines a structure that is expected to be incompatible with writing methods.</summary>
     private struct IncompatibleStruct { public long A; public byte[] B; } // The byte[] makes it incompatible
+    #pragma warning restore 0649
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with an incompatible
-    /// struct. Expect a <see cref="WriteFailureOnConversion"/> error.
+    /// struct. Expect a <see cref="ConversionWriteFailure"/> error.
     /// </summary>
     /// <remarks>
     /// This test has been disabled because it triggers a System.AccessViolationException. This exception type used to
@@ -135,12 +137,12 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
     {
         var result = TestProcessMemory!.Write(OuterClassPointer, new IncompatibleStruct());
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnConversion>());
+        Assert.That(result.Failure, Is.InstanceOf<ConversionWriteFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> with a detached
-    /// process. Expect a <see cref="WriteFailureOnDetachedProcess"/> error.
+    /// process. Expect a <see cref="DetachedProcessFailure"/> error.
     /// </summary>
     [Test]
     public void WriteWithDetachedProcessTest()
@@ -148,12 +150,12 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory.Write(OuterClassPointer, 8);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(PointerPath,T,Nullable{MemoryProtectionStrategy})"/> with a detached
-    /// process. Expect a <see cref="WriteFailureOnDetachedProcess"/> error.
+    /// process. Expect a <see cref="DetachedProcessFailure"/> error.
     /// </summary>
     [Test]
     public void WriteAtPointerPathWithDetachedProcessTest()
@@ -161,7 +163,7 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory.Write(OuterClassPointer.ToString("X"), 8);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
 }
 
@@ -176,7 +178,7 @@ public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> on a 32-bit target app
-    /// with a 64-bit address. Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// with a 64-bit address. Expect a <see cref="IncompatibleBitnessPointerFailure"/> error.
     /// </summary>
     [Test]
     public void WriteGenericOnX86WithX64AddressTest()
@@ -184,12 +186,12 @@ public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
         var address = (ulong)uint.MaxValue + 1;
         var result = TestProcessMemory!.Write((UIntPtr)address, 8);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+        Assert.That(result.Failure, Is.InstanceOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.WriteBytes(UIntPtr,Span{byte},Nullable{MemoryProtectionStrategy})"/> on a 32-bit
-    /// target app with a 64-bit address. Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// target app with a 64-bit address. Expect a <see cref="IncompatibleBitnessPointerFailure"/> error.
     /// </summary>
     [Test]
     public void WriteBytesOnX86WithX64AddressTest()
@@ -197,13 +199,13 @@ public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
         var address = (ulong)uint.MaxValue + 1;
         var result = TestProcessMemory!.WriteBytes((UIntPtr)address, new byte[8]);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+        Assert.That(result.Failure, Is.InstanceOf<IncompatibleBitnessPointerFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.Write{T}(UIntPtr,T,Nullable{MemoryProtectionStrategy})"/> on a 32-bit target app
     /// with a reachable address, but a value with a pointer type that goes beyond the 32-bit address space.
-    /// Expect a <see cref="WriteFailureOnIncompatibleBitness"/> error.
+    /// Expect a <see cref="IncompatibleBitnessPointerFailure"/> error.
     /// </summary>
     [Test]
     public void WriteX64PointerOnX86Test()
@@ -211,6 +213,6 @@ public class ProcessMemoryWriteTestX86 : ProcessMemoryWriteTest
         var address = (ulong)uint.MaxValue + 1;
         var result = TestProcessMemory!.Write(OuterClassPointer, (UIntPtr)address);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<WriteFailureOnIncompatibleBitness>());
+        Assert.That(result.Failure, Is.InstanceOf<IncompatibleBitnessPointerFailure>());
     }
 }

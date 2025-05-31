@@ -91,19 +91,19 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Allocate"/> method with a zero size.
-    /// This should return an <see cref="AllocationFailureOnInvalidArguments"/>.
+    /// This should return an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void AllocateZeroTest()
     {
         var allocateResult = TestProcessMemory!.Allocate(0, false);
         Assert.That(allocateResult.IsSuccess, Is.False);
-        Assert.That(allocateResult.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+        Assert.That(allocateResult.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Allocate"/> method with a detached process.
-    /// This should return an <see cref="AllocationFailureOnDetachedProcess"/>.
+    /// This should return an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void AllocateWithDetachedProcessTest()
@@ -111,7 +111,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var allocateResult = TestProcessMemory.Allocate(0x1000, false);
         Assert.That(allocateResult.IsSuccess, Is.False);
-        Assert.That(allocateResult.Error, Is.InstanceOf<AllocationFailureOnDetachedProcess>());
+        Assert.That(allocateResult.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
 
     /// <summary>
@@ -259,19 +259,19 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Reserve"/> method with a size of zero.
-    /// Expects the result to be an <see cref="AllocationFailureOnInvalidArguments"/>.
+    /// Expects the result to be an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void ReserveZeroTest()
     {
         var reserveResult = TestProcessMemory!.Reserve(0, false);
         Assert.That(reserveResult.IsSuccess, Is.False);
-        Assert.That(reserveResult.Error, Is.InstanceOf<AllocationFailureOnInvalidArguments>());
+        Assert.That(reserveResult.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Reserve"/> method with a detached process.
-    /// Expects the result to be an <see cref="AllocationFailureOnDetachedProcess"/>.
+    /// Expects the result to be an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void ReserveWithDetachedProcessTest()
@@ -279,7 +279,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var reserveResult = TestProcessMemory.Reserve(0x1000, false);
         Assert.That(reserveResult.IsSuccess, Is.False);
-        Assert.That(reserveResult.Error, Is.InstanceOf<AllocationFailureOnDetachedProcess>());
+        Assert.That(reserveResult.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
     
     /// <summary>
@@ -342,7 +342,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         
         var reservations = reservationResults.Select(r => r.Value).ToList();
         var readBackValues = reservations.Select(r => TestProcessMemory!.ReadBytes(r.Range.Start, value.Length)
-            .GetValueOrDefault());
+            .ValueOrDefault());
         
         // The store method should have allocated only one range that's big enough to accomodate all the values.
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(1));
@@ -383,7 +383,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Store(byte[],bool)"/> method with a detached process.
-    /// Expects the result to be an <see cref="StoreFailureOnDetachedProcess"/>.
+    /// Expects the result to be an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void StoreWithDetachedProcessTest()
@@ -391,12 +391,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var storeResult = TestProcessMemory.Store(new byte[8]);
         Assert.That(storeResult.IsSuccess, Is.False);
-        Assert.That(storeResult.Error, Is.InstanceOf<StoreFailureOnDetachedProcess>());
+        Assert.That(storeResult.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Store(byte[],MemoryAllocation)"/> method with a detached process.
-    /// Expects the result to be an <see cref="StoreFailureOnDetachedProcess"/>.
+    /// Expects the result to be an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void StoreWithAllocationWithDetachedProcessTest()
@@ -405,7 +405,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory.Dispose();
         var storeResult = TestProcessMemory.Store(new byte[8], allocation);
         Assert.That(storeResult.IsSuccess, Is.False);
-        Assert.That(storeResult.Error, Is.InstanceOf<StoreFailureOnDetachedProcess>());
+        Assert.That(storeResult.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
     
     /// <summary>
@@ -460,7 +460,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method.
-    /// Specify invalid settings. The result is expected to be an <see cref="StoreFailureOnInvalidArguments"/>.
+    /// Specify invalid settings. The result is expected to be an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithoutAllocationWithInvalidSettingsTest()
@@ -469,13 +469,13 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var result = TestProcessMemory!.StoreString("Hello world", invalidSettings);
 
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method.
     /// Specify valid settings, but with a length prefix that is too short to store the provided string. The result is
-    /// expected to be an <see cref="StoreFailureOnInvalidArguments"/>.
+    /// expected to be an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithoutAllocationWithIncompatibleSettingsTest()
@@ -485,12 +485,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var result = TestProcessMemory!.StoreString(new string('a', 256), settingsThatCanOnlyStoreUpTo255Chars);
 
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method.
-    /// Specify invalid settings. The result is expected to be an <see cref="StoreFailureOnInvalidArguments"/>.
+    /// Specify invalid settings. The result is expected to be an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithAllocationWithInvalidSettingsTest()
@@ -500,13 +500,13 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var result = TestProcessMemory!.StoreString("Hello world", invalidSettings, allocation);
 
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method.
     /// Specify valid settings, but with a length prefix that is too short to store the provided string. The result is
-    /// expected to be an <see cref="StoreFailureOnInvalidArguments"/>.
+    /// expected to be an <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithAllocationWithIncompatibleSettingsTest()
@@ -518,12 +518,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
             allocation);
 
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnInvalidArguments>());
+        Assert.That(result.Failure, Is.InstanceOf<InvalidArgumentFailure>());
     }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings)"/> method with a detached process.
-    /// Expects the result to be an <see cref="StoreFailureOnDetachedProcess"/>.
+    /// Expects the result to be an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithDetachedProcessTest()
@@ -531,12 +531,12 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory.StoreString("Hello world", GetDotNetStringSettings());
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemory.StoreString(string,StringSettings,MemoryAllocation)"/> method with a detached
-    /// process. Expects the result to be an <see cref="StoreFailureOnDetachedProcess"/>.
+    /// process. Expects the result to be an <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void StoreStringWithAllocationWithDetachedProcessTest()
@@ -545,7 +545,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         TestProcessMemory.Dispose();
         var result = TestProcessMemory.StoreString("Hello world", GetDotNetStringSettings(), allocation);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<StoreFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
 }
 

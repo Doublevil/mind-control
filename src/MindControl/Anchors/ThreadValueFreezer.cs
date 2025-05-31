@@ -2,23 +2,21 @@
 
 /// <summary>Provides methods to freeze a value in memory, using a thread that constantly writes the value.</summary>
 /// <typeparam name="TValue">Type of the value to freeze.</typeparam>
-/// <typeparam name="TReadFailure">Type of the failure that can occur when reading the value.</typeparam>
-/// <typeparam name="TWriteFailure">Type of the failure that can occur when writing the value.</typeparam>
-public class ThreadValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposable
+public class ThreadValueFreezer<TValue> : IDisposable
 {
-    private readonly ValueAnchor<TValue, TReadFailure, TWriteFailure> _anchor;
+    private readonly ValueAnchor<TValue> _anchor;
     private readonly TValue _value;
     private bool _disposed;
 
     /// <summary>Event raised when a freeze operation fails.</summary>
-    public event EventHandler<FreezeFailureEventArgs<TWriteFailure>>? FreezeFailed;
+    public event EventHandler<FreezeFailureEventArgs>? FreezeFailed;
     
     /// <summary>
     /// Freezes a value in memory, using a thread that constantly writes the target value.
     /// </summary>
     /// <param name="anchor">Anchor holding the memory value to freeze.</param>
     /// <param name="value">Value to freeze in memory.</param>
-    public ThreadValueFreezer(ValueAnchor<TValue, TReadFailure, TWriteFailure> anchor, TValue value)
+    public ThreadValueFreezer(ValueAnchor<TValue> anchor, TValue value)
     {
         _anchor = anchor;
         _value = value;
@@ -35,7 +33,7 @@ public class ThreadValueFreezer<TValue, TReadFailure, TWriteFailure> : IDisposab
         {
             var result = _anchor.Write(_value);
             if (result.IsFailure)
-                FreezeFailed?.Invoke(this, new FreezeFailureEventArgs<TWriteFailure>(result.Error));
+                FreezeFailed?.Invoke(this, new FreezeFailureEventArgs(result.Failure));
         }
     }
 

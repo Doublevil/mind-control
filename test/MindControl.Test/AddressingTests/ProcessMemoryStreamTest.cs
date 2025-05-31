@@ -39,13 +39,13 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryStream.CanSeek"/> getter.
-    /// Must always return false.
+    /// Must always return true.
     /// </summary>
     [Test]
     public void CanSeekTest()
     {
         using var stream = TestProcessMemory!.GetMemoryStream(OuterClassPointer);
-        Assert.That(stream.CanSeek, Is.False);
+        Assert.That(stream.CanSeek, Is.True);
     }
     
     /// <summary>

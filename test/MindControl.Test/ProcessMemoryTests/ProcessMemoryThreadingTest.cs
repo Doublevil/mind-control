@@ -58,9 +58,9 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
     public void RunThreadAndWaitTest()
     {
         var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "ExitProcess");
-        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Error.ToString());
+        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Failure.ToString());
         var waitResult = threadResult.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
-        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Error.ToString());
+        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Failure.ToString());
         Assert.That(waitResult.Value, Is.Zero); // The exit code should be 0
         Assert.That(HasProcessExited, Is.True); // The process should have exited as a result of the function call
     }
@@ -75,9 +75,9 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         var kernel32Module = TestProcessMemory!.GetModule("kernel32.dll");
         var functionAddress = kernel32Module!.ReadExportTable().Value["ExitProcess"];
         var threadResult = TestProcessMemory!.RunThread(functionAddress.ToString("X"));
-        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Error.ToString());
+        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Failure.ToString());
         var waitResult = threadResult.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
-        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Error.ToString());
+        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Failure.ToString());
         Assert.That(waitResult.Value, Is.Zero);
         Assert.That(HasProcessExited, Is.True);
     }
@@ -103,13 +103,14 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         // We cannot call GetCurrentDirectoryW directly because of its parameters. We need to write a trampoline
         // function that prepares the parameters as they are expected by the function before calling it.
         var assembler = AssembleTrampolineForGetCurrentDirectoryW(functionAddress);
-        var codeReservation = TestProcessMemory.StoreCode(assembler, kernel32Module.GetRange().Start).Value;
+        var codeReservation = TestProcessMemory
+            .StoreCode(assembler, nearAddress: kernel32Module.GetRange().Start).Value;
         
         // Run the thread
         var threadResult = TestProcessMemory!.RunThread(codeReservation.Address, argsReservation.Address);
-        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Error.ToString());
+        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Failure.ToString());
         var waitResult = threadResult.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
-        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Error.ToString());
+        Assert.That(waitResult.IsSuccess, Is.True, () => waitResult.Failure.ToString());
         
         // Read the resulting string from the allocated buffer
         var resultingString = TestProcessMemory.ReadRawString(bufferReservation.Address, Encoding.Unicode, 512).Value;
@@ -120,17 +121,17 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
     /// Tests <see cref="ProcessMemory.RunThread(string,string,System.Nullable{System.UIntPtr})"/>.
     /// Runs the Sleep kernel32.dll function in a thread in the target process.
     /// Waits for the resulting thread, but with a timeout that does not leave enough time for the function to complete.
-    /// Check that the wait operation returns a <see cref="ThreadFailureOnWaitTimeout"/> error.
+    /// Check that the wait operation returns a <see cref="ThreadWaitTimeoutFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadSleepTimeoutTest()
     {
         // Start a Sleep thread that will run for 5 seconds, but wait only for 500ms
         var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "Sleep", 5000);
-        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Error.ToString());
+        Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Failure.ToString());
         var waitResult = threadResult.Value.WaitForCompletion(TimeSpan.FromMilliseconds(500));
         Assert.That(waitResult.IsSuccess, Is.False);
-        Assert.That(waitResult.Error, Is.TypeOf<ThreadFailureOnWaitTimeout>());
+        Assert.That(waitResult.Failure, Is.TypeOf<ThreadWaitTimeoutFailure>());
     }
     
     /// <summary>
@@ -143,12 +144,12 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
     [Test]
     public async Task RunThreadSleepWaitAsyncTest()
     {
-        var tasks = new List<Task<Result<uint, ThreadFailure>>>();
+        var tasks = new List<Task<Result<uint>>>();
         for (int i = 0; i < 10; i++)
         {
             // Each thread executes Sleep for 500ms
             var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "Sleep", 500);
-            Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Error.ToString());
+            Assert.That(threadResult.IsSuccess, Is.True, () => threadResult.Failure.ToString());
             tasks.Add(threadResult.Value.WaitForCompletionAsync(TimeSpan.FromSeconds(10)));
         }
         
@@ -158,7 +159,7 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         
         foreach (var task in tasks)
         {
-            Assert.That(task.Result.IsSuccess, Is.True, () => task.Result.Error.ToString());
+            Assert.That(task.Result.IsSuccess, Is.True, () => task.Result.Failure.ToString());
             Assert.That(task.Result.Value, Is.Zero);
         }
         
@@ -171,57 +172,56 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(PointerPath,System.Nullable{System.UIntPtr})"/> with an invalid
     /// pointer path.
-    /// Expects a <see cref="ThreadFailureOnPointerPathEvaluation"/> error.
+    /// Expects a failure.
     /// </summary>
     [Test]
     public void RunThreadWithInvalidPointerPathTest()
     {
         var threadResult = TestProcessMemory!.RunThread("invalid pointer path");
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnPointerPathEvaluation>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(UIntPtr,System.Nullable{System.UIntPtr})"/> with a zero address.
-    /// Expects a <see cref="ThreadFailureOnInvalidArguments"/> error.
+    /// Expects a <see cref="InvalidArgumentFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithZeroPointerTest()
     {
         var threadResult = TestProcessMemory!.RunThread(UIntPtr.Zero);
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnInvalidArguments>());
+        Assert.That(threadResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(string,string,System.Nullable{System.UIntPtr})"/> with a module name
     /// that does not match any module loaded in the process.
-    /// Expects a <see cref="ThreadFailureOnFunctionNotFound"/> error.
+    /// Expects a <see cref="FunctionNotFoundFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithInvalidModuleTest()
     {
         var threadResult = TestProcessMemory!.RunThread("invalid module", "ExitProcess");
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnFunctionNotFound>());
+        Assert.That(threadResult.Failure, Is.TypeOf<FunctionNotFoundFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(string,string,System.Nullable{System.UIntPtr})"/> with a valid module
     /// name but a function name that does not match any exported function in the module.
-    /// Expects a <see cref="ThreadFailureOnFunctionNotFound"/> error.
+    /// Expects a <see cref="FunctionNotFoundFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithInvalidFunctionTest()
     {
         var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "invalid function");
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnFunctionNotFound>());
+        Assert.That(threadResult.Failure, Is.TypeOf<FunctionNotFoundFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(UIntPtr,System.Nullable{System.UIntPtr})"/> with a detached process.
-    /// Expects a <see cref="ThreadFailureOnDetachedProcess"/> error.
+    /// Expects a <see cref="DetachedProcessFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithAddressOnDetachedProcessTest()
@@ -229,12 +229,12 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var threadResult = TestProcessMemory!.RunThread(0x1234);
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnDetachedProcess>());
+        Assert.That(threadResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(PointerPath,System.Nullable{System.UIntPtr})"/> with a detached
-    /// process. Expects a <see cref="ThreadFailureOnDetachedProcess"/> error.
+    /// process. Expects a <see cref="DetachedProcessFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithPointerPathOnDetachedProcessTest()
@@ -242,12 +242,12 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var threadResult = TestProcessMemory!.RunThread("1234");
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnDetachedProcess>());
+        Assert.That(threadResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(string,string,System.Nullable{System.UIntPtr})"/> with a detached
-    /// process. Expects a <see cref="ThreadFailureOnDetachedProcess"/> error.
+    /// process. Expects a <see cref="DetachedProcessFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithExportedFunctionOnDetachedProcessTest()
@@ -255,7 +255,7 @@ public class ProcessMemoryThreadingTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "Sleep", 2000);
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnDetachedProcess>());
+        Assert.That(threadResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
 }
 
@@ -293,7 +293,7 @@ public class ProcessMemoryThreadingTestX86 : ProcessMemoryThreadingTest
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(UIntPtr,System.Nullable{System.UIntPtr})"/> with an address that is
     /// beyond the scope of a 32-bit process.
-    /// Expect a <see cref="ThreadFailureOnInvalidArguments"/> error.
+    /// Expect a <see cref="IncompatibleBitnessPointerFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithIncompatibleAddressTest()
@@ -301,13 +301,13 @@ public class ProcessMemoryThreadingTestX86 : ProcessMemoryThreadingTest
         UIntPtr maxAddress = uint.MaxValue;
         var threadResult = TestProcessMemory!.RunThread(maxAddress + 1);
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnInvalidArguments>());
+        Assert.That(threadResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.RunThread(string,string,System.Nullable{System.UIntPtr})"/> with a parameter
     /// value that is beyond the scope of a 32-bit process.
-    /// Expect a <see cref="ThreadFailureOnInvalidArguments"/> error.
+    /// Expect a <see cref="IncompatibleBitnessPointerFailure"/> error.
     /// </summary>
     [Test]
     public void RunThreadWithIncompatibleParameterTest()
@@ -315,6 +315,6 @@ public class ProcessMemoryThreadingTestX86 : ProcessMemoryThreadingTest
         UIntPtr maxValue = uint.MaxValue;
         var threadResult = TestProcessMemory!.RunThread("kernel32.dll", "ExitProcess", maxValue + 1);
         Assert.That(threadResult.IsSuccess, Is.False);
-        Assert.That(threadResult.Error, Is.TypeOf<ThreadFailureOnInvalidArguments>());
+        Assert.That(threadResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
 }

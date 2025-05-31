@@ -42,16 +42,16 @@ public static class ProcessMemoryHookExtensions
     /// <see cref="Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/> signature.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
-    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
-    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
+    /// and allows you to revert the hook, or a failure.</returns>
+    public static Result<CodeHook> Hook(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, byte[] code, HookOptions options)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
-            return new HookFailureOnPathEvaluation(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.Hook(addressResult.Value, code, options);
     }
@@ -74,25 +74,25 @@ public static class ProcessMemoryHookExtensions
     /// <see cref="Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> signature.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
-    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
-    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
+    /// and allows you to revert the hook, or a failure.</returns>
+    public static Result<CodeHook> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
         byte[] code, HookOptions options)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (targetInstructionAddress == UIntPtr.Zero)
-            return new HookFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
-            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
+            return new IncompatibleBitnessPointerFailure(targetInstructionAddress);
         if (code.Length == 0)
-            return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
+            return new InvalidArgumentFailure(nameof(code), "The code to inject must contain at least one byte.");
 
         // Reserve memory for the injected code as close as possible to the target instruction
         ulong sizeToReserve = GetSizeToReserveForCodeInjection(processMemory, code.Length, options);
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             options.JumpMode);
         if (reservationResult.IsFailure)
-            return reservationResult.Error;
+            return reservationResult.Failure;
         var reservation = reservationResult.Value;
         
         return PerformHook(processMemory, targetInstructionAddress, code, reservation, options);
@@ -115,16 +115,16 @@ public static class ProcessMemoryHookExtensions
     /// back to the original code will be appended automatically, so it is not necessary to include it.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
-    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
-    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory,
+    /// and allows you to revert the hook, or a failure.</returns>
+    public static Result<CodeHook> Hook(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, Assembler codeAssembler, HookOptions options)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
-            return new HookFailureOnPathEvaluation(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.Hook(addressResult.Value, codeAssembler, options);
     }
@@ -145,18 +145,19 @@ public static class ProcessMemoryHookExtensions
     /// back to the original code will be appended automatically, so it is not necessary to include it.</param>
     /// <param name="options">Options defining how the hook works.</param>
     /// <returns>A result holding either a code hook instance that contains a reference to the injected code reservation
-    /// and allows you to revert the hook, or a hook failure when the operation failed.</returns>
-    public static Result<CodeHook, HookFailure> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
+    /// and allows you to revert the hook, or a failure.</returns>
+    public static Result<CodeHook> Hook(this ProcessMemory processMemory, UIntPtr targetInstructionAddress,
         Assembler codeAssembler, HookOptions options)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (targetInstructionAddress == UIntPtr.Zero)
-            return new HookFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
-            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
+            return new IncompatibleBitnessPointerFailure(targetInstructionAddress);
         if (codeAssembler.Instructions.Count == 0)
-            return new HookFailureOnInvalidArguments("The given code assembler must have at least one instruction.");
+            return new InvalidArgumentFailure(nameof(codeAssembler),
+                "The given code assembler must have at least one instruction.");
         
         // The problem with using an assembler is that we don't know how many bytes the assembled code will take, so we
         // have to use the most conservative estimate possible, which is the maximum length of an instruction multiplied
@@ -168,7 +169,7 @@ public static class ProcessMemoryHookExtensions
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             options.JumpMode);
         if (reservationResult.IsFailure)
-            return reservationResult.Error;
+            return reservationResult.Failure;
         var reservation = reservationResult.Value;
         
         // Assemble the code to inject
@@ -178,7 +179,7 @@ public static class ProcessMemoryHookExtensions
         if (assemblingResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, assemblingResult.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.InjectedCode, assemblingResult.Failure.Message);
         }
         byte[] codeBytes = assemblingResult.Value;
         
@@ -211,9 +212,8 @@ public static class ProcessMemoryHookExtensions
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
     /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
-    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
-    /// </returns>
-    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+    /// injected code and also allows you to revert the operation, or a failure.</returns>
+    public static Result<CodeHook> InsertCodeAt(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, byte[] code, params HookRegister[] registersToPreserve)
         => processMemory.Hook(targetInstructionPointerPath, code,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
@@ -239,9 +239,8 @@ public static class ProcessMemoryHookExtensions
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
     /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
-    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
-    /// </returns>
-    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+    /// injected code and also allows you to revert the operation, or a failure.</returns>
+    public static Result<CodeHook> InsertCodeAt(this ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, byte[] code, params HookRegister[] registersToPreserve)
         => processMemory.Hook(targetInstructionAddress, code,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
@@ -267,9 +266,8 @@ public static class ProcessMemoryHookExtensions
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
     /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
-    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
-    /// </returns>
-    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+    /// injected code and also allows you to revert the operation, or a failure.</returns>
+    public static Result<CodeHook> InsertCodeAt(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, Assembler codeAssembler, params HookRegister[] registersToPreserve)
         => processMemory.Hook(targetInstructionPointerPath, codeAssembler,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
@@ -295,9 +293,8 @@ public static class ProcessMemoryHookExtensions
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
     /// <returns>A result holding either a code hook instance that contains the memory reservation holding the
-    /// injected code and also allows you to revert the operation, or a hook failure when the operation failed.
-    /// </returns>
-    public static Result<CodeHook, HookFailure> InsertCodeAt(this ProcessMemory processMemory,
+    /// injected code and also allows you to revert the operation, or a failure.</returns>
+    public static Result<CodeHook> InsertCodeAt(this ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, Assembler codeAssembler, params HookRegister[] registersToPreserve)
         => processMemory.Hook(targetInstructionAddress, codeAssembler,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, registersToPreserve));
@@ -318,19 +315,19 @@ public static class ProcessMemoryHookExtensions
     /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
-    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
-    /// failure when the operation failed. If the operation performed a hook, the result will be a
-    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
-    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a failure.
+    /// If the operation performed a hook, the result will be a <see cref="CodeHook"/> that also contains the
+    /// reservation holding the injected code.</returns>
+    public static Result<CodeChange> ReplaceCodeAt(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, int instructionCount, byte[] code,
         params HookRegister[] registersToPreserve)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
-            return new HookFailureOnPathEvaluation(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.ReplaceCodeAt(addressResult.Value, instructionCount, code, registersToPreserve);
     }
@@ -350,22 +347,23 @@ public static class ProcessMemoryHookExtensions
     /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
-    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
-    /// failure when the operation failed. If the operation performed a hook, the result will be a
-    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
-    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a failure.
+    /// If the operation performed a hook, the result will be a <see cref="CodeHook"/> that also contains the
+    /// reservation holding the injected code.</returns>
+    public static Result<CodeChange> ReplaceCodeAt(this ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, int instructionCount, byte[] code, params HookRegister[] registersToPreserve)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (targetInstructionAddress == UIntPtr.Zero)
-            return new HookFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
-            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
+            return new IncompatibleBitnessPointerFailure(targetInstructionAddress);
         if (instructionCount < 1)
-            return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
+            return new InvalidArgumentFailure(nameof(instructionCount),
+                "The number of instructions to replace must be at least 1.");
         if (code.Length == 0)
-            return new HookFailureOnInvalidArguments("The code to inject must contain at least one byte.");
+            return new InvalidArgumentFailure(nameof(code), "The code to inject must contain at least one byte.");
         
         var hookOptions = new HookOptions(HookExecutionMode.ReplaceOriginalInstruction, registersToPreserve);
         
@@ -374,11 +372,11 @@ public static class ProcessMemoryHookExtensions
         var fullCodeAssemblyResult = AssembleFullCodeToInject(processMemory, code, targetInstructionAddress,
             hookOptions);
         if (fullCodeAssemblyResult.IsFailure)
-            return fullCodeAssemblyResult.Error;
+            return fullCodeAssemblyResult.Failure;
         var directReplaceResult = TryReplaceCodeBytes(processMemory, targetInstructionAddress, instructionCount,
             fullCodeAssemblyResult.Value);
         if (directReplaceResult.IsFailure)
-            return directReplaceResult.Error;
+            return directReplaceResult.Failure;
         if (directReplaceResult.Value != null)
             return directReplaceResult.Value;
         
@@ -387,12 +385,12 @@ public static class ProcessMemoryHookExtensions
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             hookOptions.JumpMode);
         if (reservationResult.IsFailure)
-            return reservationResult.Error;
+            return reservationResult.Failure;
         var reservation = reservationResult.Value;
         
         var hookResult = PerformHook(processMemory, targetInstructionAddress, code, reservation, hookOptions);
         if (hookResult.IsFailure)
-            return hookResult.Error;
+            return hookResult.Failure;
         return hookResult.Value;
     }
     
@@ -412,19 +410,19 @@ public static class ProcessMemoryHookExtensions
     /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
-    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
-    /// failure when the operation failed. If the operation performed a hook, the result will be a
-    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
-    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a failure.
+    /// If the operation performed a hook, the result will be a <see cref="CodeHook"/> that also contains the
+    /// reservation holding the injected code.</returns>
+    public static Result<CodeChange> ReplaceCodeAt(this ProcessMemory processMemory,
         PointerPath targetInstructionPointerPath, int instructionCount, Assembler codeAssembler,
         params HookRegister[] registersToPreserve)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = processMemory.EvaluateMemoryAddress(targetInstructionPointerPath);
         if (addressResult.IsFailure)
-            return new HookFailureOnPathEvaluation(addressResult.Error);
+            return addressResult.Failure;
         
         return processMemory.ReplaceCodeAt(addressResult.Value, instructionCount, codeAssembler, registersToPreserve);
     }
@@ -444,23 +442,25 @@ public static class ProcessMemoryHookExtensions
     /// <param name="registersToPreserve">Optionally provided registers to be saved and restored around the injected
     /// code. This allows the injected code to modify registers without affecting the original code, which could
     /// otherwise lead to crashes or unexpected behavior.</param>
-    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a hook
-    /// failure when the operation failed. If the operation performed a hook, the result will be a
-    /// <see cref="CodeHook"/> that also contains the reservation holding the injected code.</returns>
-    public static Result<CodeChange, HookFailure> ReplaceCodeAt(this ProcessMemory processMemory,
+    /// <returns>A result holding either a code change instance that allows you to revert the operation, or a failure.
+    /// If the operation performed a hook, the result will be a <see cref="CodeHook"/> that also contains the
+    /// reservation holding the injected code.</returns>
+    public static Result<CodeChange> ReplaceCodeAt(this ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, int instructionCount, Assembler codeAssembler,
         params HookRegister[] registersToPreserve)
     {
         if (!processMemory.IsAttached)
-            return new HookFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (targetInstructionAddress == UIntPtr.Zero)
-            return new HookFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!processMemory.Is64Bit && targetInstructionAddress.ToUInt64() > uint.MaxValue)
-            return new HookFailureOnIncompatibleBitness(targetInstructionAddress);
+            return new IncompatibleBitnessPointerFailure(targetInstructionAddress);
         if (instructionCount < 1)
-            return new HookFailureOnInvalidArguments("The number of instructions to replace must be at least 1.");
+            return new InvalidArgumentFailure(nameof(instructionCount),
+                "The number of instructions to replace must be at least 1.");
         if (codeAssembler.Instructions.Count == 0)
-            return new HookFailureOnInvalidArguments("The given code assembler must have at least one instruction.");
+            return new InvalidArgumentFailure(nameof(codeAssembler),
+                "The given code assembler must have at least one instruction.");
         
         var hookOptions = new HookOptions(HookExecutionMode.ReplaceOriginalInstruction, registersToPreserve);
         int preCodeSize = hookOptions.GetExpectedPreCodeSize(processMemory.Is64Bit);
@@ -471,17 +471,17 @@ public static class ProcessMemoryHookExtensions
         var targetAddressAssemblyResult = codeAssembler.AssembleToBytes(
             targetInstructionAddress + (UIntPtr)preCodeSize, 128);
         if (targetAddressAssemblyResult.IsFailure)
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode,
-                targetAddressAssemblyResult.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.InjectedCode,
+                targetAddressAssemblyResult.Failure.Message);
         var fullCodeAssemblyAtTargetAddressResult = AssembleFullCodeToInject(processMemory,
             targetAddressAssemblyResult.Value, targetInstructionAddress, hookOptions);
         if (fullCodeAssemblyAtTargetAddressResult.IsFailure)
-            return fullCodeAssemblyAtTargetAddressResult.Error;
+            return fullCodeAssemblyAtTargetAddressResult.Failure;
         byte[] codeAssembledAtTargetAddress = fullCodeAssemblyAtTargetAddressResult.Value;
         var directReplaceResult = TryReplaceCodeBytes(processMemory, targetInstructionAddress, instructionCount,
             codeAssembledAtTargetAddress);
         if (directReplaceResult.IsFailure)
-            return directReplaceResult.Error;
+            return directReplaceResult.Failure;
         if (directReplaceResult.Value != null)
             return directReplaceResult.Value;
         
@@ -492,7 +492,7 @@ public static class ProcessMemoryHookExtensions
         var reservationResult = ReserveHookTarget(processMemory, sizeToReserve, targetInstructionAddress,
             hookOptions.JumpMode);
         if (reservationResult.IsFailure)
-            return reservationResult.Error;
+            return reservationResult.Failure;
         var reservation = reservationResult.Value;
         
         // Assemble the code to inject (even though we already assembled the code before, it was at a different address,
@@ -503,7 +503,7 @@ public static class ProcessMemoryHookExtensions
         if (assemblyResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.InjectedCode, assemblyResult.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.InjectedCode, assemblyResult.Failure.Message);
         }
         byte[] code = assemblyResult.Value;
         
@@ -516,7 +516,7 @@ public static class ProcessMemoryHookExtensions
         if (hookResult.IsFailure)
         {
             reservation.Dispose();
-            return hookResult.Error;
+            return hookResult.Failure;
         }
         return hookResult.Value;
     }
@@ -535,7 +535,7 @@ public static class ProcessMemoryHookExtensions
     /// <param name="reservation">Memory reservation where the injected code will be written.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <returns>A result holding either a code hook instance, or a hook failure when the operation failed.</returns>
-    private static Result<CodeHook, HookFailure> PerformHook(ProcessMemory processMemory,
+    private static Result<CodeHook> PerformHook(ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, byte[] code, MemoryReservation reservation, HookOptions options)
     {
         // Assemble the jump to the injected code
@@ -545,7 +545,8 @@ public static class ProcessMemoryHookExtensions
         if (jmpAssembleResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.JumpToInjectedCode, jmpAssembleResult.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.JumpToInjectedCode,
+                jmpAssembleResult.Failure.Message);
         }
 
         byte[] jmpBytes = jmpAssembleResult.Value;
@@ -562,7 +563,7 @@ public static class ProcessMemoryHookExtensions
             if (instruction.IsInvalid)
             {
                 reservation.Dispose();
-                return new HookFailureOnDecodingFailure(decoder.LastError);
+                return new CodeDecodingFailure(decoder.LastError);
             }
 
             instructionsToReplace.Add(instruction);
@@ -574,7 +575,7 @@ public static class ProcessMemoryHookExtensions
         if (originalBytesResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnReadFailure(originalBytesResult.Error);
+            return originalBytesResult.Failure;
         }
 
         // Pad the jump bytes with NOPs if needed (example: we inject a 5-byte jump, but we read 2 instructions of 3
@@ -591,13 +592,13 @@ public static class ProcessMemoryHookExtensions
         if (fullCodeResult.IsFailure)
         {
             reservation.Dispose();
-            return fullCodeResult.Error;
+            return fullCodeResult.Failure;
         }
 
         byte[] fullCode = fullCodeResult.Value;
         if ((ulong)fullCode.Length > reservation.Size)
         {
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.Unknown,
+            return new CodeAssemblyFailure(HookCodeAssemblySource.Unknown,
                 $"The assembled code is too large to fit in the reserved memory (reserved {reservation.Size} bytes, but assembled a total of {fullCode.Length} bytes). Please report this, as it is a bug in the hook code generation.");
         }
         
@@ -606,7 +607,7 @@ public static class ProcessMemoryHookExtensions
         if (writeResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnWriteFailure(writeResult.Error);
+            return writeResult.Failure;
         }
 
         // Write the jump to the injected code
@@ -614,7 +615,7 @@ public static class ProcessMemoryHookExtensions
         if (jmpWriteResult.IsFailure)
         {
             reservation.Dispose();
-            return new HookFailureOnWriteFailure(jmpWriteResult.Error);
+            return writeResult.Failure;
         }
 
         return new CodeHook(processMemory, targetInstructionAddress, originalBytesResult.Value, reservation);
@@ -633,8 +634,7 @@ public static class ProcessMemoryHookExtensions
     /// <param name="nextInstructionAddress">Address of the first byte of the instruction that comes after the original
     /// instructions to replace. This is used to generate the jump instruction in the post-hook code. If null, no jump
     /// will be assembled.</param>
-    /// <returns></returns>
-    private static Result<byte[], HookFailure> AssembleFullCodeToInject(ProcessMemory processMemory, byte[] code,
+    private static Result<byte[]> AssembleFullCodeToInject(ProcessMemory processMemory, byte[] code,
         UIntPtr injectionAddress, HookOptions options, IList<Instruction>? instructionsToReplace = null,
         UIntPtr? nextInstructionAddress = null)
     {
@@ -642,7 +642,7 @@ public static class ProcessMemoryHookExtensions
         var preHookCodeResult = BuildPreHookCode(injectionAddress, instructionsToReplace, processMemory.Is64Bit,
             options);
         if (preHookCodeResult.IsFailure)
-            return preHookCodeResult.Error;
+            return preHookCodeResult.Failure;
         byte[] preHookCodeBytes = preHookCodeResult.Value;
 
         // Assemble the post-code
@@ -650,7 +650,7 @@ public static class ProcessMemoryHookExtensions
         var postHookCodeResult = BuildPostHookCode(postHookCodeAddress, instructionsToReplace, processMemory.Is64Bit,
             options, nextInstructionAddress);
         if (postHookCodeResult.IsFailure)
-            return postHookCodeResult.Error;
+            return postHookCodeResult.Failure;
         byte[] postHookCodeBytes = postHookCodeResult.Value;
         
         // Assemble the full code to inject
@@ -674,9 +674,9 @@ public static class ProcessMemoryHookExtensions
     /// <param name="targetInstructionAddress">Address of the first byte of the first instruction to replace.</param>
     /// <param name="instructionCount">Number of consecutive instructions to replace.</param>
     /// <param name="code">Assembled code to inject into the target process.</param>
-    /// <returns>A result that can hold either a code change instance, or a hook failure when the operation failed.
-    /// If the operation cannot be performed, the result will be successful but the value will be null.</returns>
-    private static Result<CodeChange?, HookFailure> TryReplaceCodeBytes(ProcessMemory processMemory,
+    /// <returns>A result that can hold either a code change instance, or a failure. If the operation cannot be
+    /// performed, the result will be successful but the value will be null.</returns>
+    private static Result<CodeChange?> TryReplaceCodeBytes(ProcessMemory processMemory,
         UIntPtr targetInstructionAddress, int instructionCount, byte[] code)
     {
         // Read the original instructions to replace to determine how many bytes it makes up.
@@ -689,7 +689,7 @@ public static class ProcessMemoryHookExtensions
         {
             var instruction = decoder.Decode();
             if (instruction.IsInvalid)
-                return new HookFailureOnDecodingFailure(decoder.LastError);
+                return new CodeDecodingFailure(decoder.LastError);
             
             instructionsToReplace.Add(instruction);
             bytesRead += instruction.Length;
@@ -703,7 +703,7 @@ public static class ProcessMemoryHookExtensions
         // Read the original bytes to replace (so that the change can be reverted)
         var originalBytesResult = processMemory.ReadBytes(targetInstructionAddress, bytesRead);
         if (originalBytesResult.IsFailure)
-            return new HookFailureOnReadFailure(originalBytesResult.Error);
+            return originalBytesResult.Failure;
         
         // Pad the injected code with NOPs if needed, to avoid leaving bytes from the original instructions in memory
         if (bytesRead > code.Length)
@@ -713,7 +713,7 @@ public static class ProcessMemoryHookExtensions
         // Write the injected code directly
         var writeResult = processMemory.WriteBytes(targetInstructionAddress, code);
         if (writeResult.IsFailure)
-            return new HookFailureOnWriteFailure(writeResult.Error);
+            return writeResult.Failure;
         
         return new CodeChange(processMemory, targetInstructionAddress, originalBytesResult.Value);
     }
@@ -725,8 +725,8 @@ public static class ProcessMemoryHookExtensions
     /// <param name="instructionsToReplace">Original instructions to be replaced by a jump to the injected code.</param>
     /// <param name="is64Bit">Boolean indicating if the target process is 64-bit.</param>
     /// <param name="options">Options defining how the hook behaves.</param>
-    /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
-    private static Result<byte[], HookFailure> BuildPreHookCode(ulong baseAddress,
+    /// <returns>A result holding either the assembled code bytes, or a failure.</returns>
+    private static Result<byte[]> BuildPreHookCode(ulong baseAddress,
         IList<Instruction>? instructionsToReplace, bool is64Bit, HookOptions options)
     {
         var assembler = new Assembler(is64Bit ? 64 : 32);
@@ -761,7 +761,7 @@ public static class ProcessMemoryHookExtensions
         // Assemble the code and return the resulting bytes
         var result = assembler.AssembleToBytes(baseAddress, 128);
         if (result.IsFailure)
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.PrependedCode, result.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.PrependedCode, result.Failure.Message);
         
         return result.Value;
     }
@@ -775,8 +775,8 @@ public static class ProcessMemoryHookExtensions
     /// <param name="options">Options defining how the hook behaves.</param>
     /// <param name="originalCodeJumpTarget">Address of the first byte of the instruction to jump back to. If null,
     /// the jump back will not be assembled.</param>
-    /// <returns>A result holding either the assembled code bytes, or a hook failure.</returns>
-    private static Result<byte[], HookFailure> BuildPostHookCode(ulong baseAddress,
+    /// <returns>A result holding either the assembled code bytes, or a failure.</returns>
+    private static Result<byte[]> BuildPostHookCode(ulong baseAddress,
         IList<Instruction>? instructionsToReplace, bool is64Bit, HookOptions options, UIntPtr? originalCodeJumpTarget)
     {
         var assembler = new Assembler(is64Bit ? 64 : 32);
@@ -819,7 +819,7 @@ public static class ProcessMemoryHookExtensions
         // Assemble the code and return the resulting bytes
         var result = assembler.AssembleToBytes(baseAddress, 128);
         if (result.IsFailure)
-            return new HookFailureOnCodeAssembly(HookCodeAssemblySource.AppendedCode, result.Error);
+            return new CodeAssemblyFailure(HookCodeAssemblySource.AppendedCode, result.Failure.Message);
 
         return result.Value;
     }
@@ -847,8 +847,8 @@ public static class ProcessMemoryHookExtensions
     /// <param name="sizeToReserve">Size of the memory to reserve.</param>
     /// <param name="jumpAddress">Address of the jump instruction that will jump to the injected code.</param>
     /// <param name="jumpMode">Jump mode of the hook.</param>
-    /// <returns>A result holding either the memory reservation, or an allocation failure.</returns>
-    private static Result<MemoryReservation, HookFailure> ReserveHookTarget(ProcessMemory processMemory,
+    /// <returns>A result holding either the memory reservation, or a failure.</returns>
+    private static Result<MemoryReservation> ReserveHookTarget(ProcessMemory processMemory,
         ulong sizeToReserve, UIntPtr jumpAddress, HookJumpMode jumpMode)
     {
         // The range of a near jump is limited by the signed byte displacement that follows the opcode.
@@ -858,12 +858,7 @@ public static class ProcessMemoryHookExtensions
         // For example, a jump from 0x00000000 to 0xFFFFFFFF can be made with a near jump with an offset of -1.
         // Which means that for 32-bit processes, we can reserve memory anywhere in the address space.
         if (!processMemory.Is64Bit)
-        {
-            var reservationResult = processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
-            if (reservationResult.IsFailure)
-                return new HookFailureOnAllocationFailure(reservationResult.Error);
-            return reservationResult.Value;
-        }
+            return processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
 
         // In 64-bit processes, however, the offset is still a signed 4-byte integer, but the full range is much
         // larger, meaning we can't reach any address.
@@ -872,8 +867,8 @@ public static class ProcessMemoryHookExtensions
         // the offset is outside the 64-bit address space), because they mostly make sense for 32-bit processes and
         // would complicate things unnecessarily.
         
-        // The displacement is relative to the address of the next instruction. A near jump instruction is 5 bytes long.
-        var nextInstructionAddress = jumpAddress + 5;
+        // The displacement is relative to the address of the next instruction.
+        var nextInstructionAddress = jumpAddress + NearJumpInstructionLength;
         
         // The aim of this method is to reserve memory close enough to perform a near jump from the target instruction.
         // However, to potentially avoid having to do far jumps from the injected code, we do a first attempt to reserve
@@ -891,13 +886,10 @@ public static class ProcessMemoryHookExtensions
         
         // If the jump mode is set to near jump only, we return the failure, as we would not be able to use a near jump.
         if (jumpMode == HookJumpMode.NearJumpOnly)
-            return new HookFailureOnAllocationFailure(nearJumpResult.Error);
+            return nearJumpResult.Failure;
         
         // Otherwise, we try to reserve memory anywhere in the address space
-        var fullRangeResult = processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
-        if (fullRangeResult.IsFailure)
-            return new HookFailureOnAllocationFailure(fullRangeResult.Error);
-        return fullRangeResult.Value;
+        return processMemory.Reserve(sizeToReserve, true, nearAddress: jumpAddress);
     }
     
     #endregion

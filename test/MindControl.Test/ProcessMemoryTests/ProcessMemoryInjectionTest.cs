@@ -43,7 +43,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     public void InjectLibraryTest()
     {
         var result = TestProcessMemory!.InjectLibrary(GetInjectedLibraryPath());
-        Assert.That(result.IsSuccess, Is.True, () => result.Error.ToString());
+        Assert.That(result.IsSuccess, Is.True, () => result.Failure.ToString());
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
     }
@@ -70,7 +70,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
     /// <summary>
     /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
     /// Specify a path to a non-existent library file.
-    /// The method should fail with a <see cref="InjectionFailureOnLibraryFileNotFound"/>.
+    /// The method should fail with a <see cref="LibraryFileNotFoundFailure"/>.
     /// </summary>
     [Test]
     public void InjectLibraryWithLibraryFileNotFoundTest()
@@ -78,14 +78,15 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
         const string path = "./NonExistentLibrary.dll";
         var result = TestProcessMemory!.InjectLibrary(path);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.TypeOf<InjectionFailureOnLibraryFileNotFound>());
-        var error = (InjectionFailureOnLibraryFileNotFound)result.Error;
-        Assert.That(error.LibraryPath, Has.Length.GreaterThan(path.Length)); // We expect a full path
-        Assert.That(error.LibraryPath, Does.EndWith("NonExistentLibrary.dll"));
+        Assert.That(result.Failure, Is.TypeOf<LibraryFileNotFoundFailure>());
+        var failure = (LibraryFileNotFoundFailure)result.Failure;
+        Assert.That(failure.LibraryPath, Has.Length.GreaterThan(path.Length)); // We expect a full path
+        Assert.That(failure.LibraryPath, Does.EndWith("NonExistentLibrary.dll"));
     }
     
     /// <summary>
-    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method.
+    /// Tests the <see cref="ProcessMemory.InjectLibrary(string)"/> method with a detached process.
+    /// The method should fail with a <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
     public void InjectLibraryWithDetachedProcessTest()
@@ -93,7 +94,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
         TestProcessMemory!.Dispose();
         var result = TestProcessMemory.InjectLibrary(GetInjectedLibraryPath());
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<InjectionFailureOnDetachedProcess>());
+        Assert.That(result.Failure, Is.InstanceOf<DetachedProcessFailure>());
     }
 }
 
@@ -108,13 +109,13 @@ public class ProcessMemoryInjectionTestX86 : ProcessMemoryInjectionTest
     
     /// <summary>
     /// Tests <see cref="ProcessMemory.InjectLibrary(string)"/> with a 64-bit library on a 32-bit process.
-    /// Expect a <see cref="InjectionFailureOnLoadLibraryFailure"/>.
+    /// Expect a <see cref="LibraryLoadFailure"/>.
     /// </summary>
     [Test]
     public void InjectX64LibraryOnX86ProcessTest()
     {
         var result = TestProcessMemory!.InjectLibrary(GetInjectedLibraryPath(true));
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<InjectionFailureOnLoadLibraryFailure>());
+        Assert.That(result.Failure, Is.InstanceOf<LibraryLoadFailure>());
     }
 }

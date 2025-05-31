@@ -23,20 +23,20 @@ public partial class ProcessMemory
     /// <param name="forExecutableCode">Determines if the memory range can be used to store executable code.</param>
     /// <param name="limitRange">Specify this parameter to limit the allocation to a specific range of memory.</param>
     /// <param name="nearAddress">If specified, try to allocate as close as possible to this address.</param>
-    /// <returns>A result holding either the allocated memory range, or an allocation failure.</returns>
-    public DisposableResult<MemoryAllocation, AllocationFailure> Allocate(ulong size, bool forExecutableCode,
+    /// <returns>A result holding either the allocated memory range, or a failure.</returns>
+    public DisposableResult<MemoryAllocation> Allocate(ulong size, bool forExecutableCode,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         if (!IsAttached)
-            return new AllocationFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (size == 0)
-            return new AllocationFailureOnInvalidArguments(
+            return new InvalidArgumentFailure(nameof(size),
                 "The size of the memory range to allocate must be greater than zero.");
         
         // Find a free memory range that satisfies the size needed
         var rangeResult = FindAndAllocateFreeMemory(size, forExecutableCode, limitRange, nearAddress);
         if (rangeResult.IsFailure)
-            return rangeResult.Error;
+            return rangeResult.Failure;
         
         // Add the range to the list of allocated ranges and return it
         var allocatedRange = new MemoryAllocation(rangeResult.Value, forExecutableCode, this);
@@ -67,10 +67,10 @@ public partial class ProcessMemory
     /// <param name="limitRange">Specify this parameter to limit the search to a specific range of memory.
     /// If left null (default), the entire process memory will be searched.</param>
     /// <param name="nearAddress">If specified, try to allocate as close as possible to this address.</param>
-    /// <returns>A result holding either the memory range found, or an allocation failure.</returns>
+    /// <returns>A result holding either the memory range found, or a failure.</returns>
     /// <remarks>The reason why the method performs the allocation itself is because we cannot know if the range can
     /// actually be allocated without performing the allocation.</remarks>
-    private Result<MemoryRange, AllocationFailure> FindAndAllocateFreeMemory(ulong sizeNeeded,
+    private Result<MemoryRange> FindAndAllocateFreeMemory(ulong sizeNeeded,
         bool forExecutableCode, MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         var maxRange = _osService.GetFullMemoryRange();
@@ -78,7 +78,7 @@ public partial class ProcessMemory
 
         // If the given range is not within the process applicative memory, return null
         if (actualRange == null)
-            return new AllocationFailureOnLimitRangeOutOfBounds(maxRange);
+            return new LimitRangeOutOfBoundsFailure(maxRange);
 
         // Compute the minimum multiple of the system page size that can fit the size needed
         // This will be the maximum size that we are going to allocate
@@ -100,7 +100,7 @@ public partial class ProcessMemory
         while ((nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
                 && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64())
             && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress)
-                .GetValueOrDefault()).Size.ToUInt64() > 0)
+                .ValueOrDefault()).Size.ToUInt64() > 0)
         {
             nextAddressForward = (UIntPtr)Math.Max(nextAddressForward.ToUInt64(),
                 nextAddress.ToUInt64() + currentMetadata.Size.ToUInt64());
@@ -177,7 +177,7 @@ public partial class ProcessMemory
         }
 
         // We reached the end of the memory range and didn't find a suitable free range.
-        return new AllocationFailureOnNoFreeMemoryFound(actualRange.Value, nextAddress);
+        return new NoFreeMemoryFailure(actualRange.Value, nextAddress);
     }
     
     #region Store
@@ -194,14 +194,14 @@ public partial class ProcessMemory
     /// </param>
     /// <param name="nearAddress">If specified, prioritize allocations by their proximity to this address. If no
     /// matching allocation is found, a new allocation as close as possible to this address will be attempted.</param>
-    /// <returns>A result holding either the resulting reservation, or an allocation failure.</returns>
-    public DisposableResult<MemoryReservation, AllocationFailure> Reserve(ulong size, bool requireExecutable,
+    /// <returns>A result holding either the resulting reservation, or a failure.</returns>
+    public DisposableResult<MemoryReservation> Reserve(ulong size, bool requireExecutable,
         MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
         if (!IsAttached)
-            return new AllocationFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (size == 0)
-            return new AllocationFailureOnInvalidArguments(
+            return new InvalidArgumentFailure(nameof(size),
                 "The size of the memory range to reserve must be greater than zero.");
         
         uint alignment = Is64Bit ? (uint)8 : 4;
@@ -226,7 +226,7 @@ public partial class ProcessMemory
         // No allocation could satisfy the reservation: allocate a new range
         var allocationResult = Allocate(size, requireExecutable, limitRange, nearAddress);
         if (allocationResult.IsFailure)
-            return allocationResult.Error;
+            return allocationResult.Failure;
         
         // Make a reservation within that new allocation
         var newAllocation = allocationResult.Value;
@@ -236,7 +236,7 @@ public partial class ProcessMemory
             // There is no reason for the reservation to fail here, as we just allocated memory of sufficient size.
             // Just in case, we free the memory and return the most appropriate failure.
             Free(allocationResult.Value);
-            return new AllocationFailureOnNoFreeMemoryFound(newAllocation.Range, newAllocation.Range.Start);
+            return new NoFreeMemoryFailure(newAllocation.Range, newAllocation.Range.Start);
         }
         
         return reservationResult.Value;
@@ -249,16 +249,16 @@ public partial class ProcessMemory
     /// <param name="data">Data to store.</param>
     /// <param name="isCode">Set to true if the data is executable code. Defaults to false.</param>
     /// <returns>A result holding either the reserved memory range, or an allocation failure.</returns>
-    public DisposableResult<MemoryReservation, StoreFailure> Store(byte[] data, bool isCode = false)
+    public DisposableResult<MemoryReservation> Store(byte[] data, bool isCode = false)
     {
         if (!IsAttached)
-            return new StoreFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (data.Length == 0)
-            return new StoreFailureOnInvalidArguments("The data to store must not be empty.");
+            return new InvalidArgumentFailure(nameof(data), "The data to store must not be empty.");
         
         var reservedRangeResult = Reserve((ulong)data.Length, isCode);
         if (reservedRangeResult.IsFailure)
-            return new StoreFailureOnAllocation(reservedRangeResult.Error);
+            return reservedRangeResult.Failure;
 
         var reservedRange = reservedRangeResult.Value;
         var writeResult = WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
@@ -266,7 +266,7 @@ public partial class ProcessMemory
         {
             // If writing the data failed, free the reservation and return the write failure.
             reservedRange.Dispose();
-            return new StoreFailureOnWrite(writeResult.Error);
+            return writeResult.Failure;
         }
         
         return reservedRange;
@@ -274,22 +274,22 @@ public partial class ProcessMemory
     
     /// <summary>
     /// Stores the given data in the specified allocated range. Returns the reservation that holds the data.
-    /// In most situations, you should use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
+    /// In most situations, you can use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
     /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically. Use this signature
     /// if you need to manage allocations and reservations manually.
     /// </summary>
     /// <param name="data">Data to store.</param>
     /// <param name="allocation">Allocated memory to store the data.</param>
-    /// <returns>A result holding either the reservation storing the data, or a reservation failure.</returns>
-    public DisposableResult<MemoryReservation, StoreFailure> Store(byte[] data, MemoryAllocation allocation)
+    /// <returns>A result holding either the reservation storing the data, or a failure.</returns>
+    public DisposableResult<MemoryReservation> Store(byte[] data, MemoryAllocation allocation)
     {
         if (!IsAttached)
-            return new StoreFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         uint alignment = Is64Bit ? (uint)8 : 4;
         var reservedRangeResult = allocation.ReserveRange((ulong)data.Length, alignment);
         if (reservedRangeResult.IsFailure)
-            return new StoreFailureOnReservation(reservedRangeResult.Error);
+            return reservedRangeResult.Failure;
 
         var reservedRange = reservedRangeResult.Value;
         var writeResult = WriteBytes(reservedRange.Range.Start, data, MemoryProtectionStrategy.Ignore);
@@ -297,7 +297,7 @@ public partial class ProcessMemory
         {
             // If writing the data failed, free the reservation and return the write failure.
             reservedRange.Dispose();
-            return new StoreFailureOnWrite(writeResult.Error);
+            return writeResult.Failure;
         }
         
         return reservedRange;
@@ -309,24 +309,22 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
-    /// </returns>
-    public DisposableResult<MemoryReservation, StoreFailure> Store<T>(T value)
+    /// <returns>A result holding either the reservation where the data has been written, or a failure.</returns>
+    public DisposableResult<MemoryReservation> Store<T>(T value)
         => Store(value.ToBytes(), false);
 
     /// <summary>
     /// Stores the given value or structure in the specified range of memory. Returns the reservation that holds the
     /// data.
-    /// In most situations, you should use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
+    /// In most situations, you can use the <see cref="Store{T}(T)"/> or <see cref="Store(byte[],bool)"/> signatures
     /// instead, to have the <see cref="ProcessMemory"/> instance handle allocations automatically. Use this signature
     /// if you need to manage allocations and reservations manually.
     /// </summary>
     /// <param name="value">Value or structure to store.</param>
     /// <param name="allocation">Range of memory to store the data in.</param>
     /// <typeparam name="T">Type of the value or structure.</typeparam>
-    /// <returns>A result holding either the reservation where the data has been written, or an allocation failure.
-    /// </returns>
-    public DisposableResult<MemoryReservation, StoreFailure> Store<T>(T value, MemoryAllocation allocation)
+    /// <returns>A result holding either the reservation where the data has been written, or a failure.</returns>
+    public DisposableResult<MemoryReservation> Store<T>(T value, MemoryAllocation allocation)
         where T: struct
         => Store(value.ToBytes(), allocation);
     
@@ -336,18 +334,17 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="value">String to store.</param>
     /// <param name="settings">String settings to use to write the string.</param>
-    /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
-    /// </returns>
-    public DisposableResult<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings)
+    /// <returns>A result holding either the reservation where the string has been written, or a failure.</returns>
+    public DisposableResult<MemoryReservation> StoreString(string value, StringSettings settings)
     {
         if (!IsAttached)
-            return new StoreFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (!settings.IsValid)
-            return new StoreFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+            return new InvalidArgumentFailure(nameof(settings), StringSettings.InvalidSettingsMessage);
         
         var bytes = settings.GetBytes(value);
         if (bytes == null)
-            return new StoreFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+            return new InvalidArgumentFailure(nameof(settings), StringSettings.GetBytesFailureMessage);
         
         return Store(bytes, isCode: false);
     }
@@ -361,19 +358,18 @@ public partial class ProcessMemory
     /// <param name="value">String to store.</param>
     /// <param name="settings">String settings to use to write the string.</param>
     /// <param name="allocation">Range of memory to store the string in.</param>
-    /// <returns>A result holding either the reservation where the string has been written, or an allocation failure.
-    /// </returns>
-    public DisposableResult<MemoryReservation, StoreFailure> StoreString(string value, StringSettings settings,
+    /// <returns>A result holding either the reservation where the string has been written, or a failure.</returns>
+    public DisposableResult<MemoryReservation> StoreString(string value, StringSettings settings,
         MemoryAllocation allocation)
     {
         if (!IsAttached)
-            return new StoreFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (!settings.IsValid)
-            return new StoreFailureOnInvalidArguments(StringSettings.InvalidSettingsMessage);
+            return new InvalidArgumentFailure(nameof(settings), StringSettings.InvalidSettingsMessage);
         
         var bytes = settings.GetBytes(value);
         if (bytes == null)
-            return new StoreFailureOnInvalidArguments(StringSettings.GetBytesFailureMessage);
+            return new InvalidArgumentFailure(nameof(settings), StringSettings.GetBytesFailureMessage);
         
         return Store(bytes, allocation);
     }

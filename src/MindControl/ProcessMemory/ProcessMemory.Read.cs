@@ -22,13 +22,13 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, long length)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<byte[]> ReadBytes(PointerPath pointerPath, long length)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (length < 0)
-            return new ReadFailureOnInvalidArguments("The length to read cannot be negative.");
+            return new InvalidArgumentFailure(nameof(length), "The length to read cannot be negative.");
         
         return ReadBytes(pointerPath, (ulong)length);
     }
@@ -38,15 +38,14 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Optimized, reusable path to the target address.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(PointerPath pointerPath, ulong length)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<byte[]> ReadBytes(PointerPath pointerPath, ulong length)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? ReadBytes(addressResult.Value, length)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+        return addressResult.IsSuccess ? ReadBytes(addressResult.Value, length) : addressResult.Failure;
     }
 
     /// <summary>
@@ -54,13 +53,13 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, long length)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<byte[]> ReadBytes(UIntPtr address, long length)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (length < 0)
-            return new ReadFailureOnInvalidArguments("The length to read cannot be negative.");
+            return new InvalidArgumentFailure(nameof(length), "The length to read cannot be negative.");
         
         return ReadBytes(address, (ulong)length);
     }
@@ -70,19 +69,17 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="length">Number of bytes to read.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<byte[], ReadFailure> ReadBytes(UIntPtr address, ulong length)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<byte[]> ReadBytes(UIntPtr address, ulong length)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         
-        var readResult = _osService.ReadProcessMemory(ProcessHandle, address, length);
-        return readResult.IsSuccess ? readResult.Value
-            : new ReadFailureOnSystemRead(readResult.Error);
+        return _osService.ReadProcessMemory(ProcessHandle, address, length);
     }
 
     /// <summary>
@@ -95,15 +92,15 @@ public partial class ProcessMemory
     /// <param name="pointerPath">Pointer path to the target address in the process memory.</param>
     /// <param name="buffer">Buffer to store the bytes read.</param>
     /// <param name="maxLength">Number of bytes to read, at most.</param>
-    /// <returns>The value read from the process memory, or a read failure in case no bytes could be read.</returns>
-    public Result<ulong, ReadFailure> ReadBytesPartial(PointerPath pointerPath, byte[] buffer, ulong maxLength)
+    /// <returns>The value read from the process memory, or a failure in case no bytes could be read.</returns>
+    public Result<ulong> ReadBytesPartial(PointerPath pointerPath, byte[] buffer, ulong maxLength)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? ReadBytesPartial(addressResult.Value, buffer, maxLength)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+        return addressResult.IsSuccess ? ReadBytesPartial(addressResult.Value, buffer, maxLength) 
+            : addressResult.Failure;
     }
     
     /// <summary>
@@ -116,23 +113,23 @@ public partial class ProcessMemory
     /// <param name="address">Target address in the process memory.</param>
     /// <param name="buffer">Buffer to store the bytes read.</param>
     /// <param name="maxLength">Number of bytes to read, at most.</param>
-    /// <returns>The value read from the process memory, or a read failure in case no bytes could be read.</returns>
-    public Result<ulong, ReadFailure> ReadBytesPartial(UIntPtr address, byte[] buffer, ulong maxLength)
+    /// <returns>The value read from the process memory, or a failure in case no bytes could be read.</returns>
+    public Result<ulong> ReadBytesPartial(UIntPtr address, byte[] buffer, ulong maxLength)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (maxLength == 0)
             return 0;
         if ((ulong)buffer.Length < maxLength)
-            return new ReadFailureOnInvalidArguments("The buffer length must be at least the provided length to read.");
+            return new InvalidArgumentFailure(nameof(buffer),
+                "The buffer length must be at least the provided length to read.");
         if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         
         var readResult = _osService.ReadProcessMemoryPartial(ProcessHandle, address, buffer, 0, maxLength);
-        return readResult.IsSuccess ? readResult.Value
-            : new ReadFailureOnSystemRead(readResult.Error);
+        return readResult;
     }
     
     #endregion
@@ -147,15 +144,14 @@ public partial class ProcessMemory
     /// Example: "MyGame.exe+1F1688,1F,4". Reuse <see cref="PointerPath"/> instances to optimize execution time.</param>
     /// <typeparam name="T">Type of data to read. Only value types are supported (primitive types and structures).
     /// </typeparam>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<T, ReadFailure> Read<T>(PointerPath pointerPath) where T : struct
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<T> Read<T>(PointerPath pointerPath) where T : struct
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? Read<T>(addressResult.Value)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+        return addressResult.IsSuccess ? Read<T>(addressResult.Value) : addressResult.Failure;
     }
     
     /// <summary>
@@ -165,15 +161,15 @@ public partial class ProcessMemory
     /// <param name="address">Target address in the process memory.</param>
     /// <typeparam name="T">Type of data to read. Only value types are supported (primitive types and structures).
     /// </typeparam>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<T, ReadFailure> Read<T>(UIntPtr address) where T : struct
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<T> Read<T>(UIntPtr address) where T : struct
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         
         // Get the size of the target type
         int size;
@@ -189,14 +185,14 @@ public partial class ProcessMemory
             }
             catch (ArgumentException)
             {
-                return new ReadFailureOnConversionFailure();
+                return new ConversionFailure();
             }
         }
 
         // Read the bytes from the process memory
         var readResult = _osService.ReadProcessMemory(ProcessHandle, address, (ulong)size);
         if (readResult.IsFailure)
-            return new ReadFailureOnSystemRead(readResult.Error);
+            return readResult.Failure;
         byte[] bytes = readResult.Value;
         
         // Convert the bytes into the target type
@@ -210,7 +206,7 @@ public partial class ProcessMemory
         }
         catch (Exception)
         {
-            return new ReadFailureOnConversionFailure();
+            return new ConversionFailure();
         }
     }
 
@@ -222,15 +218,14 @@ public partial class ProcessMemory
     /// </param>
     /// <param name="pointerPath">Pointer path to the target address. Can be implicitly converted from a string.
     /// Example: "MyGame.exe+1F1688,1F,4". Reuse <see cref="PointerPath"/> instances to optimize execution time.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<object, ReadFailure> Read(Type type, PointerPath pointerPath)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<object> Read(Type type, PointerPath pointerPath)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? Read(type, addressResult.Value)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+        return addressResult.IsSuccess ? Read(type, addressResult.Value) : addressResult.Failure;
     }
     
     /// <summary>
@@ -240,17 +235,17 @@ public partial class ProcessMemory
     /// <param name="type">Type of data to read. Only value types are supported (primitive types and structures).
     /// </param>
     /// <param name="address">Target address in the process memory.</param>
-    /// <returns>The value read from the process memory, or a read failure.</returns>
-    public Result<object, ReadFailure> Read(Type type, UIntPtr address)
+    /// <returns>The value read from the process memory, or a failure.</returns>
+    public Result<object> Read(Type type, UIntPtr address)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (!type.IsValueType)
-            return new ReadFailureOnUnsupportedType(type);
+            return new UnsupportedTypeReadFailure(type);
         if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         
         // Get the size of the target type
         int size = Marshal.SizeOf(type);
@@ -258,7 +253,7 @@ public partial class ProcessMemory
         // Read the bytes from the process memory
         var readResult = _osService.ReadProcessMemory(ProcessHandle, address, (ulong)size);
         if (!readResult.IsSuccess)
-            return new ReadFailureOnSystemRead(readResult.Error);
+            return readResult.Failure;
         
         // Convert the bytes into the target type
         // Special case for booleans, which do not work well with Marshal.PtrToStructure
@@ -273,12 +268,12 @@ public partial class ProcessMemory
             var pointer = handle.AddrOfPinnedObject();
             object? structure = Marshal.PtrToStructure(pointer, type);
             if (structure == null)
-                return new ReadFailureOnConversionFailure();
+                return new ConversionFailure();
             return structure;
         }
         catch (Exception)
         {
-            return new ReadFailureOnConversionFailure();
+            return new ConversionFailure();
         }
         finally
         {
@@ -323,17 +318,17 @@ public partial class ProcessMemory
     /// <param name="expectedString">Known string that the pointer points to. Very short strings consisting of only a
     /// few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
     /// better results.</param>
-    /// <returns>A result holding the potential string settings if they were successfully determined, or a read failure
+    /// <returns>A result holding the potential string settings if they were successfully determined, or a failure
     /// otherwise.</returns>
-    public Result<StringSettings, FindStringSettingsFailure> FindStringSettings(PointerPath pointerPath,
+    public Result<StringSettings> FindStringSettings(PointerPath pointerPath,
         string expectedString)
     {
         if (!IsAttached)
-            return new FindStringSettingsFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
-        return addressResult.IsSuccess ? FindStringSettings(addressResult.Value, expectedString)
-            : new FindStringSettingsFailureOnPointerPathEvaluation(addressResult.Error);
+        return addressResult.IsSuccess ? FindStringSettings(addressResult.Value, expectedString) 
+            : addressResult.Failure;
     }
     
     /// <summary>
@@ -345,19 +340,19 @@ public partial class ProcessMemory
     /// <param name="expectedString">Known string that the pointer points to. Very short strings consisting of only a
     /// few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
     /// better results.</param>
-    /// <returns>A result holding the potential string settings if they were successfully determined, or a read failure
+    /// <returns>A result holding the potential string settings if they were successfully determined, or a failure
     /// otherwise.</returns>
-    public Result<StringSettings, FindStringSettingsFailure> FindStringSettings(UIntPtr stringPointerAddress,
+    public Result<StringSettings> FindStringSettings(UIntPtr stringPointerAddress,
         string expectedString)
     {
         if (!IsAttached)
-            return new FindStringSettingsFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (stringPointerAddress == UIntPtr.Zero)
-            return new FindStringSettingsFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(stringPointerAddress))
-            return new FindStringSettingsFailureOnIncompatibleBitness(stringPointerAddress);
+            return new IncompatibleBitnessPointerFailure(stringPointerAddress);
         if (string.IsNullOrWhiteSpace(expectedString))
-            return new FindStringSettingsFailureOnNoSettingsFound();
+            return new InvalidArgumentFailure(nameof(expectedString), "The expected string cannot be null or empty.");
         
         // We have to determine 4 parameters:
         // - The encoding of the string
@@ -372,11 +367,11 @@ public partial class ProcessMemory
         // Read the address of the actual string from the pointer
         var pointerResult = Read<UIntPtr>(stringPointerAddress);
         if (pointerResult.IsFailure)
-            return new FindStringSettingsFailureOnPointerReadFailure(pointerResult.Error);
+            return pointerResult.Failure;
         
         var pointerValue = pointerResult.Value;
         if (pointerValue == UIntPtr.Zero)
-            return new FindStringSettingsFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         
         // Read the max amount of bytes we might need to read the string from
         // This is computed from the sum of the longest considered type prefix, the longest considered length prefix,
@@ -390,7 +385,7 @@ public partial class ProcessMemory
         
         var bytesResult = ReadBytes(pointerValue, (ulong)maxBytesTotal);
         if (bytesResult.IsFailure)
-            return new FindStringSettingsFailureOnStringReadFailure(bytesResult.Error);
+            return bytesResult.Failure;
         byte[] bytes = bytesResult.Value;
         
         // Iterate through all possible setting combinations from the considered setting values
@@ -442,7 +437,7 @@ public partial class ProcessMemory
         }
         
         // If we reach this point, we could not find any settings that would allow us to read the expected string.
-        return new FindStringSettingsFailureOnNoSettingsFound();
+        return new UndeterminedStringSettingsFailure();
     }
     
     #endregion
@@ -493,16 +488,16 @@ public partial class ProcessMemory
     /// <param name="isNullTerminated">Boolean indicating if the string is null-terminated. If true, the string will be
     /// read until the first null character. If false, the string will be read up to the maximum length specified.
     /// </param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    public Result<string, ReadFailure> ReadRawString(PointerPath pointerPath, Encoding encoding,
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    public Result<string> ReadRawString(PointerPath pointerPath, Encoding encoding,
         int? maxLength = null, bool isNullTerminated = true)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
         return addressResult.IsSuccess ? ReadRawString(addressResult.Value, encoding, maxLength, isNullTerminated)
-            : new ReadFailureOnPointerPathEvaluation(addressResult.Error);
+            : addressResult.Failure;
     }
 
     /// <summary>
@@ -521,18 +516,18 @@ public partial class ProcessMemory
     /// <param name="isNullTerminated">Boolean indicating if the string is null-terminated. If true, the string will be
     /// read until the first null character. If false, the string will be read up to the maximum length specified.
     /// </param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    public Result<string, ReadFailure> ReadRawString(UIntPtr address, Encoding encoding,
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    public Result<string> ReadRawString(UIntPtr address, Encoding encoding,
         int? maxLength = null, bool isNullTerminated = true)
     {
         if (!IsAttached)
-            return new ReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new ReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new ReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         if (maxLength is < 0)
-            return new ReadFailureOnInvalidArguments("The maximum length cannot be negative.");
+            return new InvalidArgumentFailure(nameof(maxLength), "The maximum length cannot be negative.");
         if (maxLength == 0)
             return string.Empty;
         
@@ -548,7 +543,7 @@ public partial class ProcessMemory
         var buffer = new byte[byteSizeToRead];
         var readResult = ReadBytesPartial(address, buffer, (ulong)byteSizeToRead);
         if (readResult.IsFailure)
-            return readResult.Error;
+            return readResult.Failure;
         
         // Check the number of bytes read
         ulong readByteCount = readResult.Value;
@@ -574,15 +569,15 @@ public partial class ProcessMemory
     /// <param name="settings">Settings that define how to read the string. If you cannot figure out what settings to
     /// use, try <see cref="FindStringSettings(UIntPtr,string)"/> to automatically determine the right settings for a
     /// known string pointer. See the documentation for more information.</param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    public Result<string, StringReadFailure> ReadStringPointer(PointerPath pointerPath, StringSettings settings)
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    public Result<string> ReadStringPointer(PointerPath pointerPath, StringSettings settings)
     {
         if (!IsAttached)
-            return new StringReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(pointerPath);
         return addressResult.IsSuccess ? ReadStringPointer(addressResult.Value, settings)
-            : new StringReadFailureOnPointerPathEvaluation(addressResult.Error);
+            : addressResult.Failure;
     }
     
     /// <summary>
@@ -593,24 +588,24 @@ public partial class ProcessMemory
     /// <param name="settings">Settings that define how to read the string. If you cannot figure out what settings to
     /// use, try <see cref="FindStringSettings(UIntPtr,string)"/> to automatically determine the right settings for a
     /// known string pointer. See the documentation for more information.</param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    public Result<string, StringReadFailure> ReadStringPointer(UIntPtr address, StringSettings settings)
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    public Result<string> ReadStringPointer(UIntPtr address, StringSettings settings)
     {
         if (!IsAttached)
-            return new StringReadFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (!IsBitnessCompatible(address))
-            return new StringReadFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         if (address == UIntPtr.Zero)
-            return new StringReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!settings.IsValid)
-            return new StringReadFailureOnInvalidSettings();
+            return new InvalidStringSettingsFailure();
         
         // Start by reading the address of the string bytes
         var stringAddressResult = Read<UIntPtr>(address);
         if (stringAddressResult.IsFailure)
-            return new StringReadFailureOnPointerReadFailure(stringAddressResult.Error);
+            return stringAddressResult.Failure;
         if (stringAddressResult.Value == UIntPtr.Zero)
-            return new StringReadFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         var stringAddress = stringAddressResult.Value;
         
         // The string settings will either have a null terminator or a length prefix.
@@ -637,9 +632,8 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="address">Address of the string in the process memory.</param>
     /// <param name="settings">Settings that define how to read the string.</param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    private Result<string, StringReadFailure> ReadStringWithLengthPrefixInBytes(UIntPtr address,
-        StringSettings settings)
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    private Result<string> ReadStringWithLengthPrefixInBytes(UIntPtr address, StringSettings settings)
     {
         // The strategy when the string has a length prefix in bytes is the easiest one:
         // Read the length prefix, then we know exactly how many bytes to read, and then use the encoding to decode
@@ -650,20 +644,20 @@ public partial class ProcessMemory
         var lengthPrefixAddress = (UIntPtr)(address.ToUInt64() + (ulong)lengthPrefixOffset);
         var lengthPrefixBytesResult = ReadBytes(lengthPrefixAddress, settings.LengthPrefix!.Size);
         if (lengthPrefixBytesResult.IsFailure)
-            return new StringReadFailureOnStringBytesReadFailure(lengthPrefixAddress, lengthPrefixBytesResult.Error);
+            return lengthPrefixBytesResult.Failure;
         ulong length = lengthPrefixBytesResult.Value.ReadUnsignedNumber();
         
         if (length == 0)
             return string.Empty;
         if (length > (ulong)settings.MaxLength)
-            return new StringReadFailureOnStringTooLong(length);
+            return new StringTooLongFailure(length);
         
         // Read the string bytes (after the prefixes)
         int stringBytesOffset = lengthPrefixOffset + settings.LengthPrefix.Size;
         var stringBytesAddress = (UIntPtr)(address.ToUInt64() + (ulong)stringBytesOffset);
         var stringBytesResult = ReadBytes(stringBytesAddress, length);
         if (stringBytesResult.IsFailure)
-            return new StringReadFailureOnStringBytesReadFailure(stringBytesAddress, lengthPrefixBytesResult.Error);
+            return stringBytesResult.Failure;
         var stringBytes = stringBytesResult.Value;
         
         // Decode the bytes into a string using the encoding specified in the settings
@@ -676,9 +670,8 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="address">Address of the string in the process memory.</param>
     /// <param name="settings">Settings that define how to read the string.</param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    private Result<string, StringReadFailure> ReadStringWithLengthPrefixInCharacters(UIntPtr address,
-        StringSettings settings)
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    private Result<string> ReadStringWithLengthPrefixInCharacters(UIntPtr address, StringSettings settings)
     {
         // The strategy when the string has a length prefix in characters is the following:
         // Read the length prefix, then get a stream that reads bytes from the process memory, and use a stream reader
@@ -689,13 +682,13 @@ public partial class ProcessMemory
         var lengthPrefixAddress = (UIntPtr)(address.ToUInt64() + (ulong)lengthPrefixOffset);
         var lengthPrefixBytesResult = ReadBytes(lengthPrefixAddress, settings.LengthPrefix!.Size);
         if (lengthPrefixBytesResult.IsFailure)
-            return new StringReadFailureOnStringBytesReadFailure(lengthPrefixAddress, lengthPrefixBytesResult.Error);
+            return lengthPrefixBytesResult.Failure;
         ulong expectedStringLength = lengthPrefixBytesResult.Value.ReadUnsignedNumber();
 
         if (expectedStringLength == 0)
             return string.Empty;
         if (expectedStringLength > (ulong)settings.MaxLength)
-            return new StringReadFailureOnStringTooLong(expectedStringLength);
+            return new StringTooLongFailure(expectedStringLength);
         
         // Get a memory stream after the prefixes
         int stringBytesOffset = lengthPrefixOffset + settings.LengthPrefix.Size;
@@ -727,8 +720,8 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="address">Address of the string in the process memory.</param>
     /// <param name="settings">Settings that define how to read the string.</param>
-    /// <returns>The string read from the process memory, or a read failure.</returns>
-    private Result<string, StringReadFailure> ReadStringWithNullTerminator(UIntPtr address, StringSettings settings)
+    /// <returns>The string read from the process memory, or a failure.</returns>
+    private Result<string> ReadStringWithNullTerminator(UIntPtr address, StringSettings settings)
     {
         // The strategy when the string has no length prefix but has a null-terminator is the following:
         // Get a stream that reads bytes from the process memory, and use a stream reader to read characters until we
@@ -752,7 +745,7 @@ public partial class ProcessMemory
             stringBuilder.Append((char)nextChar);
             
             if (stringBuilder.Length > settings.MaxLength)
-                return new StringReadFailureOnStringTooLong(null);
+                return new StringTooLongFailure(null);
         }
 
         return stringBuilder.ToString();

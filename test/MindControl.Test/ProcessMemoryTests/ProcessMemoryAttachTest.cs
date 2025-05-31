@@ -12,26 +12,26 @@ public class ProcessMemoryInstancelessAttachTest
 {
     /// <summary>
     /// Tests <see cref="ProcessMemory.OpenProcessByName"/> when no process with the given name is found.
-    /// Expects a <see cref="AttachFailureOnTargetProcessNotFound"/> result.
+    /// Expects a <see cref="TargetProcessNotFoundFailure"/> result.
     /// </summary>
     [Test]
     public void OpenProcessByNameWithNoMatchTest()
     {
         var result = ProcessMemory.OpenProcessByName("ThisProcessDoesNotExist");
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<AttachFailureOnTargetProcessNotFound>());
+        Assert.That(result.Failure, Is.InstanceOf<TargetProcessNotFoundFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemory.OpenProcessById"/> with a PID that does not match any running process.
-    /// Expects a <see cref="AttachFailureOnTargetProcessNotFound"/> result.
+    /// Expects a <see cref="TargetProcessNotFoundFailure"/> result.
     /// </summary>
     [Test]
     public void OpenProcessByInvalidPidTest()
     {
         var result = ProcessMemory.OpenProcessById(-1);
         Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.Error, Is.InstanceOf<AttachFailureOnTargetProcessNotFound>());
+        Assert.That(result.Failure, Is.InstanceOf<TargetProcessNotFoundFailure>());
     }
 }
 

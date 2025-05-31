@@ -309,15 +309,14 @@ public static class AssemblerExtensions
     /// <param name="assembler">Assembler instance to use to generate the instructions.</param>
     /// <param name="baseAddress">Base address to use for the assembled instructions. Default is 0.</param>
     /// <param name="bufferSize">Size of the buffer to use for the assembled instructions. Default is 128 bytes.</param>
-    /// <returns>A result holding either the assembled instructions as a byte array, or an error message if the
-    /// assembling failed.</returns>
-    public static Result<byte[], string> AssembleToBytes(this Assembler assembler, ulong baseAddress = 0,
+    /// <returns>A result holding either the assembled instructions as a byte array, or a failure.</returns>
+    public static Result<byte[]> AssembleToBytes(this Assembler assembler, ulong baseAddress = 0,
         int bufferSize = 128)
     {
         using var memoryStream = new MemoryStream(bufferSize);
         var writer = new StreamCodeWriter(memoryStream);
         if (!assembler.TryAssemble(writer, baseAddress, out var error, out _))
-            return error;
+            return new Failure(error);
         return memoryStream.ToArray();
     }
 }

@@ -17,21 +17,21 @@ internal class PeParser(ProcessMemory processMemory, UIntPtr imageBaseAddress)
     /// Reads and parses the export table of the module, associating the names of the exported functions with their
     /// absolute addresses in the process memory.
     /// </summary>
-    public Result<Dictionary<string, UIntPtr>, string> ReadExportTable()
+    public Result<Dictionary<string, UIntPtr>> ReadExportTable()
     {
         var exportTable = new Dictionary<string, UIntPtr>();
         
         // Read the PE header address
         var peHeaderRva = processMemory.Read<uint>(imageBaseAddress + PeHeaderAddressOffset);
         if (peHeaderRva.IsFailure)
-            return "Could not read the PE header address from the DOS header.";
+            return new Failure("Could not read the PE header address from the DOS header.");
         var peHeaderAddress = imageBaseAddress + peHeaderRva.Value;
 
         // Read the magic number from the Optional Header
         var optionalHeaderAddress = peHeaderAddress + 24; // Skip over the 20-byte File Header and 4-byte PE signature
         var magicNumber = processMemory.Read<ushort>(optionalHeaderAddress);
         if (magicNumber.IsFailure)
-            return "Could not read the magic number.";
+            return new Failure("Could not read the magic number.");
         
         bool? is64Bit = magicNumber.Value switch
         {
@@ -41,39 +41,39 @@ internal class PeParser(ProcessMemory processMemory, UIntPtr imageBaseAddress)
         };
         
         if (is64Bit == null)
-            return $"Invalid magic number value: 0x{magicNumber.Value:X}.";
+            return new Failure($"Invalid magic number value: 0x{magicNumber.Value:X}.");
         
         // Read the export table address
         UIntPtr exportTableAddressPointer = peHeaderAddress + (UIntPtr)(is64Bit.Value ? 0x88 : 0x78);
         var exportTableAddressRva = processMemory.Read<uint>(exportTableAddressPointer);
         if (exportTableAddressRva.IsFailure)
-            return "Could not read the export table address.";
+            return new Failure("Could not read the export table address.");
         
         // Read the export table size
         var exportTableSize = processMemory.Read<uint>(exportTableAddressPointer + 4);
         if (exportTableSize.IsFailure)
-            return "Could not read the export table size.";
+            return new Failure("Could not read the export table size.");
         
         // Read the number of exported functions
         var exportTableAddress = imageBaseAddress + exportTableAddressRva.Value;
         var numberOfFunctions = processMemory.Read<uint>(exportTableAddress + 24);
         if (numberOfFunctions.IsFailure)
-            return "Could not read the number of exported functions.";
+            return new Failure("Could not read the number of exported functions.");
         
         // Read the export name pointers table (ENPT)
         var enptBytes = ReadExportTableBytes(exportTableAddress + 32, numberOfFunctions.Value * 4);
         if (enptBytes == null)
-            return "Could not read the export name pointers table.";
+            return new Failure("Could not read the export name pointers table.");
         
         // Read the export ordinal table (EOT)
         var eotBytes = ReadExportTableBytes(exportTableAddress + 36, numberOfFunctions.Value * 2);
         if (eotBytes == null)
-            return "Could not read the export ordinal table.";
+            return new Failure("Could not read the export ordinal table.");
         
         // Read the export address table (EAT)
         var eatBytes = ReadExportTableBytes(exportTableAddress + 28, numberOfFunctions.Value * 4);
         if (eatBytes == null)
-            return "Could not read the export address table.";
+            return new Failure("Could not read the export address table.");
         
         for (int i = 0; i < numberOfFunctions.Value; i++)
         {

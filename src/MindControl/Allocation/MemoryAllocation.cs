@@ -149,16 +149,16 @@ public class MemoryAllocation : IDisposable
     /// only accomodate 32 bytes. Alignment means the actual reserved space might be bigger than the
     /// <paramref name="size"/>, but will never make it smaller.</param>
     /// <returns>A result holding the resulting reservation or a reservation failure.</returns>
-    public Result<MemoryReservation, ReservationFailure> ReserveRange(ulong size, uint? byteAlignment = 8)
+    public Result<MemoryReservation> ReserveRange(ulong size, uint? byteAlignment = 8)
     {
         if (IsDisposed || !_parentProcessMemory.IsAttached)
-            return new ReservationFailureOnDisposedAllocation();
+            return new DisposedAllocationFailure();
         if (size == 0)
-            return new ReservationFailureOnInvalidArguments("The size to reserve must be more than 0 bytes.");
+            return new InvalidArgumentFailure(nameof(size), "The size to reserve must be more than 0 bytes.");
         
         var range = GetNextRangeFittingSize(size, byteAlignment);
         if (range == null)
-            return new ReservationFailureOnNoSpaceAvailable();
+            return new InsufficientSpaceFailure();
         
         var reservedRange = new MemoryReservation(range.Value, this);
         _reservations.Add(reservedRange);

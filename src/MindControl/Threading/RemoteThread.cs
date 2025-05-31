@@ -25,16 +25,16 @@ public class RemoteThread : IDisposable
     /// Synchronously waits for the thread to finish execution and returns its exit code.
     /// </summary>
     /// <param name="timeout">Maximum time to wait for the thread to finish execution. If the duration is exceeded, the
-    /// result will contain a <see cref="ThreadFailureOnWaitTimeout"/> error.</param>
-    /// <returns>A result holding either the exit code of the thread, or a <see cref="ThreadFailure"/> error.</returns>
-    public Result<uint, ThreadFailure> WaitForCompletion(TimeSpan timeout)
+    /// result will hold a <see cref="ThreadWaitTimeoutFailure"/> instance.</param>
+    /// <returns>A result holding either the exit code of the thread, or a failure.</returns>
+    public Result<uint> WaitForCompletion(TimeSpan timeout)
     {
         if (IsDisposed)
-            return new ThreadFailureOnDisposedInstance();
+            return new DisposedThreadFailure();
         
         var waitResult = _osService.WaitThread(_threadHandle, timeout);
         if (waitResult.IsFailure)
-            return waitResult.Error;
+            return waitResult.Failure;
         Dispose();
         return waitResult.Value;
     }
@@ -44,10 +44,9 @@ public class RemoteThread : IDisposable
     /// asynchronous wrapper around <see cref="WaitForCompletion"/>.
     /// </summary>
     /// <param name="timeout">Maximum time to wait for the thread to finish execution. If the duration is exceeded, the
-    /// result will contain a <see cref="ThreadFailureOnWaitTimeout"/> error.</param>
-    /// <returns>A result holding either the exit code of the thread, or a <see cref="ThreadFailure"/> error.</returns>
-    public Task<Result<uint, ThreadFailure>> WaitForCompletionAsync(TimeSpan timeout)
-        => Task.Run(() => WaitForCompletion(timeout));
+    /// result will contain a <see cref="ThreadWaitTimeoutFailure"/> error.</param>
+    /// <returns>A result holding either the exit code of the thread, or a failure.</returns>
+    public Task<Result<uint>> WaitForCompletionAsync(TimeSpan timeout) => Task.Run(() => WaitForCompletion(timeout));
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged
     /// resources.</summary>

@@ -16,16 +16,16 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBytes(PointerPath path, byte[] value,
+    /// <returns>A result indicating either a success or a failure.</returns>
+    public Result WriteBytes(PointerPath path, byte[] value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         if (!IsAttached)
-            return new WriteFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         var addressResult = EvaluateMemoryAddress(path);
         return addressResult.IsSuccess ? WriteBytes(addressResult.Value, value, memoryProtectionStrategy)
-                : new WriteFailureOnPointerPathEvaluation(addressResult.Error);
+                : addressResult.Failure;
     }
     
     /// <summary>
@@ -35,16 +35,16 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> WriteBytes(UIntPtr address, Span<byte> value,
+    /// <returns>A result indicating either a success or a failure.</returns>
+    public Result WriteBytes(UIntPtr address, Span<byte> value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         if (!IsAttached)
-            return new WriteFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new WriteFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new WriteFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         
         // Remove protection if needed
         memoryProtectionStrategy ??= DefaultWriteStrategy;
@@ -55,7 +55,7 @@ public partial class ProcessMemory
                 address, MemoryProtection.ExecuteReadWrite);
             
             if (protectionRemovalResult.IsFailure)
-                return new WriteFailureOnSystemProtectionRemoval(address, protectionRemovalResult.Error);
+                return new MemoryProtectionRemovalFailure(address, protectionRemovalResult.Failure);
 
             previousProtection = protectionRemovalResult.Value;
         }
@@ -63,7 +63,7 @@ public partial class ProcessMemory
         // Write memory
         var writeResult = _osService.WriteProcessMemory(ProcessHandle, address, value);
         if (writeResult.IsFailure)
-            return new WriteFailureOnSystemWrite(address, writeResult.Error);
+            return writeResult;
         
         // Restore protection if needed
         if (memoryProtectionStrategy == MemoryProtectionStrategy.RemoveAndRestore
@@ -73,10 +73,10 @@ public partial class ProcessMemory
                 address, previousProtection!.Value);
             
             if (protectionRestorationResult.IsFailure)
-                return new WriteFailureOnSystemProtectionRestoration(address, protectionRestorationResult.Error);
+                return new MemoryProtectionRestorationFailure(address, protectionRestorationResult.Failure);
         }
         
-        return Result<WriteFailure>.Success;
+        return Result.Success;
     }
     
     #endregion
@@ -92,15 +92,15 @@ public partial class ProcessMemory
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <typeparam name="T">Type of the value to write.</typeparam>
     /// <exception cref="ArgumentException">Thrown when the type of the value is not supported.</exception>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> Write<T>(PointerPath path, T value,
+    /// <returns>A result indicating either a success or a failure.</returns>
+    public Result Write<T>(PointerPath path, T value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         if (!IsAttached)
-            return new WriteFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         var addressResult = EvaluateMemoryAddress(path);
         return addressResult.IsSuccess ? Write(addressResult.Value, value, memoryProtectionStrategy)
-            : new WriteFailureOnPointerPathEvaluation(addressResult.Error);
+            : addressResult.Failure;
     }
     
     /// <summary>
@@ -111,22 +111,22 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <typeparam name="T">Type of the value to write.</typeparam>
-    /// <returns>A successful result, or a write failure</returns>
-    public Result<WriteFailure> Write<T>(UIntPtr address, T value,
+    /// <returns>A result indicating either a success or a failure.</returns>
+    public Result Write<T>(UIntPtr address, T value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         if (!IsAttached)
-            return new WriteFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         if (address == UIntPtr.Zero)
-            return new WriteFailureOnZeroPointer();
+            return new ZeroPointerFailure();
         if (!IsBitnessCompatible(address))
-            return new WriteFailureOnIncompatibleBitness(address);
+            return new IncompatibleBitnessPointerFailure(address);
         if (value == null)
-            return new WriteFailureOnInvalidArguments("The value to write cannot be null.");
+            return new InvalidArgumentFailure(nameof(value), "The value to write cannot be null.");
         if (value is IntPtr ptr && ptr.ToInt64() > uint.MaxValue)
-            return new WriteFailureOnIncompatibleBitness((UIntPtr)ptr);
+            return new IncompatibleBitnessPointerFailure((UIntPtr)ptr);
         if (value is UIntPtr uptr && uptr.ToUInt64() > uint.MaxValue)
-            return new WriteFailureOnIncompatibleBitness(uptr);
+            return new IncompatibleBitnessPointerFailure(uptr);
         
         return value switch
         {
@@ -158,14 +158,14 @@ public partial class ProcessMemory
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
     /// <typeparam name="T">Type of the value to write.</typeparam>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> ConvertAndWriteBytes<T>(UIntPtr address, T value,
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result ConvertAndWriteBytes<T>(UIntPtr address, T value,
         MemoryProtectionStrategy? memoryProtectionStrategy = null)
     {
         if (value == null)
-            return new WriteFailureOnInvalidArguments("The value to write cannot be null.");
+            return new InvalidArgumentFailure(nameof(value), "The value to write cannot be null.");
         if (value is not ValueType)
-            return new WriteFailureOnUnsupportedType(value.GetType());
+            return new UnsupportedTypeWriteFailure(value.GetType());
 
         byte[] bytes;
         try
@@ -174,7 +174,7 @@ public partial class ProcessMemory
         }
         catch (Exception e)
         {
-            return new WriteFailureOnConversion(typeof(T), e);
+            return new ConversionWriteFailure(typeof(T), e);
         }
         
         return WriteBytes(address, bytes, memoryProtectionStrategy);
@@ -188,9 +188,8 @@ public partial class ProcessMemory
     /// as a byte with the value 0.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteBool(UIntPtr address, bool value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteBool(UIntPtr address, bool value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { (byte)(value ? 1 : 0) }, memoryProtectionStrategy);
     
     /// <summary>
@@ -200,9 +199,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteByte(UIntPtr address, byte value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteByte(UIntPtr address, byte value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, new[] { value }, memoryProtectionStrategy);
     
     /// <summary>
@@ -212,9 +210,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteShort(UIntPtr address, short value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteShort(UIntPtr address, short value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -224,9 +221,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteUShort(UIntPtr address, ushort value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteUShort(UIntPtr address, ushort value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -236,9 +232,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteInt(UIntPtr address, int value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteInt(UIntPtr address, int value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -248,9 +243,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteUInt(UIntPtr address, uint value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteUInt(UIntPtr address, uint value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -260,9 +254,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteIntPtr(UIntPtr address, IntPtr value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteIntPtr(UIntPtr address, IntPtr value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, value.ToBytes(Is64Bit), memoryProtectionStrategy);
     
     /// <summary>
@@ -272,9 +265,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteFloat(UIntPtr address, float value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteFloat(UIntPtr address, float value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -284,9 +276,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteLong(UIntPtr address, long value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteLong(UIntPtr address, long value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -296,9 +287,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteULong(UIntPtr address, ulong value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteULong(UIntPtr address, ulong value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     /// <summary>
@@ -308,9 +298,8 @@ public partial class ProcessMemory
     /// <param name="value">Value to write.</param>
     /// <param name="memoryProtectionStrategy">Strategy to use to deal with memory protection. If null (default), the
     /// <see cref="DefaultWriteStrategy"/> of this instance is used.</param>
-    /// <returns>A successful result, or a write failure</returns>
-    private Result<WriteFailure> WriteDouble(UIntPtr address, double value,
-        MemoryProtectionStrategy? memoryProtectionStrategy = null)
+    /// <returns>A result indicating either a success or a failure.</returns>
+    private Result WriteDouble(UIntPtr address, double value, MemoryProtectionStrategy? memoryProtectionStrategy = null)
         => WriteBytes(address, BitConverter.GetBytes(value), memoryProtectionStrategy);
     
     #endregion

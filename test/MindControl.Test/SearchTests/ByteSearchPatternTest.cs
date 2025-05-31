@@ -61,7 +61,7 @@ public class ByteSearchPatternTest
         if (testCase.Expected == null)
         {
             Assert.That(result.IsFailure, Is.True);
-            Assert.That(result.Error.Message, Is.Not.Empty);
+            Assert.That(result.Failure.Message, Is.Not.Empty);
         }
         else
         {

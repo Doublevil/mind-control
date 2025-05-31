@@ -24,6 +24,17 @@ public class ReadIntByAddressBenchmark
         return result;
     }
     
+    [Benchmark(Description = "MindControl 100xRead<int>")]
+    public void MindControlMassReadGenericType()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            var result = _setup.MindControlProcessMemory.Read<int>(_setup.OuterClassPointer + 0x38).Value;
+            if (result != -7651)
+                throw new Exception("Unexpected result");
+        }
+    }
+    
     [Benchmark(Description = "MindControl Read(Type)")]
     public int MindControlReadObject()
     {
@@ -51,5 +62,17 @@ public class ReadIntByAddressBenchmark
         if (result != -7651)
             throw new Exception("Unexpected result");
         return result;
+    }
+    
+    [Benchmark(Description = "Memory.dll 100xReadMemory<int>")]
+    public void MemoryMassReadGeneric()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            UIntPtr address = _setup.OuterClassPointer + 0x38;
+            var result = _setup.MemoryDllMem.ReadMemory<int>(address.ToString("X"));
+            if (result != -7651)
+                throw new Exception("Unexpected result");
+        }
     }
 }

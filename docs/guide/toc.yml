@@ -1,0 +1,54 @@
+﻿- name: Introduction
+  href: introduction.md
+- name: Basic hacking concepts
+  items:
+    - name: Basic memory concepts
+      href: hacking-basics/basic-memory-concepts.md
+    - name: Finding values with Cheat Engine
+      href: hacking-basics/finding-values.md
+    - name: Unstable addresses
+      href: hacking-basics/unstable-address.md
+    - name: Stable addresses
+      href: hacking-basics/stable-address.md
+    - name: Code manipulation
+      href: hacking-basics/code-manipulation.md
+- name: Setting up a MindControl project
+  items:
+    - name: Creating a MindControl project
+      href: project-setup/creating-mc-project.md
+    - name: Console app setup
+      href: project-setup/console-setup.md
+    - name: WPF (desktop) app setup
+      href: project-setup/wpf-setup.md
+    - name: Blazor (web) app setup
+      href: project-setup/blazor-setup.md
+- name: MindControl features
+  items:
+    - name: Attaching to a process
+      href: mcfeatures/attaching.md
+    - name: Reading memory
+      href: mcfeatures/reading.md
+    - name: Writing memory
+      href: mcfeatures/writing.md
+    - name: Pointer paths
+      href: mcfeatures/pointer-paths.md
+    - name: Results & error handling
+      href: mcfeatures/results.md
+    - name: Allocating & storing data
+      href: mcfeatures/allocations.md
+    - name: Manipulating strings
+      href: mcfeatures/strings.md
+    - name: Searching memory
+      href: mcfeatures/searching.md
+    - name: Freezing values
+      href: mcfeatures/freezing.md
+    - name: Monitoring value changes
+      href: mcfeatures/monitoring.md
+    - name: Injecting DLLs
+      href: mcfeatures/dll-injection.md
+    - name: Code manipulation
+      href: mcfeatures/code-manipulation.md
+    - name: Calling functions
+      href: mcfeatures/functions.md
+    - name: Streaming memory
+      href: mcfeatures/streams.md

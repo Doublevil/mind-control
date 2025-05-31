@@ -31,8 +31,8 @@ public class ProcessMemoryStream : Stream
     public override bool CanRead => true;
 
     /// <summary>Returns False to indicate that this stream does not support seeking.</summary>
-    /// <returns><see langword="false" />.</returns>
-    public override bool CanSeek => false;
+    /// <returns><see langword="true" />.</returns>
+    public override bool CanSeek => true;
 
     /// <summary>Returns True to indicate that this stream supports writing.</summary>
     /// <returns><see langword="true" /></returns>

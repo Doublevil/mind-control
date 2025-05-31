@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using MindControl.Internal;
 using MindControl.Modules;
 using MindControl.Results;
 
@@ -7,33 +6,33 @@ namespace MindControl;
 
 // This partial class implements methods related to retrieving memory addresses.
 public partial class ProcessMemory
-{
+{    
     /// <summary>
     /// Evaluates the given pointer path to the memory address it points to in the process.
     /// </summary>
     /// <param name="pointerPath">Pointer path to evaluate.</param>
     /// <returns>The memory address pointed by the pointer path.</returns>
-    public Result<UIntPtr, PathEvaluationFailure> EvaluateMemoryAddress(PointerPath pointerPath)
+    public Result<UIntPtr> EvaluateMemoryAddress(PointerPath pointerPath)
     {
         if (!IsAttached)
-            return new PathEvaluationFailureOnDetachedProcess();
+            return new DetachedProcessFailure();
         
         if (pointerPath.IsStrictly64Bit && (IntPtr.Size == 4 || !Is64Bit))
-            return new PathEvaluationFailureOnIncompatibleBitness();
+            return new IncompatiblePointerPathBitnessFailure();
         
         UIntPtr? baseAddress;
         if (pointerPath.BaseModuleName != null)
         {
-            baseAddress = GetModuleAddress(pointerPath.BaseModuleName);
+            baseAddress = GetModule(pointerPath.BaseModuleName)?.GetRange().Start;
             if (baseAddress == null)
-                return new PathEvaluationFailureOnBaseModuleNotFound(pointerPath.BaseModuleName);
+                return new BaseModuleNotFoundFailure(pointerPath.BaseModuleName);
         }
         else
         {
             var firstOffset = pointerPath.PointerOffsets.FirstOrDefault();
             baseAddress = firstOffset.AsAddress();
             if (baseAddress == null)
-                return new PathEvaluationFailureOnPointerOutOfRange(null, firstOffset);
+                return new PointerOutOfRangeFailure(null, firstOffset);
         }
 
         // Apply the base offset if there is one
@@ -41,16 +40,16 @@ public partial class ProcessMemory
         {
             var baseAddressWithOffset = pointerPath.BaseModuleOffset.OffsetAddress(baseAddress.Value);
             if (baseAddressWithOffset == null)
-                return new PathEvaluationFailureOnPointerOutOfRange(baseAddress, pointerPath.BaseModuleOffset);
+                return new PointerOutOfRangeFailure(baseAddress, pointerPath.BaseModuleOffset);
             
             baseAddress = baseAddressWithOffset.Value;
         }
 
         // Check if the base address is valid
         if (baseAddress == UIntPtr.Zero)
-            return new PathEvaluationFailureOnPointerOutOfRange(UIntPtr.Zero, PointerOffset.Zero);
+            return new PointerOutOfRangeFailure(UIntPtr.Zero, PointerOffset.Zero);
         if (!IsBitnessCompatible(baseAddress.Value))
-            return new PathEvaluationFailureOnIncompatibleBitness(baseAddress.Value);
+            return new IncompatibleBitnessPointerFailure(baseAddress.Value);
         
         // Follow the pointer path offset by offset
         var currentAddress = baseAddress.Value;
@@ -60,7 +59,7 @@ public partial class ProcessMemory
             // Read the value pointed by the current address as a pointer address
             var nextAddressResult = Read<UIntPtr>(currentAddress);
             if (nextAddressResult.IsFailure)
-                return new PathEvaluationFailureOnPointerReadFailure(currentAddress, nextAddressResult.Error);
+                return nextAddressResult.Failure;
             
             var nextAddress = nextAddressResult.Value;
 
@@ -70,9 +69,9 @@ public partial class ProcessMemory
             
             // Check for invalid address values
             if (nextValue == null || nextValue.Value == UIntPtr.Zero)
-                return new PathEvaluationFailureOnPointerOutOfRange(nextAddress, offset);
+                return new PointerOutOfRangeFailure(nextAddress, offset);
             if (!IsBitnessCompatible(nextValue.Value))
-                return new PathEvaluationFailureOnIncompatibleBitness(nextAddress);
+                return new IncompatibleBitnessPointerFailure(nextAddress);
             
             // The next value has been vetted. Keep going with it as the current address
             currentAddress = nextValue.Value;
@@ -89,13 +88,31 @@ public partial class ProcessMemory
     /// </summary>
     /// <param name="pointerPath">Pointer path to the starting address of the stream.</param>
     /// <returns>A result holding either the created process memory stream, or a path evaluation failure.</returns>
-    public DisposableResult<ProcessMemoryStream, PathEvaluationFailure> GetMemoryStream(PointerPath pointerPath)
+    public DisposableResult<ProcessMemoryStream> GetMemoryStream(PointerPath pointerPath)
     {
         var addressResult = EvaluateMemoryAddress(pointerPath);
         if (addressResult.IsFailure)
-            return addressResult.Error;
+            return addressResult.Failure;
 
         return GetMemoryStream(addressResult.Value);
+    }
+    
+    private Dictionary<string, RemoteModule>? _cachedModules;
+    
+    /// <summary>
+    /// Refreshes the module cache used when evaluating pointer paths.
+    /// Call this method when your process' modules have changed due to external factors such as plugins being loaded,
+    /// or other third-party software interacting with the process.
+    /// </summary>
+    public void RefreshModuleCache()
+    {
+        using var process = GetAttachedProcessInstance();
+        if (process.IsFailure)
+            return;
+        
+        _cachedModules = new Dictionary<string, RemoteModule>(StringComparer.OrdinalIgnoreCase);
+        foreach (ProcessModule module in process.Value.Modules)
+            _cachedModules[module.ModuleName] = new RemoteModule(this, module);
     }
     
     /// <summary>
@@ -107,33 +124,6 @@ public partial class ProcessMemory
     /// <returns>The created process memory stream.</returns>
     public ProcessMemoryStream GetMemoryStream(UIntPtr startAddress)
         => new(_osService, ProcessHandle, startAddress);
-    
-    /// <summary>
-    /// Gets the process module with the given name.
-    /// </summary>
-    /// <param name="moduleName">Name of the target module.</param>
-    /// <param name="process">The target process instance to get the module from.</param>
-    /// <returns>The module if found, null otherwise.</returns>
-    private static ProcessModule? GetModule(string moduleName, Process process)
-    {
-        return process.Modules
-            .Cast<ProcessModule>()
-            .FirstOrDefault(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase));
-    }
-    
-    /// <summary>
-    /// Gets the base address of the process module with the given name.
-    /// </summary>
-    /// <param name="moduleName">Name of the target module.</param>
-    /// <returns>The base address of the module if found, null otherwise.</returns>
-    public UIntPtr? GetModuleAddress(string moduleName)
-    {
-        using var process = GetAttachedProcessInstance();
-        var module = GetModule(moduleName, process);
-        IntPtr? baseAddress = module?.BaseAddress;
-
-        return baseAddress == null ? null : (UIntPtr)(long)baseAddress;
-    }
 
     /// <summary>
     /// Gets the module with the given name, if it exists.
@@ -142,9 +132,10 @@ public partial class ProcessMemory
     /// <returns>The module if found, null otherwise.</returns>
     public RemoteModule? GetModule(string moduleName)
     {
-        using var process = GetAttachedProcessInstance();
-        var module = GetModule(moduleName, process);
-        return module == null ? null : new RemoteModule(this, module);
+        if (_cachedModules == null)
+            RefreshModuleCache();
+        
+        return _cachedModules!.GetValueOrDefault(moduleName);
     }
     
     /// <summary>

@@ -1,27 +1,26 @@
 ﻿using MindControl.Anchors;
-using MindControl.Results;
 using MindControl.Test.ProcessMemoryTests;
 using NUnit.Framework;
 
 namespace MindControl.Test.AnchorTests;
 
-/// <summary>Tests <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/>.</summary>
+/// <summary>Tests <see cref="ValueWatcher{TValue}"/>.</summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
 public class ValueWatcherTest : BaseProcessMemoryTest
 {
     /// <summary>Builds and returns an anchor instance that can be used to build a value watcher.</summary>
-    private ValueAnchor<int, ReadFailure, WriteFailure> GetAnchorOnOutputInt()
+    private ValueAnchor<int> GetAnchorOnOutputInt()
         => TestProcessMemory!.GetAnchor<int>(GetAddressForValueAtIndex(IndexOfOutputInt));
     
     /// <summary>Builds and returns a value watcher instance that can be used to test the class.</summary>
-    private ValueWatcher<int, ReadFailure, WriteFailure> GetWatcherOnOutputInt(TimeSpan? refreshInterval = null)
+    private ValueWatcher<int> GetWatcherOnOutputInt(TimeSpan? refreshInterval = null)
         => GetAnchorOnOutputInt().Watch(refreshInterval ?? DefaultRefreshInterval);
 
     /// <summary>Default interval for refreshing the value in the watcher.</summary>
     private static readonly TimeSpan DefaultRefreshInterval = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> constructor.
+    /// Tests the <see cref="ValueWatcher{TValue}"/> constructor.
     /// The constructor should set the watcher instance to an initial state by reading the value without raising events.
     /// </summary>
     [Test]
@@ -43,7 +42,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}"/> constructor.
+    /// Tests the <see cref="ValueWatcher{TValue}"/> constructor.
     /// The watcher is set to an initial state where the value is unreadable.
     /// </summary>
     [Test]
@@ -64,7 +63,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}.ValueChanged"/> event.
+    /// Tests the <see cref="ValueWatcher{TValue}.ValueChanged"/> event.
     /// Build a value watcher, let the process change the value, force an update, and check if the event is raised.
     /// </summary>
     [Test]
@@ -94,7 +93,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     }
 
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}.ValueLost"/> event.
+    /// Tests the <see cref="ValueWatcher{TValue}.ValueLost"/> event.
     /// Build a value watcher with a pointer path, change a pointer in the path so that the address no longer resolves,
     /// and check that the event gets raised after a state update.
     /// </summary>
@@ -102,9 +101,9 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     public void ValueLostTest()
     {
         using var reservation = TestProcessMemory!.Reserve(16, false).Value;
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnFailure();
         int targetValue = 46;
-        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnFailure();
         var pointerPath = new PointerPath($"{reservation.Address:X},0");
         
         var watcher = TestProcessMemory.GetAnchor<int>(pointerPath).Watch(DefaultRefreshInterval);
@@ -123,7 +122,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
         Assert.That(watcher.IsValueReadable, Is.True);
         Assert.That(watcher.LastKnownValue, Is.EqualTo(targetValue));
         
-        TestProcessMemory.Write(reservation.Address, 0).ThrowOnError(); // Sabotage the pointer path
+        TestProcessMemory.Write(reservation.Address, 0).ThrowOnFailure(); // Sabotage the pointer path
         
         watcher.UpdateState();
         watcher.UpdateState(); // Update once more to make sure events are not raised multiple times
@@ -135,7 +134,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}.ValueReacquired"/> event.
+    /// Tests the <see cref="ValueWatcher{TValue}.ValueReacquired"/> event.
     /// Build a value watcher with a pointer path, change a pointer in the path so that the address no longer resolves,
     /// update the state so that the value gets lost, and then repair the pointer path and update the state again.
     /// The tested event should be raised exactly once.
@@ -144,9 +143,9 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     public void ValueReacquiredTest()
     {
         using var reservation = TestProcessMemory!.Reserve(16, false).Value;
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnFailure();
         int targetValue = 46;
-        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnFailure();
         var pointerPath = new PointerPath($"{reservation.Address:X},0");
         
         var watcher = TestProcessMemory.GetAnchor<int>(pointerPath).Watch(DefaultRefreshInterval);
@@ -164,10 +163,10 @@ public class ValueWatcherTest : BaseProcessMemoryTest
         Assert.That(watcher.IsValueReadable, Is.True);
         Assert.That(watcher.LastKnownValue, Is.EqualTo(targetValue));
         
-        TestProcessMemory.Write(reservation.Address, 0).ThrowOnError(); // Sabotage the pointer path
+        TestProcessMemory.Write(reservation.Address, 0).ThrowOnFailure(); // Sabotage the pointer path
         watcher.UpdateState(); // This should raise a ValueLost event
         
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnError(); // Repair the pointer path
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnFailure(); // Repair the pointer path
         watcher.UpdateState(); // This should raise a ValueReacquired event
         watcher.UpdateState(); // Update once more to make sure events are not raised multiple times
         watcher.Dispose();
@@ -178,8 +177,8 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     }
     
     /// <summary>
-    /// Tests the <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}.ValueReacquired"/> and
-    /// <see cref="ValueWatcher{TValue,TReadFailure,TWriteFailure}.ValueChanged"/> events.
+    /// Tests the <see cref="ValueWatcher{TValue}.ValueReacquired"/> and <see cref="ValueWatcher{TValue}.ValueChanged"/>
+    /// events.
     /// Same setup as <see cref="ValueReacquiredTest"/>, except we make the pointer path resolve to a different value.
     /// We expect the ValueReacquired event to be raised first, and then the ValueChanged event.
     /// </summary>
@@ -187,9 +186,9 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     public void ValueReacquiredAndChangedTest()
     {
         using var reservation = TestProcessMemory!.Reserve(16, false).Value;
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnFailure();
         int targetValue = 46;
-        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnFailure();
         var pointerPath = new PointerPath($"{reservation.Address:X},0");
         
         var watcher = TestProcessMemory.GetAnchor<int>(pointerPath).Watch(DefaultRefreshInterval);
@@ -218,11 +217,11 @@ public class ValueWatcherTest : BaseProcessMemoryTest
         Assert.That(watcher.IsValueReadable, Is.True);
         Assert.That(watcher.LastKnownValue, Is.EqualTo(targetValue));
         
-        TestProcessMemory.Write(reservation.Address, 0).ThrowOnError(); // Sabotage the pointer path
+        TestProcessMemory.Write(reservation.Address, 0).ThrowOnFailure(); // Sabotage the pointer path
         watcher.UpdateState(); // This should raise a ValueLost event
         
         // Make the pointer path resolve to an area with a 0 value
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 12).ThrowOnError();
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 12).ThrowOnFailure();
         watcher.UpdateState(); // This should raise a ValueReacquired event and then a ValueChanged event
         watcher.Dispose();
         

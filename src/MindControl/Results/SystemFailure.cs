@@ -1,26 +1,27 @@
 ﻿namespace MindControl.Results;
 
-/// <summary>Represents a failure in an operating system operation.</summary>
-public abstract record SystemFailure;
-
-/// <summary>Represents a failure in an operating system operation when the provided arguments are invalid.</summary>
-/// <param name="ArgumentName">Name of the argument that caused the failure.</param>
-/// <param name="Message">Message that describes how the argument fails to meet expectations.</param>
-public record SystemFailureOnInvalidArgument(string ArgumentName, string Message) : SystemFailure
-{
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"The value provided for \"{ArgumentName}\" is invalid: {Message}";
-}
-
 /// <summary>Represents a failure in a system API call.</summary>
+/// <param name="SystemApiName">Name of the system API function that failed.</param>
+/// <param name="TopLevelOperationName">Friendly name of the operation that was attempted. As multiple system API calls
+/// may be made to perform a single manipulation, this name is used to identify the broader operation that failed.
+/// </param>
 /// <param name="ErrorCode">Numeric code that identifies the error. Typically provided by the operating system.</param>
-/// <param name="ErrorMessage">Message that describes the error. Typically provided by the operating system.</param>
-public record OperatingSystemCallFailure(int ErrorCode, string ErrorMessage) : SystemFailure
+/// <param name="SystemMessage">Message that describes the error, provided by the operating system.</param>
+public record OperatingSystemCallFailure(string SystemApiName, string TopLevelOperationName, int ErrorCode,
+    string SystemMessage)
+    : Failure($"A system API call to {SystemApiName} as part of a {TopLevelOperationName} operation failed with error code {ErrorCode}: {SystemMessage}")
 {
-    /// <summary>Returns a string that represents the current object.</summary>
-    /// <returns>A string that represents the current object.</returns>
-    public override string ToString()
-        => $"A system API call failed with error code {ErrorCode}: {ErrorMessage}";
+    /// <summary>Name of the system API function that failed.</summary>
+    public string SystemApiName { get; init; } = SystemApiName;
+
+    /// <summary>Friendly name of the operation that was attempted. As multiple system API calls
+    /// may be made to perform a single manipulation, this name is used to identify the broader operation that failed.
+    /// </summary>
+    public string TopLevelOperationName { get; init; } = TopLevelOperationName;
+
+    /// <summary>Numeric code that identifies the error. Typically provided by the operating system.</summary>
+    public int ErrorCode { get; init; } = ErrorCode;
+
+    /// <summary>Message that describes the error, provided by the operating system.</summary>
+    public string SystemMessage { get; init; } = SystemMessage;
 }

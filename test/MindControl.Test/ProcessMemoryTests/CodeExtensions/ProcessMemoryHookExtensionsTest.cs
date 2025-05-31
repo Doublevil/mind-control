@@ -146,7 +146,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
     /// The method is called with a zero pointer address.
-    /// Expects a <see cref="HookFailureOnZeroPointer"/> result.
+    /// Expects a <see cref="ZeroPointerFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithZeroAddressTest()
@@ -154,13 +154,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(UIntPtr.Zero, new byte[5],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnZeroPointer>());
+        Assert.That(hookResult.Failure, Is.TypeOf<ZeroPointerFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,byte[],HookOptions)"/> method.
-    /// The method is called with a pointer path that does not evaluate to a valid address.
-    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// The method is called with a pointer path that does not evaluate to a valid address. Expects a failure.
     /// </summary>
     [Test]
     public void HookWithBadPathWithByteArrayTest()
@@ -168,15 +167,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(new PointerPath("bad pointer path"), new byte[5],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
-        Assert.That(((HookFailureOnPathEvaluation)hookResult.Error).Details, Is.Not.Null);
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/>
     /// method.
-    /// The method is called with a pointer path that does not evaluate to a valid address.
-    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// The method is called with a pointer path that does not evaluate to a valid address. Expects a failure.
     /// </summary>
     [Test]
     public void HookWithBadPathWithAssemblerTest()
@@ -184,14 +180,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(new PointerPath("bad pointer path"), AssembleAlternativeMovInt(),
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
-        Assert.That(((HookFailureOnPathEvaluation)hookResult.Error).Details, Is.Not.Null);
     }
 
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> method.
     /// The hook is called with an empty code byte array.
-    /// Expects a <see cref="HookFailureOnInvalidArguments"/> result.
+    /// Expects a <see cref="InvalidArgumentFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithEmptyCodeArrayTest()
@@ -199,13 +193,13 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), [],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     /// <summary>
     /// Tests the <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> method.
     /// The hook is called with an assembler that does not have any instructions.
-    /// Expects a <see cref="HookFailureOnInvalidArguments"/> result.
+    /// Expects a <see cref="InvalidArgumentFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithEmptyAssemblerTest()
@@ -214,12 +208,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsFailure, Is.True);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> with a
-    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithDetachedProcessTest()
@@ -230,12 +224,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(0x1234, assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,Assembler,HookOptions)"/> with a
-    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithPointerPathWithDetachedProcessTest()
@@ -246,12 +240,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook("1234", assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> with a
-    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithByteArrayWithDetachedProcessTest()
@@ -260,12 +254,12 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(0x1234, [0xCC],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,PointerPath,byte[],HookOptions)"/> with a
-    /// detached process. Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// detached process. Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithByteArrayWithPointerPathWithDetachedProcessTest()
@@ -274,7 +268,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook("1234", [0xCC],
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
@@ -408,8 +402,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
 
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/>.
-    /// Specifies a pointer path that does not evaluate to a valid address.
-    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// Specifies a pointer path that does not evaluate to a valid address. Expects a failure.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithBadPointerTest()
@@ -417,25 +410,22 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.InsertCodeAt("bad pointer path", bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
     
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>.
-    /// Specifies a pointer path that does not evaluate to a valid address.
-    /// Expects a <see cref="HookFailureOnPathEvaluation"/> result.
+    /// Specifies a pointer path that does not evaluate to a valid address. Expects a failure.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithBadPointerTest()
     {
         var hookResult = TestProcessMemory!.InsertCodeAt("bad pointer path", AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
 
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
-    /// Specifies an address of 0. Expects a <see cref="HookFailureOnZeroPointer"/> result.
+    /// Specifies an address of 0. Expects a <see cref="ZeroPointerFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithZeroPointerTest()
@@ -443,25 +433,25 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.InsertCodeAt(0, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnZeroPointer>());
+        Assert.That(hookResult.Failure, Is.TypeOf<ZeroPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
-    /// Specifies an address of 0. Expects a <see cref="HookFailureOnZeroPointer"/> result.
+    /// Specifies an address of 0. Expects a <see cref="ZeroPointerFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithZeroPointerTest()
     {
         var hookResult = TestProcessMemory!.InsertCodeAt(0, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnZeroPointer>());
+        Assert.That(hookResult.Failure, Is.TypeOf<ZeroPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/>.
     /// Disposes the process memory instance and then call the method with valid parameters.
-    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithAddressWithDisposedInstanceTest()
@@ -470,13 +460,13 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,byte[],HookRegister[])"/>.
     /// Disposes the process memory instance and then call the method with valid parameters.
-    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayWithPointerPathWithDisposedInstanceTest()
@@ -485,13 +475,13 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress().ToString("X"), bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>.
     /// Disposes the process memory instance and then call the method with valid parameters.
-    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithAddressWithDisposedInstanceTest()
@@ -499,13 +489,13 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         TestProcessMemory!.Dispose();
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,PointerPath,Assembler,HookRegister[])"/>.
     /// Disposes the process memory instance and then call the method with valid parameters.
-    /// Expects a <see cref="HookFailureOnDetachedProcess"/> result.
+    /// Expects a <see cref="DetachedProcessFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerWithPointerPathWithDisposedInstanceTest()
@@ -514,7 +504,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress().ToString("X"),
             AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnDetachedProcess>());
+        Assert.That(hookResult.Failure, Is.TypeOf<DetachedProcessFailure>());
     }
     
     #endregion
@@ -659,7 +649,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,PointerPath,int,byte[],HookRegister[])"/>.
     /// Use a pointer path that does not evaluate to a valid address, but otherwise valid parameters.
-    /// Expects the result to be a <see cref="HookFailureOnPathEvaluation"/>.
+    /// Expects a failure.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithBadPointerPathTest()
@@ -667,7 +657,6 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.ReplaceCodeAt("bad pointer path", 1, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
     
     /// <summary>Tests
@@ -680,39 +669,38 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var hookResult = TestProcessMemory!.ReplaceCodeAt("bad pointer path", 1, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnPathEvaluation>());
     }
     
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
     /// Specify an empty code array, but otherwise valid parameters.
-    /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
+    /// Expects the result to be a <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithNoCodeTest()
     {
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, []);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>.
     /// Specify an empty assembler, but otherwise valid parameters.
-    /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
+    /// Expects the result to be a <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerWithNoCodeTest()
     {
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, new Assembler(Is64Bit ? 64 : 32));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     /// <summary>Tests
     /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>.
     /// Specifies a number of instructions to replace of 0, but otherwise valid parameters.
-    /// Expects the result to be a <see cref="HookFailureOnInvalidArguments"/>.
+    /// Expects the result to be a <see cref="InvalidArgumentFailure"/>.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayWithZeroInstructionTest()
@@ -720,7 +708,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 0, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     /// <summary>Tests
@@ -733,7 +721,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 0, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnInvalidArguments>());
+        Assert.That(hookResult.Failure, Is.TypeOf<InvalidArgumentFailure>());
     }
     
     #endregion
@@ -766,7 +754,7 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
 
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,byte[],HookOptions)"/> with a 64-bit
-    /// address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithByteArrayOnX64AddressOnX86ProcessTest()
@@ -776,12 +764,12 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var hookResult = TestProcessMemory!.Hook((UIntPtr)address, bytes,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.Hook(ProcessMemory,UIntPtr,Assembler,HookOptions)"/> with a 64-bit
-    /// address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void HookWithAssemblerOnX64AddressOnX86ProcessTest()
@@ -790,12 +778,12 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var hookResult = TestProcessMemory!.Hook((UIntPtr)address, AssembleAlternativeMovInt(),
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,byte[],HookRegister[])"/> with a
-    /// 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// 64-bit address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithByteArrayOnX64AddressOnX86ProcessTest()
@@ -804,12 +792,12 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.InsertCodeAt((UIntPtr)address, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory,UIntPtr,Assembler,HookRegister[])"/>
-    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void InsertCodeAtWithAssemblerOnX64AddressOnX86ProcessTest()
@@ -817,12 +805,12 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var address = (ulong)uint.MaxValue + 1;
         var hookResult = TestProcessMemory!.InsertCodeAt((UIntPtr)address, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,byte[],HookRegister[])"/>
-    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithByteArrayOnX64AddressOnX86ProcessTest()
@@ -831,13 +819,13 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.ReplaceCodeAt((UIntPtr)address, 1, bytes);
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
     
     /// <summary>
     /// Tests
     /// <see cref="ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory,UIntPtr,int,Assembler,HookRegister[])"/>
-    /// with a 64-bit address on a 32-bit process. Expects a <see cref="HookFailureOnIncompatibleBitness"/> result.
+    /// with a 64-bit address on a 32-bit process. Expects a <see cref="IncompatibleBitnessPointerFailure"/> result.
     /// </summary>
     [Test]
     public void ReplaceCodeAtWithAssemblerOnX64AddressOnX86ProcessTest()
@@ -845,6 +833,6 @@ public class ProcessMemoryHookExtensionsTestX86 : ProcessMemoryHookExtensionsTes
         var address = (ulong)uint.MaxValue + 1;
         var hookResult = TestProcessMemory!.ReplaceCodeAt((UIntPtr)address, 1, AssembleAlternativeMovInt());
         Assert.That(hookResult.IsSuccess, Is.False);
-        Assert.That(hookResult.Error, Is.TypeOf<HookFailureOnIncompatibleBitness>());
+        Assert.That(hookResult.Failure, Is.TypeOf<IncompatibleBitnessPointerFailure>());
     }
 }
