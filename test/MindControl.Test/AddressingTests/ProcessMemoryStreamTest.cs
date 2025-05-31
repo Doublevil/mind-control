@@ -277,7 +277,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
         var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
         var targetAddress = allocatedMemory.Range.End - 4;
         var writeResult = TestProcessMemory.WriteBytes(targetAddress, bytesAtTheEnd, MemoryProtectionStrategy.Ignore);
-        Assert.That(writeResult.IsSuccess, Is.True);
+        Assert.That(writeResult.IsSuccess, Is.True, writeResult.ToString());
         
         // Attempt to read 8 bytes from the target address, which is 4 bytes before the end of the isolated segment.
         using var stream = TestProcessMemory.GetMemoryStream(targetAddress);
@@ -416,7 +416,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
         var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
         var targetAddress = allocatedMemory.Range.End - 4;
         var writeResult = TestProcessMemory.WriteBytes(targetAddress, bytesAtTheEnd, MemoryProtectionStrategy.Ignore);
-        Assert.That(writeResult.IsSuccess, Is.True);
+        Assert.That(writeResult.IsSuccess, Is.True, writeResult.ToString());
 
         // Attempt to write 8 bytes from the target address, which is 4 bytes before the end of the isolated segment.
         var stream = TestProcessMemory.GetMemoryStream(targetAddress);

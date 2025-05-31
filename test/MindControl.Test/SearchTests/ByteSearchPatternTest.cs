@@ -65,7 +65,7 @@ public class ByteSearchPatternTest
         }
         else
         {
-            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.IsSuccess, Is.True, result.ToString());
             var pattern = result.Value;
             Assert.That(pattern.ToString(), Is.EqualTo(testCase.Pattern));
             Assert.That(pattern.ByteArray, Is.EqualTo(testCase.Expected.Value.ByteArray));

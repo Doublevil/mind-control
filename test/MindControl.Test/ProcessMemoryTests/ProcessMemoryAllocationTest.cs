@@ -20,7 +20,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocationResult = TestProcessMemory!.Allocate(0x1000, false);
         
-        Assert.That(allocationResult.IsSuccess, Is.True);
+        Assert.That(allocationResult.IsSuccess, Is.True, allocationResult.ToString());
         var allocation = allocationResult.Value;
         
         // To check that the memory is writable, we will write a byte array to the allocated range.
@@ -44,7 +44,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocationResult = TestProcessMemory!.Allocate(0x1000, true);
         
-        Assert.That(allocationResult.IsSuccess, Is.True);
+        Assert.That(allocationResult.IsSuccess, Is.True, allocationResult.ToString());
         var allocation = allocationResult.Value;
         Assert.That(allocation, Is.Not.Null);
         Assert.That(allocation.IsDisposed, Is.False);
@@ -65,8 +65,8 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var range = new MemoryRange(new UIntPtr(0x120000), UIntPtr.MaxValue);
         var allocationWithoutRangeResult = TestProcessMemory!.Allocate(0x1000, false);
         var allocationWithRangeResult = TestProcessMemory!.Allocate(0x1000, false, range);
-        Assert.That(allocationWithoutRangeResult.IsSuccess, Is.True);
-        Assert.That(allocationWithRangeResult.IsSuccess, Is.True);
+        Assert.That(allocationWithoutRangeResult.IsSuccess, Is.True, allocationWithoutRangeResult.ToString());
+        Assert.That(allocationWithRangeResult.IsSuccess, Is.True, allocationWithRangeResult.ToString());
         Assert.That(range.Contains(allocationWithoutRangeResult.Value.Range), Is.False);
         Assert.That(range.Contains(allocationWithRangeResult.Value.Range), Is.True);
     }
@@ -82,8 +82,8 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var nearAddress = new UIntPtr(0x400000000000);
         var allocationWithNearAddressResult = TestProcessMemory!.Allocate(0x1000, false, nearAddress: nearAddress);
         var allocationWithoutNearAddressResult = TestProcessMemory!.Allocate(0x1000, false);
-        Assert.That(allocationWithoutNearAddressResult.IsSuccess, Is.True);
-        Assert.That(allocationWithNearAddressResult.IsSuccess, Is.True);
+        Assert.That(allocationWithoutNearAddressResult.IsSuccess, Is.True, allocationWithoutNearAddressResult.ToString());
+        Assert.That(allocationWithNearAddressResult.IsSuccess, Is.True, allocationWithNearAddressResult.ToString());
         
         Assert.That(allocationWithNearAddressResult.Value.Range.DistanceTo(nearAddress),
             Is.LessThan(allocationWithoutNearAddressResult.Value.Range.DistanceTo(nearAddress)));
@@ -124,7 +124,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, false);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.Range.GetSize(), Is.EqualTo(0x1000));
         Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
@@ -140,7 +140,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     public void ReserveWithoutAvailableAllocationTest()
     {
         var reservationResult = TestProcessMemory!.Reserve(0x1000, false);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
         Assert.That(reservationResult.Value.Range.GetSize(), Is.EqualTo(0x1000));
     }
@@ -157,7 +157,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, false);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
@@ -175,7 +175,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, true);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
@@ -193,7 +193,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, true);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(1));
@@ -209,7 +209,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
         var reservationResult = TestProcessMemory.Reserve(0x2000, true);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
@@ -227,7 +227,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var range = new MemoryRange(unchecked((UIntPtr)0x400000000000), UIntPtr.MaxValue); 
         var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, true, range);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.Not.EqualTo(allocation));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(2));
@@ -251,7 +251,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
             new MemoryRange(unchecked((UIntPtr)0x4B0000000000), UIntPtr.MaxValue));
         
         var reservationResult = TestProcessMemory.Reserve(0x1000, true, nearAddress:unchecked((UIntPtr)0x2000051C0000));
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation2));
         Assert.That(TestProcessMemory.Allocations, Has.Count.EqualTo(3));
@@ -293,7 +293,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         
         var reservationResult = TestProcessMemory.Store(value, allocation);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         byte[] read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length).Value;
         
@@ -315,7 +315,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var value = new byte[] { 1, 2, 3, 4 };
         
         var reservationResult = TestProcessMemory!.Store(value);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         var read = TestProcessMemory.ReadBytes(reservation.Range.Start, value.Length).Value;
         
@@ -338,7 +338,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 
         var reservationResults = Enumerable.Range(0, 4).Select(_ => TestProcessMemory!.Store(value)).ToList();
         foreach (var result in reservationResults)
-            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.IsSuccess, Is.True, result.ToString());
         
         var reservations = reservationResults.Select(r => r.Value).ToList();
         var readBackValues = reservations.Select(r => TestProcessMemory!.ReadBytes(r.Range.Start, value.Length)
@@ -370,14 +370,14 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var firstStoreResult = TestProcessMemory!.Store(value);
         
         // So far, we should have only one allocated range.
-        Assert.That(firstStoreResult.IsSuccess, Is.True);
+        Assert.That(firstStoreResult.IsSuccess, Is.True, firstStoreResult.ToString());
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(1));
         
         // Now we store the same value again, which should overflow the range.
         var secondStoreResult = TestProcessMemory!.Store(value);
         
         // We should have two allocated ranges now, because there is no room left in the first range.
-        Assert.That(secondStoreResult.IsSuccess, Is.True);
+        Assert.That(secondStoreResult.IsSuccess, Is.True, secondStoreResult.ToString());
         Assert.That(TestProcessMemory!.Allocations, Has.Count.EqualTo(2));
     }
 
@@ -418,7 +418,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     {
         var stringToStore = "Hello 世界!";
         var reservationResult = TestProcessMemory!.StoreString(stringToStore, GetDotNetStringSettings());
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
 
         var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;
@@ -444,7 +444,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
         var allocation = TestProcessMemory!.Allocate(0x1000, false).Value;
         
         var reservationResult = TestProcessMemory.StoreString(stringToStore, GetDotNetStringSettings(), allocation);
-        Assert.That(reservationResult.IsSuccess, Is.True);
+        Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         
         var bytesReadBack = TestProcessMemory.ReadBytes(reservation.Address, reservation.Range.GetSize()).Value;

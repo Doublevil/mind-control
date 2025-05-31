@@ -19,7 +19,7 @@ public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
     {
         var result = TestProcessMemory!.EvaluateMemoryAddress(GetPathToMaxAddress());
         
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         Assert.That(result.Value, Is.EqualTo(GetMaxPointerValue()));
     }
     
@@ -31,7 +31,7 @@ public class ProcessMemoryEvaluateTest : BaseProcessMemoryTest
     {
         var result = TestProcessMemory!.EvaluateMemoryAddress($"{MainModuleName}+8");
         
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         Assert.That(result.Value, Is.Not.EqualTo(UIntPtr.Zero));
     }
     

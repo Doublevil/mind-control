@@ -33,10 +33,10 @@
             Condition="'$(AUTOMATED_BUILD)' != 'true'">
         <!-- Build the TargetApp in Any CPU & x86 and output it to the right folder -->
         <MSBuild Projects="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj"
-                 Properties="Configuration=Release;Platform=Any CPU;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x64\"
+                 Properties="Configuration=Release;Platform=Any CPU;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x64\;SelfContained=true;RuntimeIdentifier=win-x64"
                  Targets="Build" />
         <MSBuild Projects="..\MindControl.Test.TargetApp\MindControl.Test.TargetApp.csproj"
-                 Properties="Configuration=Release;Platform=x86;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x86\"
+                 Properties="Configuration=Release;Platform=x86;OutputPath=$(MSBuildProjectDirectory)\$(OutDir)\TargetApp\x86\;SelfContained=true;RuntimeIdentifier=win-x86"
                  Targets="Build" />
         
         <!-- Build the InjectedLibrary in x64 & 86 and output it to the right folder -->

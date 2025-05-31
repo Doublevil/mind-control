@@ -54,7 +54,7 @@ public class ProcessMemoryWriteTest : BaseProcessMemoryTest
         
         var readBackResult = TestProcessMemory.Read<TestStruct>(pointerPath);
         
-        Assert.That(readBackResult.IsSuccess, Is.True);
+        Assert.That(readBackResult.IsSuccess, Is.True, readBackResult.ToString());
         Assert.That(readBackResult.Value, Is.EqualTo(structInstance));
     }
 

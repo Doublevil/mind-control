@@ -56,7 +56,7 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
     public void ReserveRangeTest()
     {
         var result = _allocation.ReserveRange(0x10);
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         
         var reservedRange = result.Value;
         
@@ -78,7 +78,7 @@ public class MemoryAllocationTest : BaseProcessMemoryTest
     public void ReserveRangeWithFullRangeTest()
     {
         var result = _allocation.ReserveRange(_allocation.Range.GetSize());
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
     }
     
     /// <summary>

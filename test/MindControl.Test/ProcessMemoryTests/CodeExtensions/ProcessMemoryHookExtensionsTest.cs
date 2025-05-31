@@ -50,7 +50,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(movIntAddress, bytes,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
         Assert.That(hookResult.Value.Address, Is.EqualTo(movIntAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
@@ -77,7 +77,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         
         var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), bytes,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst));
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         
@@ -98,7 +98,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         
         var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), bytes,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, HookRegister.RcxEcx));
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
@@ -116,7 +116,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var hookResult = TestProcessMemory!.Hook(targetInstructionAddress, assembler,
             new HookOptions(HookExecutionMode.ReplaceOriginalInstruction));
         
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
         Assert.That(hookResult.Value.Address, Is.EqualTo(targetInstructionAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
@@ -137,7 +137,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         
         var hookResult = TestProcessMemory!.Hook(FindMovIntAddress(), assembler,
             new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst, HookRegister.RcxEcx));
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
@@ -307,7 +307,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var targetInstructionAddress = FindMovIntAddress();
         
         var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionAddress, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         Assert.That(hookResult.Value.InjectedCodeReservation, Is.Not.Null);
         Assert.That(hookResult.Value.Address, Is.EqualTo(targetInstructionAddress));
         Assert.That(hookResult.Value.Length, Is.AtLeast(5));
@@ -328,7 +328,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleRcxMov(0).AssembleToBytes().Value;
         
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), bytes, HookRegister.RcxEcx);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
@@ -345,7 +345,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var assembler = AssembleRcxMov(reservation.Address.ToUInt32());
         
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
@@ -359,7 +359,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     public void InsertCodeAtWithAssemblerWithIsolationTest()
     {
         var hookResult = TestProcessMemory!.InsertCodeAt(FindMovIntAddress(), AssembleRcxMov(0), HookRegister.RcxEcx);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         ProceedUntilProcessEnds();
         AssertExpectedFinalResults();
     }
@@ -376,7 +376,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         PointerPath targetInstructionPath = FindMovIntAddress().ToString("X");
         
         var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionPath, bytes);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
@@ -394,7 +394,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var targetInstructionPath = FindMovIntAddress().ToString("X");
         
         var hookResult = TestProcessMemory!.InsertCodeAt(targetInstructionPath, assembler);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         
         ProceedUntilProcessEnds();
         AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString());
@@ -523,7 +523,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         
         var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, bytes);
-        Assert.That(replaceResult.IsSuccess, Is.True);
+        Assert.That(replaceResult.IsSuccess, Is.True, replaceResult.ToString());
         // Check that the result is a CodeChange and not a hook, because the new instructions should fit. 
         Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
@@ -544,7 +544,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         
         var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 3, bytes);
-        Assert.That(replaceResult.IsSuccess, Is.True);
+        Assert.That(replaceResult.IsSuccess, Is.True, replaceResult.ToString());
         Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
@@ -569,7 +569,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var bytes = AssembleAlternativeMovInt().AssembleToBytes().Value;
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, bytes, HookRegister.RaxEax);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
         
         ProceedUntilProcessEnds();
@@ -587,7 +587,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         PointerPath targetPath = FindMovIntAddress().ToString("X");
         
         var replaceResult = TestProcessMemory!.ReplaceCodeAt(targetPath, 1, bytes);
-        Assert.That(replaceResult.IsSuccess, Is.True);
+        Assert.That(replaceResult.IsSuccess, Is.True, replaceResult.ToString());
         Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
@@ -604,7 +604,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         var assembler = AssembleAlternativeMovInt();
         
         var replaceResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, assembler);
-        Assert.That(replaceResult.IsSuccess, Is.True); 
+        Assert.That(replaceResult.IsSuccess, Is.True, replaceResult.ToString()); 
         Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();
@@ -621,7 +621,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var assembler = AssembleAlternativeMovInt();
         var hookResult = TestProcessMemory!.ReplaceCodeAt(FindMovIntAddress(), 1, assembler, HookRegister.RaxEax);
-        Assert.That(hookResult.IsSuccess, Is.True);
+        Assert.That(hookResult.IsSuccess, Is.True, hookResult.ToString());
         Assert.That(hookResult.Value, Is.TypeOf<CodeHook>());
         
         ProceedUntilProcessEnds();
@@ -639,7 +639,7 @@ public class ProcessMemoryHookExtensionsTest : BaseProcessMemoryCodeExtensionTes
         PointerPath targetPath = FindMovIntAddress().ToString("X");
         
         var replaceResult = TestProcessMemory!.ReplaceCodeAt(targetPath, 1, assembler);
-        Assert.That(replaceResult.IsSuccess, Is.True); 
+        Assert.That(replaceResult.IsSuccess, Is.True, replaceResult.ToString()); 
         Assert.That(replaceResult.Value.GetType(), Is.EqualTo(typeof(CodeChange)));
         
         ProceedUntilProcessEnds();

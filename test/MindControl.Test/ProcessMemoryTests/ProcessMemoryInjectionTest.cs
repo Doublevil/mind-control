@@ -62,7 +62,7 @@ public class ProcessMemoryInjectionTest : BaseProcessMemoryTest
         
         File.Copy(GetInjectedLibraryPath(), targetPath, true);
         var result = TestProcessMemory!.InjectLibrary(targetPath);
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         var output = ProceedToNextStep();
         Assert.That(output, Is.EqualTo("Injected library attached"));
     }

@@ -23,7 +23,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var movIntAddress = FindMovIntAddress();
         var result = TestProcessMemory!.DisableCodeAt(movIntAddress);
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         Assert.That(result.Value.Address, Is.EqualTo(movIntAddress));
         Assert.That(result.Value.Length, Is.AtLeast(1)); // We don't care how long it is but we check that it is set.
 
@@ -43,7 +43,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     {
         var pointerPath = FindMovIntAddress().ToString("X");
         var result = TestProcessMemory!.DisableCodeAt(pointerPath);
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         
         ProceedUntilProcessEnds();
         AssertFinalResults(IndexOfOutputInt, InitialIntValue.ToString(CultureInfo.InvariantCulture));
@@ -60,7 +60,7 @@ public class ProcessMemoryCodeExtensionsTest : BaseProcessMemoryCodeExtensionTes
     public void DisableCodeAtWithMultipleInstructionsTest()
     {
         var result = TestProcessMemory!.DisableCodeAt(FindMovIntAddress(), 3);
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
         
         ProceedUntilProcessEnds();
         
