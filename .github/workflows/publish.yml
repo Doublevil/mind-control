@@ -90,9 +90,9 @@ jobs:
 
       # Build the test target project in x64 and x86
       - name: Build the test target project x64
-        run: dotnet build test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release --runtime win-x64 --output ../MindControl.Test/bin/Release/TargetApp/x64/
+        run: dotnet publish test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release --runtime win-x64 --output ../MindControl.Test/bin/Release/TargetApp/x64/
       - name: Build the test target project x86
-        run: dotnet build test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release --runtime win-x86 --output ../MindControl.Test/bin/Release/TargetApp/x86/
+        run: dotnet publish test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release --runtime win-x86 --output ../MindControl.Test/bin/Release/TargetApp/x86/
 
       # Run the tests
       - name: Run tests
