@@ -94,15 +94,9 @@ jobs:
       - name: Build the test target project x86
         run: dotnet publish test/MindControl.Test.TargetApp/MindControl.Test.TargetApp.csproj --configuration Release --runtime win-x86 --output ${{ github.workspace }}/test/MindControl.Test/bin/Release/TargetApp/x86/
 
-      - name: DEBUG List published files
-        run: Get-ChildItem -Recurse test/MindControl.Test/bin
-
-      - name: DEBUG List published files
-        run: Get-ChildItem -Recurse test/MindControl.Test.TargetApp/bin
-
       # Run the tests
       - name: Run tests
-        run: dotnet test test/MindControl.Test/MindControl.Test.csproj --configuration Release
+        run: dotnet test test/MindControl.Test/MindControl.Test.csproj --configuration Release --logger "console;verbosity=detailed"
 
   deploy:
     # Publish only when creating a GitHub Release
