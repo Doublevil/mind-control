@@ -124,6 +124,7 @@ jobs:
   publish_docs:
     if: github.event_name == 'release'
     runs-on: windows-latest
+    needs: [run_test]
     steps:
       - uses: actions/checkout@v4
   
