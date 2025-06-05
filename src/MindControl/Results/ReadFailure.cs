@@ -6,7 +6,7 @@
 /// </summary>
 /// <param name="Address">Address that caused the failure.</param>
 public record IncompatibleBitnessPointerFailure(UIntPtr Address)
-    : Failure($"The address to read, {Address}, is a 64-bit address, but the target process is 32-bit.")
+    : Failure($"The address to read, {Address:X}, is a 64-bit address, but the target process is 32-bit.")
 {
     /// <summary>Address that caused the failure.</summary>
     public UIntPtr Address { get; init; } = Address;

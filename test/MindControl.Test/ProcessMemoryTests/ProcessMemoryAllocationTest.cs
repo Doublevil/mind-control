@@ -79,7 +79,7 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     [Test]
     public void AllocateNearAddressTest()
     {
-        var nearAddress = new UIntPtr(0x400000000000);
+        var nearAddress = Is64Bit ? new UIntPtr(0x400000000000) : new UIntPtr(0x40000000);
         var allocationWithNearAddressResult = TestProcessMemory!.Allocate(0x1000, false, nearAddress: nearAddress);
         var allocationWithoutNearAddressResult = TestProcessMemory!.Allocate(0x1000, false);
         Assert.That(allocationWithoutNearAddressResult.IsSuccess, Is.True, allocationWithoutNearAddressResult.ToString());
@@ -224,7 +224,9 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     [Test]
     public void ReserveWithLimitRangeTest()
     {
-        var range = new MemoryRange(unchecked((UIntPtr)0x400000000000), UIntPtr.MaxValue); 
+        var startAddress = Is64Bit ? unchecked((UIntPtr)0x400000000000) : 0x40000000;
+        
+        var range = new MemoryRange(startAddress, UIntPtr.MaxValue); 
         var allocation = TestProcessMemory!.Allocate(0x1000, true).Value;
         var reservationResult = TestProcessMemory.Reserve(0x1000, true, range);
         Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
@@ -243,14 +245,17 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
     [Test]
     public void ReserveWithNearAddressTest()
     {
-        TestProcessMemory!.Allocate(0x1000, true,
-            new MemoryRange(unchecked((UIntPtr)0x400000000000), UIntPtr.MaxValue));
-        var allocation2 = TestProcessMemory!.Allocate(0x1000, true,
-            new MemoryRange(unchecked((UIntPtr)0x200000000000), UIntPtr.MaxValue)).Value;
-        TestProcessMemory!.Allocate(0x1000, true,
-            new MemoryRange(unchecked((UIntPtr)0x4B0000000000), UIntPtr.MaxValue));
+        var startAddress1 = Is64Bit ? unchecked((UIntPtr)0x400000000000) : 0x40000000;
+        var startAddress2 = Is64Bit ? unchecked((UIntPtr)0x200000000000) : 0x20000000;
+        var startAddress3 = Is64Bit ? unchecked((UIntPtr)0x4B0000000000) : 0x60000000;
         
-        var reservationResult = TestProcessMemory.Reserve(0x1000, true, nearAddress:unchecked((UIntPtr)0x2000051C0000));
+        TestProcessMemory!.Allocate(0x1000, true, new MemoryRange(startAddress1, UIntPtr.MaxValue));
+        var allocation2 = TestProcessMemory!.Allocate(0x1000, true,
+            new MemoryRange(startAddress2, UIntPtr.MaxValue)).Value;
+        TestProcessMemory!.Allocate(0x1000, true, new MemoryRange(startAddress3, UIntPtr.MaxValue));
+        
+        var nearAddress = Is64Bit ? unchecked((UIntPtr)0x2000051C0000) : 0x20000500;
+        var reservationResult = TestProcessMemory.Reserve(0x1000, true, nearAddress: nearAddress);
         Assert.That(reservationResult.IsSuccess, Is.True, reservationResult.ToString());
         var reservation = reservationResult.Value;
         Assert.That(reservation.ParentAllocation, Is.EqualTo(allocation2));

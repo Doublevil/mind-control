@@ -132,9 +132,10 @@ public interface IOperatingSystemService
     Result CloseHandle(IntPtr handle);
     
     /// <summary>
-    /// Gets the range of memory addressable by applications in the current system.
+    /// Gets the range of memory addressable by applications of the given bitness in the current system.
     /// </summary>
-    MemoryRange GetFullMemoryRange();
+    /// <param name="is64Bit">A boolean indicating if the target application is 64-bit or not.</param>
+    MemoryRange GetFullMemoryRange(bool is64Bit);
     
     /// <summary>
     /// Gets the metadata of a memory region in the virtual address space of a process.

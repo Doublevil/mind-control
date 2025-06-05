@@ -168,7 +168,7 @@ public partial class Win32Service : IOperatingSystemService
                 return initialReadError;
             
             // If we found a readable address within the range, we read up to that point.
-            var newLength = lastReadableAddress.Value.ToUInt64() - baseAddress.ToUInt64();
+            var newLength = lastReadableAddress.Value.ToUInt64() - baseAddress.ToUInt64() + 1;
             returnValue = ReadProcessMemory(processHandle, baseAddress, bufferPtr, newLength, out bytesRead);
 
             // If the function failed again and didn't read any byte again, return the read error.
@@ -197,7 +197,7 @@ public partial class Win32Service : IOperatingSystemService
     private UIntPtr? GetLastConsecutiveReadableAddressWithinRange(IntPtr processHandle, bool is64Bit,
         MemoryRange range)
     {
-        var applicationMemoryLimit = GetFullMemoryRange().End;
+        var applicationMemoryLimit = GetFullMemoryRange(is64Bit).End;
         ulong rangeEnd = Math.Min(range.End.ToUInt64(), applicationMemoryLimit.ToUInt64());
         UIntPtr currentAddress = range.Start;
         while (currentAddress.ToUInt64() <= rangeEnd)
@@ -426,10 +426,13 @@ public partial class Win32Service : IOperatingSystemService
     /// <summary>
     /// Gets the range of memory addressable by applications in the current system.
     /// </summary>
-    public MemoryRange GetFullMemoryRange()
+    /// <param name="is64Bit">A boolean indicating if the target application is 64-bit or not.</param>
+    public MemoryRange GetFullMemoryRange(bool is64Bit)
     {
         var systemInfo = GetSystemInfo();
-        return new MemoryRange(systemInfo.MinimumApplicationAddress, systemInfo.MaximumApplicationAddress);
+        var maxAddress = is64Bit ? systemInfo.MaximumApplicationAddress
+            : Math.Min(uint.MaxValue, systemInfo.MaximumApplicationAddress);
+        return new MemoryRange(systemInfo.MinimumApplicationAddress, maxAddress);
     }
 
     /// <summary>

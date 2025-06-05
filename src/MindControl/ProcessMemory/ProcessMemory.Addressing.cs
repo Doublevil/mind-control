@@ -146,7 +146,7 @@ public partial class ProcessMemory
     /// <returns>The clamped memory range, or the full memory range if the input is null.</returns>
     private MemoryRange GetClampedMemoryRange(MemoryRange? input)
     {
-        var fullMemoryRange = _osService.GetFullMemoryRange();
+        var fullMemoryRange = _osService.GetFullMemoryRange(Is64Bit);
         return input == null ? fullMemoryRange : new MemoryRange(
             Start: input.Value.Start.ToUInt64() < fullMemoryRange.Start.ToUInt64()
                 ? fullMemoryRange.Start : input.Value.Start,

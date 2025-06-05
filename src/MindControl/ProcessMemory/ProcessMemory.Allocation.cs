@@ -73,7 +73,7 @@ public partial class ProcessMemory
     private Result<MemoryRange> FindAndAllocateFreeMemory(ulong sizeNeeded,
         bool forExecutableCode, MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
-        var maxRange = _osService.GetFullMemoryRange();
+        var maxRange = _osService.GetFullMemoryRange(Is64Bit);
         var actualRange = limitRange == null ? maxRange : maxRange.Intersect(limitRange.Value);
 
         // If the given range is not within the process applicative memory, return null
@@ -91,39 +91,44 @@ public partial class ProcessMemory
         // For near address search, we are going to search back and forth around the address, which complicates the
         // process a bit. It means we have to keep track of both the next lowest address and next highest address.
         var nextAddress = nearAddress ?? actualRange.Value.Start;
-        var nextAddressForward = nextAddress;
-        var nextAddressBackwards = nextAddress;
+        var nextRegionStartAddress = nextAddress;
+        var previousRegionEndAddress = nextAddress;
+        var highestAddressAttempted = nextAddress;
+        var lowestAddressAttempted = nextAddress;
         bool goingForward = true;
         
         MemoryRange? freeRange = null;
         MemoryRangeMetadata currentMetadata;
-        while ((nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
-                && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64())
+        while (nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
+            && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64()
             && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress)
                 .ValueOrDefault()).Size.ToUInt64() > 0)
         {
-            nextAddressForward = (UIntPtr)Math.Max(nextAddressForward.ToUInt64(),
+            nextRegionStartAddress = (UIntPtr)Math.Max(nextRegionStartAddress.ToUInt64(),
                 nextAddress.ToUInt64() + currentMetadata.Size.ToUInt64());
-            nextAddressBackwards = (UIntPtr)Math.Min(nextAddressBackwards.ToUInt64(),
+            previousRegionEndAddress = (UIntPtr)Math.Min(previousRegionEndAddress.ToUInt64(),
                 currentMetadata.StartAddress.ToUInt64() - 1);
+            highestAddressAttempted = Math.Max(highestAddressAttempted, nextAddress);
+            lowestAddressAttempted = Math.Min(lowestAddressAttempted, nextAddress);
             
-            nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+            var currentAddress = nextAddress;
             
             // If the current region cannot be used, reinitialize the current free range and keep iterating
             if (!currentMetadata.IsFree)
             {
                 freeRange = null;
-
+                
                 // In a near address search, we may change direction there depending on which next address is closest.
                 if (nearAddress != null)
                 {
-                    var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
-                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
+                    var forwardDistance = nearAddress.Value.DistanceTo(nextRegionStartAddress);
+                    var backwardDistance = nearAddress.Value.DistanceTo(previousRegionEndAddress);
                     goingForward = forwardDistance <= backwardDistance
-                        && nextAddressForward.ToUInt64() <= actualRange.Value.End.ToUInt64();
-                    nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+                        && nextRegionStartAddress.ToUInt64() <= actualRange.Value.End.ToUInt64();
                 }
                 
+                // Travel to the next region
+                nextAddress = goingForward ? nextRegionStartAddress : previousRegionEndAddress;
                 continue;
             }
             
@@ -131,14 +136,14 @@ public partial class ProcessMemory
             // Extend the free range if it's not null, so that we can have ranges that span across multiple regions.
             if (goingForward)
             {
-                freeRange = new MemoryRange(freeRange?.Start ?? currentMetadata.StartAddress,
-                    (UIntPtr)(currentMetadata.StartAddress.ToUInt64() + currentMetadata.Size.ToUInt64()));
+                freeRange = new MemoryRange(freeRange?.Start ?? currentAddress,
+                    (UIntPtr)(currentMetadata.StartAddress.ToUInt64() + currentMetadata.Size.ToUInt64() - 1));
             }
             else
             {
                 freeRange = new MemoryRange(currentMetadata.StartAddress,
                     (UIntPtr)(freeRange?.End.ToUInt64() ?? currentMetadata.StartAddress.ToUInt64()
-                        + currentMetadata.Size.ToUInt64()));
+                        + currentMetadata.Size.ToUInt64() - 1));
             }
 
             if (freeRange.Value.GetSize() >= sizeNeeded)
@@ -163,15 +168,19 @@ public partial class ProcessMemory
                 freeRange = null;
                 
                 // In a near address search, we may change direction there depending on which next address is closest.
+                var nextAddressForward = highestAddressAttempted + pageSize;
+                var nextAddressBackward = lowestAddressAttempted - pageSize;
                 if (nearAddress != null)
                 {
                     var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
-                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackwards);
+                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackward);
                     goingForward = forwardDistance <= backwardDistance
-                        && nextAddressForward.ToUInt64() <= actualRange.Value.End.ToUInt64();
-                    nextAddress = goingForward ? nextAddressForward : nextAddressBackwards;
+                                   && nextRegionStartAddress.ToUInt64() <= actualRange.Value.End.ToUInt64();
                 }
                 
+                // Travel one page size forward or backward
+                nextAddress = goingForward ? nextAddressForward : nextAddressBackward;
+
                 continue;
             }
         }

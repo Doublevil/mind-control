@@ -230,26 +230,26 @@ public class ProcessMemoryReadTest : BaseProcessMemoryTest
     /// <summary>
     /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with an address and length that would
     /// make the read start on a readable address but end on an unreadable one.
-    /// Expect the result to be 4 (as in 4 bytes read) and the buffer to contain the 4 bytes that were readable. 
+    /// Expect the result to be 5 (as in 5 bytes read) and the buffer to contain the 5 bytes that were readable. 
     /// </summary>
     [Test]
     public void ReadBytesPartialOnPartiallyUnreadableRangeTest()
     {
         // Prepare a segment of memory that is isolated from other memory regions, and has a known sequence of bytes
         // at the end.
-        var bytesAtTheEnd = new byte[] { 0x1, 0x2, 0x3, 0x4 };
+        var bytesAtTheEnd = new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5 };
         var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
         var targetAddress = allocatedMemory.Range.End - 4;
         var writeResult = TestProcessMemory.WriteBytes(targetAddress, bytesAtTheEnd, MemoryProtectionStrategy.Ignore);
         Assert.That(writeResult.IsSuccess, Is.True, writeResult.ToString());
 
-        // Read 8 bytes, which should result in reading 4 bytes from the readable region and 4 bytes from the unreadable
+        // Read 8 bytes, which should result in reading 5 bytes from the readable region and 3 bytes from the unreadable
         // one.
         var buffer = new byte[8];
         var result = TestProcessMemory.ReadBytesPartial(targetAddress, buffer, 8);
         Assert.That(result.IsSuccess, Is.True, result.ToString());
-        Assert.That(result.Value, Is.EqualTo(4));
-        Assert.That(buffer, Is.EqualTo(new byte[] { 0x1, 0x2, 0x3, 0x4, 0, 0, 0, 0 }));
+        Assert.That(result.Value, Is.EqualTo(5));
+        Assert.That(buffer, Is.EqualTo(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0, 0, 0 }));
     }
 
     /// <summary>

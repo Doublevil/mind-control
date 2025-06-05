@@ -49,4 +49,11 @@ public struct MemoryRangeMetadata
     /// Gets a boolean indicating if the memory is mapped to a file.
     /// </summary>
     public bool IsMapped { get; init; }
+
+    /// <summary>Returns the fully qualified type name of this instance.</summary>
+    /// <returns>The fully qualified type name.</returns>
+    public override string ToString()
+    {
+        return $"[{StartAddress:X}-{StartAddress + Size - 1:X}] ({(IsCommitted ? "C" : "-")}{(IsFree ? "F" : "-")}{(IsProtected ? "P" : "-")}{(IsReadable ? "R" : "-")}{(IsWritable ? "W" : "-")}{(IsExecutable ? "E" : "-")}{(IsMapped ? "M" : "-")})";
+    }
 }

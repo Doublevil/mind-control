@@ -269,21 +269,21 @@ public class MemoryRangeTest
         RangeAlignmentMode AlignmentMode, MemoryRange? ExpectedResult);
     
     private static AlignedToTestCase[] _alignedToTestCases = {
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
-        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignBlock, new MemoryRange(0x1000, 0x1FFF)),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.AlignStart, new MemoryRange(0x1000, 0x1FFF)),
+        new(0x1000, 0x1FFF, 4, RangeAlignmentMode.None, new MemoryRange(0x1000, 0x1FFF)),
         
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
-        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1000, (UIntPtr)0x1FFF)),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignBlock, new MemoryRange(0x1000, 0x1FFF)),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.AlignStart, new MemoryRange(0x1000, 0x1FFF)),
+        new(0x1000, 0x1FFF, 8, RangeAlignmentMode.None, new MemoryRange(0x1000, 0x1FFF)),
         
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1004, (UIntPtr)0x1FFB)),
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1004, (UIntPtr)0x1FFE)),
-        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1001, (UIntPtr)0x1FFE)),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignBlock, new MemoryRange(0x1004, 0x1FFB)),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.AlignStart, new MemoryRange(0x1004, 0x1FFE)),
+        new(0x1001, 0x1FFE, 4, RangeAlignmentMode.None, new MemoryRange(0x1001, 0x1FFE)),
         
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignBlock, new MemoryRange((UIntPtr)0x1008, (UIntPtr)0x1FF7)),
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignStart, new MemoryRange((UIntPtr)0x1008, (UIntPtr)0x1FFE)),
-        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.None, new MemoryRange((UIntPtr)0x1001, (UIntPtr)0x1FFE)),
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignBlock, new MemoryRange(0x1008, 0x1FF7)),
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.AlignStart, new MemoryRange(0x1008, 0x1FFE)),
+        new(0x1001, 0x1FFE, 8, RangeAlignmentMode.None, new MemoryRange(0x1001, 0x1FFE)),
         
         new(0x1000, 0x1FFF, 0x2000, RangeAlignmentMode.AlignBlock, null)
     };

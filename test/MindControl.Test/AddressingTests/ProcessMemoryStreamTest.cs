@@ -273,7 +273,7 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
     {
         // Prepare a segment of memory that is isolated from other memory regions, and has a known sequence of bytes
         // at the end.
-        var bytesAtTheEnd = new byte[] { 0x1, 0x2, 0x3, 0x4 };
+        var bytesAtTheEnd = new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5 };
         var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
         var targetAddress = allocatedMemory.Range.End - 4;
         var writeResult = TestProcessMemory.WriteBytes(targetAddress, bytesAtTheEnd, MemoryProtectionStrategy.Ignore);
@@ -284,10 +284,10 @@ public class ProcessMemoryStreamTest : BaseProcessMemoryTest
         var buffer = new byte[8];
         int byteCount = stream.Read(buffer, 0, 8);
         
-        // We should have read only 4 bytes, and the first 4 bytes of the buffer should be the bytes we wrote at the end
+        // We should have read only 5 bytes, and the first 5 bytes of the buffer should be the bytes we wrote at the end
         // of our memory segment.
-        Assert.That(byteCount, Is.EqualTo(4));
-        Assert.That(buffer.Take(4), Is.EqualTo(bytesAtTheEnd));
+        Assert.That(byteCount, Is.EqualTo(5));
+        Assert.That(buffer.Take(5), Is.EqualTo(bytesAtTheEnd));
     }
 
     /// <summary>
