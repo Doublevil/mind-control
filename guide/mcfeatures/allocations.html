@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Storing data in memory | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Storing data in memory | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/allocations.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="storing-data-in-memory">Storing data in memory</h1>
+
+<p>This section explains how to allocate memory and store data in the memory of the target process using MindControl.</p>
+<h2 id="what-is-a-memory-allocation">What is a memory allocation?</h2>
+<p>A memory allocation is a block of memory that is reserved in the target process's address space. This memory space can be used to store data, such as structures, arrays, strings, pictures, or even code.</p>
+<p>For example, if you want to replace a texture in a game, you have to:</p>
+<ol>
+<li>Allocate memory in the target process to store the new texture data.</li>
+<li>Write the texture data to the allocated memory.</li>
+<li>Overwrite pointers to use the new texture data from the allocated memory instead of the normal one.</li>
+</ol>
+<p>MindControl provides three features for working with memory allocations: allocations, reservations, and storage.</p>
+<h2 id="storage">Storage</h2>
+<p>For most use cases, you don't need to allocate memory manually. Instead, you can use the <code>ProcessMemory</code> class to store data in the target process's memory. This is done using the <code>Store&lt;T&gt;</code> method, which takes a value and returns a <code>MemoryReservation</code> object that represents a reservation on allocated memory (more on that later). You can then get the address of the reservation and reference it wherever you need to.</p>
+<pre><code class="lang-csharp">// Store an integer value in the target process memory. This could be any other data type that you can write.
+var reservationResult = processMemory.Store(42);
+if (reservationResult.IsSuccess)
+{
+    // We can then use the Address property of the MemoryReservation
+    // In this example, we read the value back from the target process memory, but you would typically write a pointer
+    // to this address somewhere so that the process uses it.
+    MemoryReservation reservation = reservationResult.Value;
+    int value = processMemory.Read&lt;int&gt;(reservation.Address).ValueOrDefault();
+    Console.WriteLine($&quot;Stored value: {value}&quot;); // Output: Stored value: 42
+}
+</code></pre>
+<p>When calling <code>Store</code>, under the hood, MindControl will:</p>
+<ul>
+<li>Allocate a chunk of memory in the target process that is large enough to hold the data you want to store, but usually bigger than that for various reasons</li>
+<li>Keep track of the allocated memory in a <code>MemoryAllocation</code> object to maybe reuse it later</li>
+<li>Reserve a portion of the <code>MemoryAllocation</code> just big enough to hold the data you want to store, essentially creating a <code>MemoryReservation</code> object</li>
+<li>Write the data at the address of that reservation</li>
+<li>Return the <code>MemoryReservation</code> object</li>
+</ul>
+<p>If we call <code>Store</code> again with some data that is small enough to fit in the same <code>MemoryAllocation</code>, MindControl will reuse the same allocation, and create a new <code>MemoryReservation</code> on it, for your new data. This is done to avoid unnecessary memory allocations and to optimize memory usage.</p>
+<pre><code class="lang-csharp">var reservation1 = processMemory.Store(42).Value;
+var reservation2 = processMemory.Store(64).Value;
+// Only one memory allocation is issued, but two different reservations are created.
+// Usually, you don't need to worry about this.
+</code></pre>
+<p>The advantage of using <code>Store</code> is that it abstracts away the details of memory allocation and management, allowing you to focus on the data you want to store rather than the underlying memory operations. You don't have to worry about where the memory is allocated, how much space is reserved, about the system page size, data alignment, or even about accidentally overwriting the memory you allocated.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Disposing the <code>MemoryReservation</code> object will automatically free the memory reserved for your data, so that it can be reused to store other data later. If your program dynamically stores more and more data, you have to make sure to dispose of the <code>MemoryReservation</code> objects when you no longer need them, to avoid memory leaks in the target process.</p>
+</div>
+<p>The two other features, allocation and reservation, are more low-level and give you more control over the memory management process. They're usually not needed, but there are cases where you might want to use them.</p>
+<h2 id="allocations">Allocations</h2>
+<p>If you need to allocate memory manually, you can use the <code>Allocate</code> method of the <code>ProcessMemory</code> class. This method allows you to allocate a block of memory in the target process's address space. This method returns a <code>MemoryAllocation</code> object that represents the allocated memory.</p>
+<pre><code class="lang-csharp">// Allocate a block of memory of at least 1024 bytes in the target process, to store data (not code)
+MemoryAllocation allocation = processMemory.Allocate(1024, forExecutableCode: false).Result;
+// The actual allocation size may be larger than 1024 bytes, depending on the system page size and other factors.
+</code></pre>
+<p>Note that the second parameter, <code>forExecutableCode</code>, specifies whether the allocated memory should be executable or not. If you plan to write code to this memory, you should set this parameter to <code>true</code>. Otherwise, you can set it to <code>false</code> to avoid performance overhead and potential security risks.</p>
+<p>There are also two optional parameters that you can use to provide memory range limits for the allocation, and/or to specify that the memory allocation should be made as close as possible to a specific address. This is most useful when performing code injection and other advanced memory manipulation techniques.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Like the reservations, disposing <code>MemoryAllocation</code> instances will free the memory allocation in the target process. If your program creates allocations dynamically, make sure to dispose of them when you no longer need them, to avoid memory leaks in the target process.</p>
+</div>
+<p>With the returned <code>MemoryAllocation</code> object, you can perform reservations, which is the topic of the next section.</p>
+<h2 id="reservations">Reservations</h2>
+<p>If an allocation is a physical block of memory in the target process, a reservation is a logical portion of that allocation that you explicitly mark as used.</p>
+<p>Basically, reservations are another layer on top of allocations that allow you to manage your allocations more easily. When you make a reservation, you are locking in a portion of the allocated memory, and that makes sure that future reservations will not overlap with it.</p>
+<p>There are two ways to create a reservation: using the <code>ReserveRange</code> method of the <code>MemoryAllocation</code> class, or using the <code>Reserve</code> method directly on the <code>ProcessMemory</code> class.</p>
+<h3 id="using-a-memoryallocation">Using a MemoryAllocation</h3>
+<pre><code class="lang-csharp">MemoryAllocation allocation = processMemory.Allocate(1024, forExecutableCode: false).Result;
+// Reserve 256 bytes of that allocation
+MemoryReservation reservation = allocation.ReserveRange(256).Result;
+// You can now use the reservation to write data
+processMemory.Write(reservation.Address, 42);
+</code></pre>
+<h3 id="using-processmemory">Using ProcessMemory</h3>
+<p>The <code>Reserve</code> method is a more convenient way to create a reservation without having to manage the allocation yourself. It will browse existing allocations to find one that satisfies the required size, create one if none exists, and then make a reservation in it.</p>
+<pre><code class="lang-csharp">// Reserve 256 bytes of memory in the target process, without manually creating a new allocation
+MemoryReservation reservation = processMemory.Reserve(256, requireExecutable: false).Result;
+// You can now use the reservation to write data
+processMemory.Write(reservation.Address, 42);
+</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>To recapitulate, in most cases, you can use the <code>Store&lt;T&gt;</code> method to store data in the target process's memory without worrying about allocations and reservations. If you need more control over memory management, you can use the <code>Reserve</code> method to create reservations directly, or, if you need even more control, you can use <code>Allocate</code> to manage allocations yourself.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/allocations.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

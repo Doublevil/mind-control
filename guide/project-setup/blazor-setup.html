@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Setting up MindControl in a Blazor (web) application | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Setting up MindControl in a Blazor (web) application | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/project-setup/blazor-setup.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="setting-up-mindcontrol-in-a-blazor-web-application">Setting up MindControl in a Blazor (web) application</h1>
+
+<p>This section will guide you through setting up a new Blazor application project that uses the <code>MindControl</code> library to interact with the memory of a target process. We will use the Slime Rancher demo (see the <a href="../guide-requirements.html">requirements page</a> for more info) as our target process, but feel free to use any other target.</p>
+<h2 id="define-the-scope-of-your-project">Define the scope of your project</h2>
+<p>Before we start, let's define what our project should do. In our example, we are going to set up a very simple page, with an editable field for the player's current coin count, with real-time synchronization.</p>
+<h2 id="create-a-new-blazor-project">Create a new Blazor project</h2>
+<p>First, we need to create a new Blazor application project. There are two types of Blazor applications: Blazor Server and Blazor WebAssembly. Explaining the differences is beyond the scope of this guide, but Blazor server is perfect for our purposes, because it has a built-in mechanism to constantly stream updates from the server app to the browser.</p>
+<p>Open a command line interface and navigate to the directory where you want to create the project. Then, run the following command to create your project from scratch:</p>
+<pre><code class="lang-bash">dotnet new blazor -n MyMindControlWebProject --empty
+cd MyMindControlWebProject
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>We are using the <code>dotnet</code> command-line tool here, but feel free to use your IDE of choice if you prefer.</p>
+</div>
+<h2 id="add-the-mindcontrol-library-to-your-project">Add the MindControl library to your project</h2>
+<p>Next, we need to add the <code>MindControl</code> library to our project. Run the following command to add the library to your project:</p>
+<pre><code class="lang-bash">dotnet add package MindControl
+</code></pre>
+<p>This will reference the latest stable version of the <code>MindControl</code> library in your project using NuGet.</p>
+<h2 id="develop-your-memory-hacking-features-in-a-new-class">Develop your memory hacking features in a new class</h2>
+<p>It's a good idea to separate your memory hacking features from the rest of your application. This way, you can keep your code organized and easy to maintain. Let's create a new class called <code>SlimeRancherDemo</code> in a new file called <code>SlimeRancherDemo.cs</code>. This class will be our entry point for interacting with the target process, and will define methods for every memory hack our program is able to do.</p>
+<pre><code class="lang-csharp">using MindControl;
+
+namespace MyMindControlWebProject;
+
+public class SlimeRancherDemo
+{
+    // We have determined the memory path to the coin count value in the target process using Cheat Engine. See the tutorials in this guide to learn how to do this.
+    private readonly PointerPath _coinCountPath = &quot;UnityPlayer.dll+0168EEA0,8,100,28,20,80&quot;;
+    
+    // Use the name of your target process here.
+    private readonly ProcessTracker _processTracker = new(&quot;SlimeRancher&quot;);
+   
+    public int? GetCoinCount()
+    {
+        var process = _processTracker.GetProcessMemory();
+        if (process == null)
+            return null; // The target process is not running
+        
+        // Try to read the coin count value from the target process
+        var coinCountResult = process.Read&lt;int&gt;(_coinCountPath);
+        if (!coinCountResult.IsSuccess)
+        {
+            // The coin count value could not be read (maybe we are in the main menu)
+            // Check coinCountResult.Failure for more information
+            return null;
+        }
+        
+        return coinCountResult.Value;
+    }
+    
+    public bool SetCoinCount(int newCoinCount)
+    {
+        var process = _processTracker.GetProcessMemory();
+        if (process == null)
+            return false; // The target process is not running
+        
+        // Try to write the new coin count value to the target process, and return true if successful
+        var writeResult = process.Write(_coinCountPath, newCoinCount);
+        return writeResult.IsSuccess;
+    }
+}
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>In the next chapter of this guide, we will explain how to use the classes and methods provided by <code>MindControl</code>. For now, we are just focusing on getting a basic project set up.</p>
+</div>
+<p>As you can see, in our case, we defined two methods: <code>GetCoinCount</code> and <code>SetCoinCount</code>.</p>
+<h2 id="register-the-service-in-the-programcs-file">Register the service in the Program.cs file</h2>
+<p>Now that we have our memory hacking features defined, we need to register the <code>SlimeRancherDemo</code> service in the <code>Program.cs</code> file so that we can use it in our Blazor components.</p>
+<p>Open the <code>Program.cs</code> file and add the following code right before the <code>builder.Build()</code> line:</p>
+<pre><code class="lang-csharp">// Register the SlimeRancherDemoService as a singleton, so it can be used by multiple pages and components.
+builder.Services.AddSingleton&lt;MyMindControlWebProject.SlimeRancherDemo&gt;();
+</code></pre>
+<h2 id="implementing-the-page">Implementing the page</h2>
+<p>Now that we have our memory hacking features defined, let's work on the page itself. In Blazor, pages are defined in <code>.razor</code> files. The template already has a home page in <code>Components/Pages/Home.razor</code>, so let's edit that file to make our page.</p>
+<pre><code class="lang-html">@page &quot;/&quot;
+
+@* Specifying the render mode as InteractiveServer allows us to use server-side rendering with interactive components,
+which is crucial in our case because the client (the browser) cannot directly access the Slime Rancher game state. *@
+@rendermode InteractiveServer
+
+@* We can access the SlimeRancherDemo service using injection because we have registered it in the Program.cs file *@
+@inject SlimeRancherDemo _slimeRancherDemo
+
+&lt;PageTitle&gt;Home&lt;/PageTitle&gt;
+
+&lt;div class=&quot;field&quot;&gt;
+    &lt;label for=&quot;coins&quot;&gt;Coins&lt;/label&gt;
+    &lt;input type=&quot;number&quot; value=&quot;@_coinCount&quot; id=&quot;coins&quot; @oninput=&quot;OnCoinsModified&quot; /&gt;
+&lt;/div&gt;
+
+@code {
+    public int _coinCount;
+
+    private readonly System.Timers.Timer _stateUpdateTimer = new System.Timers.Timer(TimeSpan.FromMilliseconds(100));
+    protected override void OnInitialized()
+    {
+        _stateUpdateTimer.Elapsed += OnStateUpdateTimerElapsed;
+        _stateUpdateTimer.Start();
+    }
+
+    /// &lt;summary&gt;Called when the timer ticks, every 100ms.&lt;/summary&gt;
+    private void OnStateUpdateTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        _coinCount = _slimeRancherDemo.GetCoinCount() ?? 0;
+
+        // Update the UI with StateHasChanged. We need to do that manually when new data comes from events or timers.
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// &lt;summary&gt;Called when the coin input value is modified manually.&lt;/summary&gt;
+    private void OnCoinsModified(ChangeEventArgs e)
+    {
+        // Make sure the input value is a valid number
+        if (!int.TryParse(e.Value?.ToString(), out int coins))
+            return;
+
+        _slimeRancherDemo.SetCoinCount(coins);
+    }
+}
+</code></pre>
+<p>This code defines a simple page with an input field for the coin count. The input field is bound to the <code>_coinCount</code> variable, which is updated every 100 milliseconds by the timer we set up in the <code>OnInitialized</code> method.</p>
+<p>When the user modifies the input field, the <code>OnCoinsModified</code> method is called (through the <code>oninput</code> event), which updates the coin count in the game.</p>
+<p>At this stage, the program should be complete and functional. You can run it using <code>dotnet run</code> from the project directory and try it out.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>You may need to manually access the page in your browser by navigating to the link output by the application after running it, which should look like <code>http://localhost:5273</code>.</p>
+</div>
+<p><img src="../../images/ex-blazor-app-simple.png" alt="Our example Blazor application"></p>
+<blockquote>
+<p>Try spending or earning coins in the game, and see how the coin count updates in real-time in your application. You can also change the coin count value in the input field, and it will be reflected in the game.</p>
+</blockquote>
+<h2 id="going-further">Going further</h2>
+<p>Now, to learn how to use classes and methods provided by the <code>MindControl</code> library, check out the <a href="../mcfeatures/attaching.html">next chapter</a> of this guide.</p>
+<p>Alternatively, if you want to see a more advanced example of a Blazor application using the <code>MindControl</code> library, check out the <a href="https://github.com/Doublevil/mind-control/tree/main/samples/MindControl.Samples.SrDemoBlazorApp">MindControl Blazor app sample</a> in the MindControl repository. Here is a breakdown of the features in the sample:</p>
+<ul>
+<li>Fully automated process tracking (process detection with no need for user input, supports the game closing and restarting).</li>
+<li>Editable sliders and input fields, synchronized in real-time with the game, for the player's health, stamina, and coin count values.</li>
+<li>A button to toggle infinite stamina.</li>
+</ul>
+<p><img src="../../images/ex-blazor-app-full.png" alt="An example of the MindControl Blazor app sample"></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/project-setup/blazor-setup.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

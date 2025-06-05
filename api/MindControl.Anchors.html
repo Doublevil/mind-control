@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Namespace MindControl.Anchors | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Namespace MindControl.Anchors | MindControl ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.Anchors">
+
+  <h1 id="MindControl_Anchors" data-uid="MindControl.Anchors" class="text-break">Namespace MindControl.Anchors</h1>
+  <div class="markdown level0 summary"></div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="markdown level0 remarks"></div>
+
+    <h3 id="classes">
+Classes
+</h3>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ByteArrayMemoryAdapter.html">ByteArrayMemoryAdapter</a></dt>
+      <dd><p>Represents an adapter for reading and writing a value from and to memory.
+This implementation reads and writes a byte array from and to memory using an address resolver and a size.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.FreezeFailureEventArgs.html">FreezeFailureEventArgs</a></dt>
+      <dd><p>Event arguments used when a freeze operation fails.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.GenericMemoryAdapter-1.html">GenericMemoryAdapter&lt;TValue&gt;</a></dt>
+      <dd><p>Represents an adapter for reading and writing a value from and to memory.
+This implementation reads and writes any value type from and to memory using an address resolver.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.StringPointerMemoryAdapter.html">StringPointerMemoryAdapter</a></dt>
+      <dd><p>Represents an adapter for reading and writing a value from and to memory.
+This implementation reads and writes a string from and to memory using an address resolver and the string settings.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ThreadValueFreezer-1.html">ThreadValueFreezer&lt;TValue&gt;</a></dt>
+      <dd><p>Provides methods to freeze a value in memory, using a thread that constantly writes the value.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.TimerValueFreezer-1.html">TimerValueFreezer&lt;TValue&gt;</a></dt>
+      <dd><p>Provides methods to freeze a value in memory, using a timer to write the value at regular intervals.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor&lt;TValue&gt;</a></dt>
+      <dd><p>Provides methods to manipulate and track a specific value in memory.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ValueChangedEventArgs-1.html">ValueChangedEventArgs&lt;TValue&gt;</a></dt>
+      <dd><p>Event arguments used when a value observed by a <a class="xref" href="MindControl.Anchors.ValueWatcher-1.html">ValueWatcher&lt;TValue&gt;</a>
+changes.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ValueLostEventArgs-1.html">ValueLostEventArgs&lt;TValue&gt;</a></dt>
+      <dd><p>Event arguments used when a value observed by a <a class="xref" href="MindControl.Anchors.ValueWatcher-1.html">ValueWatcher&lt;TValue&gt;</a>
+becomes unreadable (causes a read failure). This may happen when the target process frees or rearranges its memory,
+or when the related <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance is detached.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ValueReacquiredEventArgs-1.html">ValueReacquiredEventArgs&lt;TValue&gt;</a></dt>
+      <dd><p>Event arguments used when a value observed by a <a class="xref" href="MindControl.Anchors.ValueWatcher-1.html">ValueWatcher&lt;TValue&gt;</a>
+is successfully read after being lost.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.ValueWatcher-1.html">ValueWatcher&lt;TValue&gt;</a></dt>
+      <dd><p>Uses a timer to periodically read a value from a given anchor and raise events when the value changes.</p>
+</dd>
+    </dl>
+    <h3 id="interfaces">
+Interfaces
+</h3>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MindControl.Anchors.IMemoryAdapter-1.html">IMemoryAdapter&lt;TValue&gt;</a></dt>
+      <dd><p>Represents an adapter for reading and writing a value from and to memory.</p>
+</dd>
+    </dl>
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

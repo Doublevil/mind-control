@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Enum MemoryProtection | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Enum MemoryProtection | MindControl ">
+      
+      <meta name="description" content="Protection attributes attributed to a memory page.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_Native_MemoryProtection.md&amp;value=---%0Auid%3A%20MindControl.Native.MemoryProtection%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.Native.MemoryProtection">
+
+
+
+
+  <h1 id="MindControl_Native_MemoryProtection" data-uid="MindControl.Native.MemoryProtection" class="text-break">
+Enum MemoryProtection  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/MemoryProtection.cs/#L6"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a>.<a class="xref" href="MindControl.Native.html">Native</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Protection attributes attributed to a memory page.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">[Flags]
+public enum MemoryProtection : uint</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+  <h2 id="fields">Fields
+</h2>
+  <dl class="parameters">
+    <dt id="MindControl_Native_MemoryProtection_Execute"><code>Execute = 16</code></dt>
+  
+  <dd><p>Enables execute access to the committed region of pages. An attempt to write to the committed region results in
+an access violation.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_ExecuteRead"><code>ExecuteRead = 32</code></dt>
+  
+  <dd><p>Enables execute or read-only access to the committed region of pages. An attempt to write to the committed
+region results in an access violation.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_ExecuteReadWrite"><code>ExecuteReadWrite = 64</code></dt>
+  
+  <dd><p>Enables execute, read-only, or read/write access to the committed region of pages.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_ExecuteWriteCopy"><code>ExecuteWriteCopy = 128</code></dt>
+  
+  <dd><p>Enables execute, read-only, or copy-on-write access to a mapped view of a file mapping object. An attempt to
+write to a committed copy-on-write page results in a private copy of the page being made for the process.
+The private page is marked as <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_ExecuteReadWrite">ExecuteReadWrite</a>, and the change is written to the new page.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_NoAccess"><code>NoAccess = 1</code></dt>
+  
+  <dd><p>Disables all access to the committed region of pages. An attempt to read from, write to, or execute the
+committed region results in an access violation.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_NoCache"><code>NoCache = 512</code></dt>
+  
+  <dd><p>Sets all pages to be non-cachable. Applications should not use this attribute except when explicitly required
+for a device. Using the interlocked functions with memory that is mapped with SEC_NOCACHE can result in an
+EXCEPTION_ILLEGAL_INSTRUCTION exception. This flag cannot be used with the <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_PageGuard">PageGuard</a>,
+<a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_NoAccess">NoAccess</a>, or <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_WriteCombine">WriteCombine</a> flags.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_PageGuard"><code>PageGuard = 256</code></dt>
+  
+  <dd><p>Pages in the region become guard pages. Any attempt to access a guard page causes the system to raise a
+STATUS_GUARD_PAGE_VIOLATION exception and turn off the guard page status. Guard pages thus act as a one-time
+access alarm. When an access attempt leads the system to turn off guard page status, the underlying page
+protection takes over. If a guard page exception occurs during a system service, the service typically returns
+a failure status indicator. This value cannot be used with <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_NoAccess">NoAccess</a>.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_ReadOnly"><code>ReadOnly = 2</code></dt>
+  
+  <dd><p>Enables read-only access to the committed region of pages. An attempt to write to the committed region results
+in an access violation. If Data Execution Prevention is enabled, an attempt to execute code in the committed
+region results in an access violation.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_ReadWrite"><code>ReadWrite = 4</code></dt>
+  
+  <dd><p>Enables read-only or read/write access to the committed region of pages. If Data Execution Prevention is
+enabled, attempting to execute code in the committed region results in an access violation.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_WriteCombine"><code>WriteCombine = 1024</code></dt>
+  
+  <dd><p>Sets all pages to be write-combined. Applications should not use this attribute except when explicitly required
+for a device. Using the interlocked functions with memory that is mapped as write-combined can result in an
+EXCEPTION_ILLEGAL_INSTRUCTION exception. This flag cannot be specified with the <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_NoAccess">NoAccess</a>,
+<a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_PageGuard">PageGuard</a>, and <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_NoCache">NoCache</a> flags.</p>
+</dd>
+    <dt id="MindControl_Native_MemoryProtection_WriteCopy"><code>WriteCopy = 8</code></dt>
+  
+  <dd><p>Enables read-only or copy-on-write access to a mapped view of a file mapping object. An attempt to write to a
+committed copy-on-write page results in a private copy of the page being made for the process. The private page
+is marked as <a class="xref" href="MindControl.Native.MemoryProtection.html#MindControl_Native_MemoryProtection_ReadWrite">ReadWrite</a>, and the change is written to the new page. If Data Execution Prevention is
+enabled, attempting to execute code in the committed region results in an access violation.</p>
+</dd>
+  </dl>
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/MemoryProtection.cs/#L6" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

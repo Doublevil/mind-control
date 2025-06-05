@@ -1,0 +1,2196 @@
+{
+  "source_base_path": "D:/a/mind-control/mind-control/docs",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ByteArrayMemoryAdapter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ByteArrayMemoryAdapter.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ByteArrayMemoryAdapter",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ByteArrayMemoryAdapter.yml\" sourcestartlinenumber=\"1\">Represents an adapter for reading and writing a value from and to memory.\nThis implementation reads and writes a byte array from and to memory using an address resolver and a size.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.FreezeFailureEventArgs.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.FreezeFailureEventArgs.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.FreezeFailureEventArgs",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.FreezeFailureEventArgs.yml\" sourcestartlinenumber=\"1\">Event arguments used when a freeze operation fails.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.GenericMemoryAdapter-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.GenericMemoryAdapter-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.GenericMemoryAdapter<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.GenericMemoryAdapter-1.yml\" sourcestartlinenumber=\"1\">Represents an adapter for reading and writing a value from and to memory.\nThis implementation reads and writes any value type from and to memory using an address resolver.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.IMemoryAdapter-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.IMemoryAdapter-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.IMemoryAdapter<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.IMemoryAdapter-1.yml\" sourcestartlinenumber=\"1\">Represents an adapter for reading and writing a value from and to memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.StringPointerMemoryAdapter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.StringPointerMemoryAdapter.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.StringPointerMemoryAdapter",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.StringPointerMemoryAdapter.yml\" sourcestartlinenumber=\"1\">Represents an adapter for reading and writing a value from and to memory.\nThis implementation reads and writes a string from and to memory using an address resolver and the string settings.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ThreadValueFreezer-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ThreadValueFreezer-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ThreadValueFreezer<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ThreadValueFreezer-1.yml\" sourcestartlinenumber=\"1\">Provides methods to freeze a value in memory, using a thread that constantly writes the value.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.TimerValueFreezer-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.TimerValueFreezer-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.TimerValueFreezer<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.TimerValueFreezer-1.yml\" sourcestartlinenumber=\"1\">Provides methods to freeze a value in memory, using a timer to write the value at regular intervals.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ValueAnchor-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ValueAnchor-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ValueAnchor<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ValueAnchor-1.yml\" sourcestartlinenumber=\"1\">Provides methods to manipulate and track a specific value in memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ValueChangedEventArgs-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ValueChangedEventArgs-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ValueChangedEventArgs<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ValueChangedEventArgs-1.yml\" sourcestartlinenumber=\"1\">Event arguments used when a value observed by a <xref href=\"MindControl.Anchors.ValueWatcher%601\" data-throw-if-not-resolved=\"false\"></xref>\nchanges.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ValueLostEventArgs-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ValueLostEventArgs-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ValueLostEventArgs<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ValueLostEventArgs-1.yml\" sourcestartlinenumber=\"1\">Event arguments used when a value observed by a <xref href=\"MindControl.Anchors.ValueWatcher%601\" data-throw-if-not-resolved=\"false\"></xref>\nbecomes unreadable (causes a read failure). This may happen when the target process frees or rearranges its memory,\nor when the related <xref href=\"MindControl.ProcessMemory\" data-throw-if-not-resolved=\"false\"></xref> instance is detached.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ValueReacquiredEventArgs-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ValueReacquiredEventArgs-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ValueReacquiredEventArgs<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ValueReacquiredEventArgs-1.yml\" sourcestartlinenumber=\"1\">Event arguments used when a value observed by a <xref href=\"MindControl.Anchors.ValueWatcher%601\" data-throw-if-not-resolved=\"false\"></xref>\nis successfully read after being lost.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.ValueWatcher-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.ValueWatcher-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors.ValueWatcher<TValue>",
+      "Summary": "<p sourcefile=\"api/MindControl.Anchors.ValueWatcher-1.yml\" sourcestartlinenumber=\"1\">Uses a timer to periodically read a value from a given anchor and raise events when the value changes.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Anchors.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Anchors.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Anchors",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.AssemblerExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.AssemblerExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.AssemblerExtensions",
+      "Summary": "<p sourcefile=\"api/MindControl.AssemblerExtensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods around code assembling.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.ByteSearchPattern.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.ByteSearchPattern.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.ByteSearchPattern",
+      "Summary": "<p sourcefile=\"api/MindControl.ByteSearchPattern.yml\" sourcestartlinenumber=\"1\">Represents a pattern of bytes to search for in memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Code.CodeChange.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Code.CodeChange.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Code.CodeChange",
+      "Summary": "<p sourcefile=\"api/MindControl.Code.CodeChange.yml\" sourcestartlinenumber=\"1\">Represents a modification to a code section in the memory of a process.\nAllows reverting the alteration by writing the original bytes back to the code section.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Code.ProcessMemoryCodeExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Code.ProcessMemoryCodeExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Code.ProcessMemoryCodeExtensions",
+      "Summary": "<p sourcefile=\"api/MindControl.Code.ProcessMemoryCodeExtensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods for <xref href=\"MindControl.ProcessMemory\" data-throw-if-not-resolved=\"false\"></xref> related to executable memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Code.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Code.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Code",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.FindBytesSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.FindBytesSettings.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.FindBytesSettings",
+      "Summary": "<p sourcefile=\"api/MindControl.FindBytesSettings.yml\" sourcestartlinenumber=\"1\">Settings for the FindBytes method.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.CodeHook.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.CodeHook.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.CodeHook",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.CodeHook.yml\" sourcestartlinenumber=\"1\">Represents a modification to a code section in the memory of a process.\nThe modification is a hook, which replaces code instructions with a jump to a block of injected code.\nAllows reverting the jump by writing the original instructions back to the code section. Reverting does not remove\nthe injected code, but will remove the entry point to the code.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.HookExecutionMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.HookExecutionMode.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.HookExecutionMode",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.HookExecutionMode.yml\" sourcestartlinenumber=\"1\">Defines how the injected code is executed in relation to the original code.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.HookJumpMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.HookJumpMode.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.HookJumpMode",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.HookJumpMode.yml\" sourcestartlinenumber=\"1\">Defines how the hook jump should be performed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.HookOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.HookOptions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.HookOptions",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.HookOptions.yml\" sourcestartlinenumber=\"1\">Holds settings for a hook operation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.HookRegister.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.HookRegister.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.HookRegister",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.HookRegister.yml\" sourcestartlinenumber=\"1\">Registers or register groups that can be saved and restored in hooks.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.HookRegisters.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.HookRegisters.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.HookRegisters",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.HookRegisters.yml\" sourcestartlinenumber=\"1\">Provides preset collections of registers for hooks.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.ProcessMemoryHookExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.ProcessMemoryHookExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks.ProcessMemoryHookExtensions",
+      "Summary": "<p sourcefile=\"api/MindControl.Hooks.ProcessMemoryHookExtensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods for <xref href=\"MindControl.ProcessMemory\" data-throw-if-not-resolved=\"false\"></xref> related to code hooks.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Hooks.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Hooks.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Hooks",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.IAddressResolver.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.IAddressResolver.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.IAddressResolver",
+      "Summary": "<p sourcefile=\"api/MindControl.IAddressResolver.yml\" sourcestartlinenumber=\"1\">Provides a way to resolve an address in the target process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.LiteralAddressResolver.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.LiteralAddressResolver.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.LiteralAddressResolver",
+      "Summary": "<p sourcefile=\"api/MindControl.LiteralAddressResolver.yml\" sourcestartlinenumber=\"1\">Provides a way to resolve an address in the target process.\nThis implementation takes a literal address and always resolves to that same address.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.MemoryAllocation.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.MemoryAllocation.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.MemoryAllocation",
+      "Summary": "<p sourcefile=\"api/MindControl.MemoryAllocation.yml\" sourcestartlinenumber=\"1\">Represents a range of memory that has been allocated in a process.\nCan be used to safely manage data or code storage using reservations.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.MemoryProtectionStrategy.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.MemoryProtectionStrategy.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.MemoryProtectionStrategy",
+      "Summary": "<p sourcefile=\"api/MindControl.MemoryProtectionStrategy.yml\" sourcestartlinenumber=\"1\">Enumerates potential strategies to deal with memory protection.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.MemoryRange.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.MemoryRange.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.MemoryRange",
+      "Summary": "<p sourcefile=\"api/MindControl.MemoryRange.yml\" sourcestartlinenumber=\"1\">Represents a range of memory addresses in a process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.MemoryReservation.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.MemoryReservation.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.MemoryReservation",
+      "Summary": "<p sourcefile=\"api/MindControl.MemoryReservation.yml\" sourcestartlinenumber=\"1\">Represents a reservation of a range of memory within a <xref href=\"MindControl.MemoryAllocation\" data-throw-if-not-resolved=\"false\"></xref>.\nReservations within an allocation cannot overlap and thus can be used to safely manage data or code storage over\na process.\nDisposing a reservation will free the memory range for other uses.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Modules.RemoteModule.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Modules.RemoteModule.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Modules.RemoteModule",
+      "Summary": "<p sourcefile=\"api/MindControl.Modules.RemoteModule.yml\" sourcestartlinenumber=\"1\">Represents a module loaded into another process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Modules.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Modules.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Modules",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.IOperatingSystemService.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.IOperatingSystemService.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.IOperatingSystemService",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.IOperatingSystemService.yml\" sourcestartlinenumber=\"1\">Provides process-related features.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.MemoryAllocationType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.MemoryAllocationType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.MemoryAllocationType",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.MemoryAllocationType.yml\" sourcestartlinenumber=\"1\">Allocation types for memory allocation functions.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.MemoryFreeType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.MemoryFreeType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.MemoryFreeType",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.MemoryFreeType.yml\" sourcestartlinenumber=\"1\">Allocation types for memory freeing functions.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.MemoryProtection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.MemoryProtection.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.MemoryProtection",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.MemoryProtection.yml\" sourcestartlinenumber=\"1\">Protection attributes attributed to a memory page.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.MemoryRangeMetadata.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.MemoryRangeMetadata.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.MemoryRangeMetadata",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.MemoryRangeMetadata.yml\" sourcestartlinenumber=\"1\">Contains properties about a uniform range in the virtual address space of a process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.Win32Service.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.Win32Service.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native.Win32Service",
+      "Summary": "<p sourcefile=\"api/MindControl.Native.Win32Service.yml\" sourcestartlinenumber=\"1\">Contains DllImports for Windows functions required internally by other components.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Native.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Native.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Native",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.PointerExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.PointerExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.PointerExtensions",
+      "Summary": "<p sourcefile=\"api/MindControl.PointerExtensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods for pointers.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.PointerOffset.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.PointerOffset.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.PointerOffset",
+      "Summary": "<p sourcefile=\"api/MindControl.PointerOffset.yml\" sourcestartlinenumber=\"1\">Describes a pointer offset as part of a <xref href=\"MindControl.PointerPath\" data-throw-if-not-resolved=\"false\"></xref>.\nEffectively, this is a number ranging from -0xFFFFFFFFFFFFFFFF to 0xFFFFFFFFFFFFFFFF.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.PointerPath.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.PointerPath.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.PointerPath",
+      "Summary": "<p sourcefile=\"api/MindControl.PointerPath.yml\" sourcestartlinenumber=\"1\">Holds a string expression consisting in a base address followed by a sequence of pointer offsets.\nAllows programs to consistently retrieve data in the process memory by following pointers to reach a dynamic\naddress.\nA pointer path instance can be reused to optimize performance, as it is only parsed once, when constructed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.PointerPathResolver.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.PointerPathResolver.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.PointerPathResolver",
+      "Summary": "<p sourcefile=\"api/MindControl.PointerPathResolver.yml\" sourcestartlinenumber=\"1\">Provides a way to resolve an address in the target process.\nThis implementation takes a pointer path and resolves it to an address in the target process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.ProcessMemory.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.ProcessMemory.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.ProcessMemory",
+      "Summary": "<p sourcefile=\"api/MindControl.ProcessMemory.yml\" sourcestartlinenumber=\"1\">Provides methods to manipulate the memory of a process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.ProcessMemoryStream.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.ProcessMemoryStream.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.ProcessMemoryStream",
+      "Summary": "<p sourcefile=\"api/MindControl.ProcessMemoryStream.yml\" sourcestartlinenumber=\"1\">A stream that reads or writes into the memory of a process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.ProcessTracker.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.ProcessTracker.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.ProcessTracker",
+      "Summary": "<p sourcefile=\"api/MindControl.ProcessTracker.yml\" sourcestartlinenumber=\"1\">Provides a <xref href=\"MindControl.ProcessMemory\" data-throw-if-not-resolved=\"false\"></xref> for a process identified by its name.\nThe tracker is able to re-attach to a process with the same name after it has been closed and reopened.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.RangeAlignmentMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.RangeAlignmentMode.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.RangeAlignmentMode",
+      "Summary": "<p sourcefile=\"api/MindControl.RangeAlignmentMode.yml\" sourcestartlinenumber=\"1\">Defines a byte alignment mode for memory ranges.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.BaseModuleNotFoundFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.BaseModuleNotFoundFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.BaseModuleNotFoundFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.BaseModuleNotFoundFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a path evaluation operation when the base module specified in the pointer path was not\nfound.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.CodeAssemblyFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.CodeAssemblyFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.CodeAssemblyFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.CodeAssemblyFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure that occurred in a hook operation when instructions could not be assembled into a code block.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.CodeDecodingFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.CodeDecodingFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.CodeDecodingFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.CodeDecodingFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure that occurred while writing code to a target process when a disassembling operation failed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ConversionFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ConversionFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ConversionFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ConversionFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory read operation when trying to convert the bytes read from memory to the target\ntype.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ConversionWriteFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ConversionWriteFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ConversionWriteFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ConversionWriteFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory write operation when trying to convert the value to write to an array of bytes to\nwrite in memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.DetachedProcessFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.DetachedProcessFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.DetachedProcessFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.DetachedProcessFailure.yml\" sourcestartlinenumber=\"1\">Failure that occurs when the process is not attached.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.DisposableResult-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.DisposableResult-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.DisposableResult<TResult>",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.DisposableResult-1.yml\" sourcestartlinenumber=\"1\">Represents the result of an operation that can either succeed or fail, with a result value in case of success. This\nvariant is disposable and may hold a disposable result. When a successful instance is disposed, the result will be\ntoo.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.DisposedAllocationFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.DisposedAllocationFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.DisposedAllocationFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.DisposedAllocationFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory reservation operation when the target allocation has been disposed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.DisposedThreadFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.DisposedThreadFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.DisposedThreadFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.DisposedThreadFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a thread operation when the thread handle has already been disposed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.Failure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.Failure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.Failure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.Failure.yml\" sourcestartlinenumber=\"1\">Base class for failures. Can also be used directly when no specific failure type is needed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.FunctionNotFoundFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.FunctionNotFoundFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.FunctionNotFoundFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.FunctionNotFoundFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a thread operation when the target function cannot be found.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.HookCodeAssemblySource.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.HookCodeAssemblySource.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.HookCodeAssemblySource",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.HookCodeAssemblySource.yml\" sourcestartlinenumber=\"1\">Enumerates potential blocks for a <xref href=\"MindControl.Results.CodeAssemblyFailure\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.IncompatibleBitnessPointerFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.IncompatibleBitnessPointerFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.IncompatibleBitnessPointerFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.IncompatibleBitnessPointerFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory read operation when the target process is 32-bit, but the target memory address is\nnot within the 32-bit address space.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.IncompatibleBitnessProcessFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.IncompatibleBitnessProcessFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.IncompatibleBitnessProcessFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.IncompatibleBitnessProcessFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a process attach operation when the target process is 64-bit and the current process is\n32-bit.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.IncompatibleBitnessWriteFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.IncompatibleBitnessWriteFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.IncompatibleBitnessWriteFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.IncompatibleBitnessWriteFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory write operation when the target process is 32-bit, but the target memory address\nis not within the 32-bit address space.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.IncompatiblePointerPathBitnessFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.IncompatiblePointerPathBitnessFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.IncompatiblePointerPathBitnessFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.IncompatiblePointerPathBitnessFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a path evaluation operation when the target process is 32-bit, but the target memory\naddress is not within the 32-bit address space.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.InsufficientSpaceFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.InsufficientSpaceFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.InsufficientSpaceFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.InsufficientSpaceFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory reservation operation when no space is available within the allocated memory range\nto reserve the specified size.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.InvalidArgumentFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.InvalidArgumentFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.InvalidArgumentFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.InvalidArgumentFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in an operating system operation when the provided arguments are invalid.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.InvalidBytePatternFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.InvalidBytePatternFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.InvalidBytePatternFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.InvalidBytePatternFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure occurring when the provided byte search pattern is invalid.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.InvalidStringSettingsFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.InvalidStringSettingsFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.InvalidStringSettingsFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.InvalidStringSettingsFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a string read operation when the settings provided are invalid.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.LibraryFileNotFoundFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.LibraryFileNotFoundFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.LibraryFileNotFoundFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.LibraryFileNotFoundFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a library injection operation when the library file to inject was not found.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.LibraryLoadFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.LibraryLoadFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.LibraryLoadFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.LibraryLoadFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a library injection operation when the library function call fails.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.LimitRangeOutOfBoundsFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.LimitRangeOutOfBoundsFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.LimitRangeOutOfBoundsFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.LimitRangeOutOfBoundsFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory allocation operation when the provided limit range is not within the bounds of the\ntarget process applicative memory range.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.MemoryProtectionRemovalFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.MemoryProtectionRemovalFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.MemoryProtectionRemovalFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.MemoryProtectionRemovalFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory write operation when the system API call to remove the protection properties of\nthe target memory space fails.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.MemoryProtectionRestorationFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.MemoryProtectionRestorationFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.MemoryProtectionRestorationFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.MemoryProtectionRestorationFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory write operation when the system API call to restore the protection properties of\nthe target memory space after writing fails.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ModuleAlreadyLoadedFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ModuleAlreadyLoadedFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ModuleAlreadyLoadedFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ModuleAlreadyLoadedFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a library injection operation when the module to inject is already loaded in the target\nprocess.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.MultipleTargetProcessesFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.MultipleTargetProcessesFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.MultipleTargetProcessesFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.MultipleTargetProcessesFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a process attach operation when multiple processes with the given name were found.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.NoFreeMemoryFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.NoFreeMemoryFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.NoFreeMemoryFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.NoFreeMemoryFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory allocation operation when no free memory large enough to accomodate the specified\nsize was found in the target process within the searched range.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.NotSupportedFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.NotSupportedFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.NotSupportedFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.NotSupportedFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure when an operation is not supported.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.OperatingSystemCallFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.OperatingSystemCallFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.OperatingSystemCallFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.OperatingSystemCallFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a system API call.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.PointerOutOfRangeFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.PointerOutOfRangeFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.PointerOutOfRangeFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.PointerOutOfRangeFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a path evaluation operation when a pointer in the path is out of the target process\naddress space.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.Result-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.Result-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.Result<TResult>",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.Result-1.yml\" sourcestartlinenumber=\"1\">Represents the result of an operation that can either succeed or fail, with a result value in case of success.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.Result.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.Result.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.Result",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.Result.yml\" sourcestartlinenumber=\"1\">Represents the result of an operation that can either succeed or fail.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ResultFailureException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ResultFailureException.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ResultFailureException",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ResultFailureException.yml\" sourcestartlinenumber=\"1\">Exception that may be thrown by failed <xref href=\"MindControl.Results.Result\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.StringTooLongFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.StringTooLongFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.StringTooLongFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.StringTooLongFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a string read operation when the string length prefix was evaluated to a value exceeding the\nconfigured max length, or a null terminator was not found within the configured max length.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.TargetProcessNotFoundFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.TargetProcessNotFoundFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.TargetProcessNotFoundFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.TargetProcessNotFoundFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a process attach operation when the target process could not be found.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.TargetProcessNotRunningFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.TargetProcessNotRunningFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.TargetProcessNotRunningFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.TargetProcessNotRunningFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a process attach operation when the target process is not running.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ThreadWaitAbandonedFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ThreadWaitAbandonedFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ThreadWaitAbandonedFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ThreadWaitAbandonedFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a thread operation when a waiting operation was abandoned.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ThreadWaitTimeoutFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ThreadWaitTimeoutFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ThreadWaitTimeoutFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ThreadWaitTimeoutFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a thread operation when the thread did not finish execution within the specified timeout.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.UndeterminedStringSettingsFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.UndeterminedStringSettingsFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.UndeterminedStringSettingsFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.UndeterminedStringSettingsFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a string settings search operation when no adequate settings were found to read the given\nstring from the specified pointer.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.UnsupportedTypeReadFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.UnsupportedTypeReadFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.UnsupportedTypeReadFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.UnsupportedTypeReadFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory read operation when the type to read is not supported.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.UnsupportedTypeWriteFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.UnsupportedTypeWriteFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.UnsupportedTypeWriteFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.UnsupportedTypeWriteFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure in a memory write operation when the value to write cannot be converted to an array of bytes.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.ZeroPointerFailure.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.ZeroPointerFailure.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results.ZeroPointerFailure",
+      "Summary": "<p sourcefile=\"api/MindControl.Results.ZeroPointerFailure.yml\" sourcestartlinenumber=\"1\">Represents a failure when a null pointer is accessed.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Results.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Results.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Results",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.ExceptionEventArgs.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.ExceptionEventArgs.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.ExceptionEventArgs",
+      "Summary": "<p sourcefile=\"api/MindControl.State.ExceptionEventArgs.yml\" sourcestartlinenumber=\"1\">Event arguments for an exception.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.IStateTimer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.IStateTimer.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.IStateTimer",
+      "Summary": "<p sourcefile=\"api/MindControl.State.IStateTimer.yml\" sourcestartlinenumber=\"1\">Provides a common interface for timers that can tick on their own but also be forced to tick manually.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.PrecisionTimer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.PrecisionTimer.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.PrecisionTimer",
+      "Summary": "<p sourcefile=\"api/MindControl.State.PrecisionTimer.yml\" sourcestartlinenumber=\"1\">High precision non-overlapping timer.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.StateEventArgs-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.StateEventArgs-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.StateEventArgs<T>",
+      "Summary": "<p sourcefile=\"api/MindControl.State.StateEventArgs-1.yml\" sourcestartlinenumber=\"1\">Event arguments for events related to arbitrary process states.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.StateWatcher-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.StateWatcher-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.StateWatcher<T>",
+      "Summary": "<p sourcefile=\"api/MindControl.State.StateWatcher-1.yml\" sourcestartlinenumber=\"1\">An abstract watcher that provides a periodically refreshed state.\nInherit this class to track the state of your target process in real time.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.ThreadingTimer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.ThreadingTimer.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State.ThreadingTimer",
+      "Summary": "<p sourcefile=\"api/MindControl.State.ThreadingTimer.yml\" sourcestartlinenumber=\"1\">Timer based on <xref href=\"System.Threading.Timer\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.State.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.State.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.State",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.StringLengthPrefix.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.StringLengthPrefix.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.StringLengthPrefix",
+      "Summary": "<p sourcefile=\"api/MindControl.StringLengthPrefix.yml\" sourcestartlinenumber=\"1\">Defines settings about the prefix that holds the length of a string.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.StringLengthUnit.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.StringLengthUnit.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.StringLengthUnit",
+      "Summary": "<p sourcefile=\"api/MindControl.StringLengthUnit.yml\" sourcestartlinenumber=\"1\">Defines what is counted by a string length prefix.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.StringSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.StringSettings.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.StringSettings",
+      "Summary": "<p sourcefile=\"api/MindControl.StringSettings.yml\" sourcestartlinenumber=\"1\">Defines how strings are read and written in a process' memory.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Threading.RemoteThread.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Threading.RemoteThread.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Threading.RemoteThread",
+      "Summary": "<p sourcefile=\"api/MindControl.Threading.RemoteThread.yml\" sourcestartlinenumber=\"1\">Represents an awaitable thread running an operation in another process.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.Threading.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.Threading.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl.Threading",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MindControl.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MindControl.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MindControl",
+      "Summary": null
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/guide-requirements.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/guide-requirements.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/hacking-basics/basic-memory-concepts.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/hacking-basics/basic-memory-concepts.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/hacking-basics/code-manipulation.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/hacking-basics/code-manipulation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/hacking-basics/finding-values.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/hacking-basics/finding-values.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/hacking-basics/stable-address.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/hacking-basics/stable-address.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/hacking-basics/unstable-address.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/hacking-basics/unstable-address.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/introduction.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/introduction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/allocations.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/allocations.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/attaching.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/attaching.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/code-manipulation.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/code-manipulation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/dll-injection.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/dll-injection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/freezing.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/freezing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/functions.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/functions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/monitoring.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/monitoring.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/pointer-paths.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/pointer-paths.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/reading.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/reading.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/results.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/results.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/searching.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/searching.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/streams.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/streams.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/strings.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/strings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/mcfeatures/writing.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/mcfeatures/writing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/project-setup/blazor-setup.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/project-setup/blazor-setup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/project-setup/console-setup.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/project-setup/console-setup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/project-setup/creating-mc-project.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/project-setup/creating-mc-project.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "guide/project-setup/wpf-setup.md",
+      "output": {
+        ".html": {
+          "relative_path": "guide/project-setup/wpf-setup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "guide/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "guide/toc.html"
+        },
+        ".json": {
+          "relative_path": "guide/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-add-pointer.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-add-pointer.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-assembly-example.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-assembly-example.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-attach.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-attach.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-auto-assemble.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-auto-assemble.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-code-injection.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-code-injection.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-coinscan-firstresults.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-coinscan-firstresults.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-coinscan-results-narrowed.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-coinscan-results-narrowed.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-coinscan.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-coinscan.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-find-writes.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-find-writes.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-memoryviewer-small.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-memoryviewer-small.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-memoryviewer-stamina-instructions.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-memoryviewer-stamina-instructions.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-memoryviewer.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-memoryviewer.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-example.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-example.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-initial-results.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-initial-results.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-open.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-open.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-options.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-options.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-rescan.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-rescan.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-results-2.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-results-2.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-pointer-scan-results-final.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-pointer-scan-results-final.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-scan-for-pointer.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-scan-for-pointer.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-scan-stable-pointer.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-scan-stable-pointer.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-stamina-find-writes.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-stamina-find-writes.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-stamina-instruction-nop.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-stamina-instruction-nop.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ce-write-trace.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ce-write-trace.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-blazor-app-full.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-blazor-app-full.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-blazor-app-simple.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-blazor-app-simple.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-console-app-full.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-console-app-full.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-console-app-simple.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-console-app-simple.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-console-app.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-console-app.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-wpf-app-full.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-wpf-app-full.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/ex-wpf-app-simple.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/ex-wpf-app-simple.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/il-datatypes.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/il-datatypes.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/il-pointerchain.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/il-pointerchain.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/il-pointers-firstscenario.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/il-pointers-firstscenario.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/il-pointers-secondscenario.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/il-pointers-secondscenario.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/il-structures.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/il-structures.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/sr-coincount-hacked.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/sr-coincount-hacked.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/sr-coincount.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/sr-coincount.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

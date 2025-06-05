@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class StateWatcher&lt;T&gt; | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class StateWatcher&lt;T&gt; | MindControl ">
+      
+      <meta name="description" content="An abstract watcher that provides a periodically refreshed state. Inherit this class to track the state of your target process in real time.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_State_StateWatcher_1.md&amp;value=---%0Auid%3A%20MindControl.State.StateWatcher%601%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.State.StateWatcher`1">
+
+
+
+  <h1 id="MindControl_State_StateWatcher_1" data-uid="MindControl.State.StateWatcher`1" class="text-break">
+Class StateWatcher&lt;T&gt;  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L8"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a>.<a class="xref" href="MindControl.State.html">State</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>An abstract watcher that provides a periodically refreshed state.
+Inherit this class to track the state of your target process in real time.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public abstract class StateWatcher&lt;T&gt;</code></pre>
+  </div>
+
+
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the state.</p>
+</dd>
+  </dl>
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">StateWatcher&lt;T&gt;</span></div>
+    </dd>
+  </dl>
+
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="MindControl_State_StateWatcher_1__ctor_" data-uid="MindControl.State.StateWatcher`1.#ctor*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1__ctor_MindControl_State_IStateTimer_" data-uid="MindControl.State.StateWatcher`1.#ctor(MindControl.State.IStateTimer)">
+  StateWatcher(IStateTimer)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L89"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a state watcher that updates the state automatically at every tick of the given timer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected StateWatcher(IStateTimer timer)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>timer</code> <a class="xref" href="MindControl.State.IStateTimer.html">IStateTimer</a></dt>
+    <dd><p>Timer to use to trigger state updates.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1__ctor_" data-uid="MindControl.State.StateWatcher`1.#ctor*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1__ctor_System_Single_" data-uid="MindControl.State.StateWatcher`1.#ctor(System.Single)">
+  StateWatcher(float)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L76"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a state watcher that updates the state automatically as many times as specified per second.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected StateWatcher(float targetUpdatesPerSecond)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>targetUpdatesPerSecond</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single">float</a></dt>
+    <dd><p>Target number of times per second the watcher should update the state.
+Note that the actual number of updates per second might differ because of timer precision and overlapping
+updates.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1__ctor_" data-uid="MindControl.State.StateWatcher`1.#ctor*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1__ctor_System_TimeSpan_" data-uid="MindControl.State.StateWatcher`1.#ctor(System.TimeSpan)">
+  StateWatcher(TimeSpan)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L83"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a state watcher that updates the state automatically with a given time interval.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected StateWatcher(TimeSpan updateInterval)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>updateInterval</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></dt>
+    <dd><p>Target interval between two state updates. Note that the actual number of updates
+per second might differ because of timer precision and overlapping updates.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="MindControl_State_StateWatcher_1_Interval_" data-uid="MindControl.State.StateWatcher`1.Interval*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_Interval" data-uid="MindControl.State.StateWatcher`1.Interval">
+  Interval
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L29"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the target interval between two automatic state updates. Note that the actual number of updates
+per second might differ because of timer precision and overlapping updates.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public TimeSpan Interval { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_IsRunning_" data-uid="MindControl.State.StateWatcher`1.IsRunning*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_IsRunning" data-uid="MindControl.State.StateWatcher`1.IsRunning">
+  IsRunning
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L23"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a value indicating if this watcher is automatically refreshing state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsRunning { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_LatestException_" data-uid="MindControl.State.StateWatcher`1.LatestException*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_LatestException" data-uid="MindControl.State.StateWatcher`1.LatestException">
+  LatestException
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L48"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the last exception raised while attempting to read the state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Exception? LatestException { get; protected set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.exception">Exception</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_LatestExceptionTime_" data-uid="MindControl.State.StateWatcher`1.LatestExceptionTime*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_LatestExceptionTime" data-uid="MindControl.State.StateWatcher`1.LatestExceptionTime">
+  LatestExceptionTime
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L53"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the time of the last exception raised while attempting to read the state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DateTime? LatestExceptionTime { get; protected set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_LatestState_" data-uid="MindControl.State.StateWatcher`1.LatestState*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_LatestState" data-uid="MindControl.State.StateWatcher`1.LatestState">
+  LatestState
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L38"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the state read from the last successful update.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T? LatestState { get; protected set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><span class="xref">T</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_LatestUpdateTime_" data-uid="MindControl.State.StateWatcher`1.LatestUpdateTime*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_LatestUpdateTime" data-uid="MindControl.State.StateWatcher`1.LatestUpdateTime">
+  LatestUpdateTime
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L43"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the time of the last successful update.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DateTime? LatestUpdateTime { get; protected set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.datetime">DateTime</a>?</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MindControl_State_StateWatcher_1_OnAfterUpdate_" data-uid="MindControl.State.StateWatcher`1.OnAfterUpdate*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_OnAfterUpdate__0__0_" data-uid="MindControl.State.StateWatcher`1.OnAfterUpdate(`0,`0)">
+  OnAfterUpdate(T?, T)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L169"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Performs actions after the update.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnAfterUpdate(T? previousState, T newState)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>previousState</code> <span class="xref">T</span></dt>
+    <dd><p>Previous state, before the update occurred.</p>
+</dd>
+    <dt><code>newState</code> <span class="xref">T</span></dt>
+    <dd><p>State that was just read. Provided for convenience, but should be the same as
+the latest state of this instance.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_OnBeforeUpdate_" data-uid="MindControl.State.StateWatcher`1.OnBeforeUpdate*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_OnBeforeUpdate__0__0_" data-uid="MindControl.State.StateWatcher`1.OnBeforeUpdate(`0,`0)">
+  OnBeforeUpdate(T?, T)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L161"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Performs actions in-between getting a new state and raising the <a class="xref" href="MindControl.State.StateWatcher-1.html#MindControl_State_StateWatcher_1_StateUpdated">StateUpdated</a> event.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual void OnBeforeUpdate(T? previousState, T newState)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>previousState</code> <span class="xref">T</span></dt>
+    <dd><p>Previous state, before the update.</p>
+</dd>
+    <dt><code>newState</code> <span class="xref">T</span></dt>
+    <dd><p>State that was just read. Provided for convenience, but should be the same as
+the latest state of this instance.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_ReadState_" data-uid="MindControl.State.StateWatcher`1.ReadState*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_ReadState" data-uid="MindControl.State.StateWatcher`1.ReadState">
+  ReadState()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L153"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the current state, as watched by this instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected abstract T ReadState()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><span class="xref">T</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_Start_" data-uid="MindControl.State.StateWatcher`1.Start*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_Start" data-uid="MindControl.State.StateWatcher`1.Start">
+  Start()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L99"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Starts automatically refreshing state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Start()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_Stop_" data-uid="MindControl.State.StateWatcher`1.Stop*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_Stop" data-uid="MindControl.State.StateWatcher`1.Stop">
+  Stop()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L104"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stops automatically refreshing state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Stop()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_State_StateWatcher_1_UpdateState_" data-uid="MindControl.State.StateWatcher`1.UpdateState*"></a>
+
+  <h3 id="MindControl_State_StateWatcher_1_UpdateState" data-uid="MindControl.State.StateWatcher`1.UpdateState">
+  UpdateState()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L115"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Performs a state update. This method is automatically called at regular intervals when the watcher is running.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void UpdateState()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="events">Events
+</h2>
+
+
+
+  <h3 id="MindControl_State_StateWatcher_1_StateUpdateFailed" data-uid="MindControl.State.StateWatcher`1.StateUpdateFailed">
+  StateUpdateFailed
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L63"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Event triggered when a state update fails.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler&lt;ExceptionEventArgs&gt;? StateUpdateFailed</code></pre>
+  </div>
+
+
+
+
+
+
+  <h4 class="section">Event Type</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.eventhandler-1">EventHandler</a>&lt;<a class="xref" href="MindControl.State.ExceptionEventArgs.html">ExceptionEventArgs</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h3 id="MindControl_State_StateWatcher_1_StateUpdateSkipped" data-uid="MindControl.State.StateWatcher`1.StateUpdateSkipped">
+  StateUpdateSkipped
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L68"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Event triggered when a state update is skipped because another update is still in progress.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler? StateUpdateSkipped</code></pre>
+  </div>
+
+
+
+
+
+
+  <h4 class="section">Event Type</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.eventhandler">EventHandler</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h3 id="MindControl_State_StateWatcher_1_StateUpdated" data-uid="MindControl.State.StateWatcher`1.StateUpdated">
+  StateUpdated
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L58"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Event triggered after the state is updated.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler&lt;StateEventArgs&lt;T&gt;&gt;? StateUpdated</code></pre>
+  </div>
+
+
+
+
+
+
+  <h4 class="section">Event Type</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.eventhandler-1">EventHandler</a>&lt;<a class="xref" href="MindControl.State.StateEventArgs-1.html">StateEventArgs</a>&lt;T&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/State/StateWatcher.cs/#L8" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

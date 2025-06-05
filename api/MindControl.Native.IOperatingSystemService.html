@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IOperatingSystemService | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IOperatingSystemService | MindControl ">
+      
+      <meta name="description" content="Provides process-related features.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_Native_IOperatingSystemService.md&amp;value=---%0Auid%3A%20MindControl.Native.IOperatingSystemService%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.Native.IOperatingSystemService">
+
+
+
+  <h1 id="MindControl_Native_IOperatingSystemService" data-uid="MindControl.Native.IOperatingSystemService" class="text-break">
+Interface IOperatingSystemService  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L8"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a>.<a class="xref" href="MindControl.Native.html">Native</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Provides process-related features.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IOperatingSystemService</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MindControl_Native_IOperatingSystemService_AllocateMemory_" data-uid="MindControl.Native.IOperatingSystemService.AllocateMemory*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_AllocateMemory_System_IntPtr_System_Int32_MindControl_Native_MemoryAllocationType_MindControl_Native_MemoryProtection_" data-uid="MindControl.Native.IOperatingSystemService.AllocateMemory(System.IntPtr,System.Int32,MindControl.Native.MemoryAllocationType,MindControl.Native.MemoryProtection)">
+  AllocateMemory(nint, int, MemoryAllocationType, MemoryProtection)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L84"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Allocates memory in the specified process. The address is determined automatically by the operating system.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;nuint&gt; AllocateMemory(nint processHandle, int size, MemoryAllocationType allocationType, MemoryProtection protection)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.</p>
+</dd>
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Size in bytes of the memory to allocate.</p>
+</dd>
+    <dt><code>allocationType</code> <a class="xref" href="MindControl.Native.MemoryAllocationType.html">MemoryAllocationType</a></dt>
+    <dd><p>Type of memory allocation.</p>
+</dd>
+    <dt><code>protection</code> <a class="xref" href="MindControl.Native.MemoryProtection.html">MemoryProtection</a></dt>
+    <dd><p>Protection flags of the memory to allocate.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>&gt;</dt>
+    <dd><p>A result holding either a pointer to the start of the allocated memory, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_AllocateMemory_" data-uid="MindControl.Native.IOperatingSystemService.AllocateMemory*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_AllocateMemory_System_IntPtr_System_UIntPtr_System_Int32_MindControl_Native_MemoryAllocationType_MindControl_Native_MemoryProtection_" data-uid="MindControl.Native.IOperatingSystemService.AllocateMemory(System.IntPtr,System.UIntPtr,System.Int32,MindControl.Native.MemoryAllocationType,MindControl.Native.MemoryProtection)">
+  AllocateMemory(nint, nuint, int, MemoryAllocationType, MemoryProtection)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Allocates memory in the specified process at the specified address.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;nuint&gt; AllocateMemory(nint processHandle, nuint address, int size, MemoryAllocationType allocationType, MemoryProtection protection)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.</p>
+</dd>
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address where the memory will be allocated.</p>
+</dd>
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Size in bytes of the memory to allocate.</p>
+</dd>
+    <dt><code>allocationType</code> <a class="xref" href="MindControl.Native.MemoryAllocationType.html">MemoryAllocationType</a></dt>
+    <dd><p>Type of memory allocation.</p>
+</dd>
+    <dt><code>protection</code> <a class="xref" href="MindControl.Native.MemoryProtection.html">MemoryProtection</a></dt>
+    <dd><p>Protection flags of the memory to allocate.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>&gt;</dt>
+    <dd><p>A result holding either a pointer to the start of the allocated memory, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_CloseHandle_" data-uid="MindControl.Native.IOperatingSystemService.CloseHandle*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_CloseHandle_System_IntPtr_" data-uid="MindControl.Native.IOperatingSystemService.CloseHandle(System.IntPtr)">
+  CloseHandle(nint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L132"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Closes the given handle.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result CloseHandle(nint handle)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>handle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle to close.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_CreateRemoteThread_" data-uid="MindControl.Native.IOperatingSystemService.CreateRemoteThread*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_CreateRemoteThread_System_IntPtr_System_UIntPtr_System_UIntPtr_" data-uid="MindControl.Native.IOperatingSystemService.CreateRemoteThread(System.IntPtr,System.UIntPtr,System.UIntPtr)">
+  CreateRemoteThread(nint, nuint, nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L106"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Spawns a thread in the specified process, starting at the given address.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;nint&gt; CreateRemoteThread(nint processHandle, nuint startAddress, nuint parameterAddress)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.</p>
+</dd>
+    <dt><code>startAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the start routine to be executed by the thread.</p>
+</dd>
+    <dt><code>parameterAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of any parameter to be passed to the start routine.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a>&gt;</dt>
+    <dd><p>A result holding either the handle of the thread, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_GetFullMemoryRange_" data-uid="MindControl.Native.IOperatingSystemService.GetFullMemoryRange*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_GetFullMemoryRange_System_Boolean_" data-uid="MindControl.Native.IOperatingSystemService.GetFullMemoryRange(System.Boolean)">
+  GetFullMemoryRange(bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L138"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the range of memory addressable by applications of the given bitness in the current system.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">MemoryRange GetFullMemoryRange(bool is64Bit)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>is64Bit</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean indicating if the target application is 64-bit or not.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_GetPageSize_" data-uid="MindControl.Native.IOperatingSystemService.GetPageSize*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_GetPageSize" data-uid="MindControl.Native.IOperatingSystemService.GetPageSize">
+  GetPageSize()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L151"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the page size of the system.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">uint GetPageSize()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_GetRegionMetadata_" data-uid="MindControl.Native.IOperatingSystemService.GetRegionMetadata*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_GetRegionMetadata_System_IntPtr_System_UIntPtr_" data-uid="MindControl.Native.IOperatingSystemService.GetRegionMetadata(System.IntPtr,System.UIntPtr)">
+  GetRegionMetadata(nint, nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L146"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the metadata of a memory region in the virtual address space of a process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;MemoryRangeMetadata&gt; GetRegionMetadata(nint processHandle, nuint baseAddress)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.</p>
+</dd>
+    <dt><code>baseAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Base address of the target memory region.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.Native.MemoryRangeMetadata.html">MemoryRangeMetadata</a>&gt;</dt>
+    <dd><p>A result holding either the metadata of the target memory region, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_IsProcess64Bit_" data-uid="MindControl.Native.IOperatingSystemService.IsProcess64Bit*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_IsProcess64Bit_System_Int32_" data-uid="MindControl.Native.IOperatingSystemService.IsProcess64Bit(System.Int32)">
+  IsProcess64Bit(int)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L22"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Returns a value indicating if the process with the given identifier is a 64-bit process or not.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;bool&gt; IsProcess64Bit(int pid)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pid</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Identifier of the target process.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>&gt;</dt>
+    <dd><p>A result holding either a boolean indicating if the process is 64-bit, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_OpenProcess_" data-uid="MindControl.Native.IOperatingSystemService.OpenProcess*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_OpenProcess_System_Int32_" data-uid="MindControl.Native.IOperatingSystemService.OpenProcess(System.Int32)">
+  OpenProcess(int)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L15"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens the process with the given identifier, in a way that allows memory manipulation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;nint&gt; OpenProcess(int pid)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pid</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Identifier of the target process.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a>&gt;</dt>
+    <dd><p>A result holding either the handle of the opened process, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_ReadAndOverwriteProtection_" data-uid="MindControl.Native.IOperatingSystemService.ReadAndOverwriteProtection*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_ReadAndOverwriteProtection_System_IntPtr_System_Boolean_System_UIntPtr_MindControl_Native_MemoryProtection_" data-uid="MindControl.Native.IOperatingSystemService.ReadAndOverwriteProtection(System.IntPtr,System.Boolean,System.UIntPtr,MindControl.Native.MemoryProtection)">
+  ReadAndOverwriteProtection(nint, bool, nuint, MemoryProtection)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L63"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Overwrites the memory protection of the page that the given address is part of.
+Returns the memory protection that was effective on the page before being changed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;MemoryProtection&gt; ReadAndOverwriteProtection(nint processHandle, bool is64Bit, nuint targetAddress, MemoryProtection newProtection)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.
+The handle must have PROCESS_VM_OPERATION access.</p>
+</dd>
+    <dt><code>is64Bit</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean indicating if the target process is 64-bit or not.</p>
+</dd>
+    <dt><code>targetAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>An address in the target page.</p>
+</dd>
+    <dt><code>newProtection</code> <a class="xref" href="MindControl.Native.MemoryProtection.html">MemoryProtection</a></dt>
+    <dd><p>New protection value for the page.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.Native.MemoryProtection.html">MemoryProtection</a>&gt;</dt>
+    <dd><p>A result holding either the memory protection value that was effective on the page before being
+changed, or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>The process handle is invalid (zero pointer).</p>
+</dd>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception">ArgumentOutOfRangeException</a></dt>
+    <dd><p>The target address is invalid (zero pointer).</p>
+</dd>
+  </dl>
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_ReadProcessMemory_" data-uid="MindControl.Native.IOperatingSystemService.ReadProcessMemory*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_ReadProcessMemory_System_IntPtr_System_UIntPtr_System_UInt64_" data-uid="MindControl.Native.IOperatingSystemService.ReadProcessMemory(System.IntPtr,System.UIntPtr,System.UInt64)">
+  ReadProcessMemory(nint, nuint, ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L32"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a targeted range of the memory of a specified process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;byte[]&gt; ReadProcessMemory(nint processHandle, nuint baseAddress, ulong length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process. The handle must have PROCESS_VM_READ access.</p>
+</dd>
+    <dt><code>baseAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Starting address of the memory range to read.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Length of the memory range to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>A result holding either an array of bytes containing the data read from the process memory, or a
+system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_ReadProcessMemoryPartial_" data-uid="MindControl.Native.IOperatingSystemService.ReadProcessMemoryPartial*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_ReadProcessMemoryPartial_System_IntPtr_System_UIntPtr_System_Byte___System_Int32_System_UInt64_" data-uid="MindControl.Native.IOperatingSystemService.ReadProcessMemoryPartial(System.IntPtr,System.UIntPtr,System.Byte[],System.Int32,System.UInt64)">
+  ReadProcessMemoryPartial(nint, nuint, byte[], int, ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L47"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a targeted range of the memory of a specified process into the given buffer. Supports partial reads, in
+case the full length failed to be read but at least one byte was successfully copied into the buffer.
+Prefer <a class="xref" href="MindControl.Native.IOperatingSystemService.html#MindControl_Native_IOperatingSystemService_ReadProcessMemory_System_IntPtr_System_UIntPtr_System_UInt64_">ReadProcessMemory(nint, nuint, ulong)</a> when you know the length of the data to read.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;ulong&gt; ReadProcessMemoryPartial(nint processHandle, nuint baseAddress, byte[] buffer, int offset, ulong length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process. The handle must have PROCESS_VM_READ access.</p>
+</dd>
+    <dt><code>baseAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Starting address of the memory range to read.</p>
+</dd>
+    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Buffer to store the data read from the memory. The buffer must be large enough to store
+the data read.</p>
+</dd>
+    <dt><code>offset</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Offset in the buffer where the data will be stored.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Length of the memory range to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>&gt;</dt>
+    <dd><p>A result holding either the number of bytes actually read from memory, or a system failure when no byte
+were successfully read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_ReleaseMemory_" data-uid="MindControl.Native.IOperatingSystemService.ReleaseMemory*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_ReleaseMemory_System_IntPtr_System_UIntPtr_" data-uid="MindControl.Native.IOperatingSystemService.ReleaseMemory(System.IntPtr,System.UIntPtr)">
+  ReleaseMemory(nint, nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L125"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Frees the memory allocated in the specified process for a region or a placeholder.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result ReleaseMemory(nint processHandle, nuint regionBaseAddress)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process.</p>
+</dd>
+    <dt><code>regionBaseAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Base address of the region or placeholder to free, as returned by the allocation
+methods.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_WaitThread_" data-uid="MindControl.Native.IOperatingSystemService.WaitThread*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_WaitThread_System_IntPtr_System_TimeSpan_" data-uid="MindControl.Native.IOperatingSystemService.WaitThread(System.IntPtr,System.TimeSpan)">
+  WaitThread(nint, TimeSpan)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L116"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Waits for the specified thread to finish execution and returns its exit code.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result&lt;uint&gt; WaitThread(nint threadHandle, TimeSpan timeout)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>threadHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target thread.</p>
+</dd>
+    <dt><code>timeout</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></dt>
+    <dd><p>Maximum time to wait for the thread to finish.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a>&gt;</dt>
+    <dd><p>A result holding either the exit code of the thread, or a thread failure when the operation failed.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_Native_IOperatingSystemService_WriteProcessMemory_" data-uid="MindControl.Native.IOperatingSystemService.WriteProcessMemory*"></a>
+
+  <h3 id="MindControl_Native_IOperatingSystemService_WriteProcessMemory_System_IntPtr_System_UIntPtr_System_Span_System_Byte__" data-uid="MindControl.Native.IOperatingSystemService.WriteProcessMemory(System.IntPtr,System.UIntPtr,System.Span{System.Byte})">
+  WriteProcessMemory(nint, nuint, Span&lt;byte&gt;)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L74"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Writes the given bytes into the memory of the specified process, at the target address.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Result WriteProcessMemory(nint processHandle, nuint targetAddress, Span&lt;byte&gt; value)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processHandle</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd><p>Handle of the target process. The handle must have PROCESS_VM_WRITE and
+PROCESS_VM_OPERATION access.</p>
+</dd>
+    <dt><code>targetAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Base address in the memory of the process to which data will be written.</p>
+</dd>
+    <dt><code>value</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.span-1">Span</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
+    <dd><p>Bytes to write in the process memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a system failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Native/IOperatingSystemService.cs/#L8" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

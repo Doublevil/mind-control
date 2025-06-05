@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Manipulating strings | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Manipulating strings | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/strings.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="manipulating-strings">Manipulating strings</h1>
+
+<p>Reading and writing strings in a process's memory is more complex than numeric values and requires understanding how strings are represented in memory. In this section, we will cover how strings are stored in memory, and how to manipulate them with <code>MindControl</code>.</p>
+<h2 id="understanding-string-representation-in-memory">Understanding string representation in memory</h2>
+<p>Intuitively, strings are sequences of characters, but in memory, they are represented as a sequence of bytes. In some way or another, these bytes represent the characters in the string. But because their length is variable, <strong>they are almost always referenced by a pointer</strong>. For example, a <code>Player</code> structure could have a <code>Name</code> field that holds a pointer to the start of the string in memory.</p>
+<p>Now, once you locate a string, the key is then to understand how to translate its bytes into characters and vice versa.</p>
+<h3 id="encodings">Encodings</h3>
+<p>The thing is, there are many ways to represent strings in memory, and it mostly comes down to what is called the &quot;encoding&quot;. The encoding defines how characters are mapped to bytes. Some common encodings are:</p>
+<ul>
+<li><strong>ASCII</strong>: Uses 1 byte per character, supports only the first 128 characters (English letters, digits, and some symbols).</li>
+<li><strong>UTF-8</strong>: Uses 1 to 4 bytes per character, supports all Unicode characters, like symbols, chinese characters, emojis, etc. It is the most common encoding used in modern applications.</li>
+<li><strong>UTF-16</strong>: Uses 2 bytes per character, also supports all Unicode characters, and is commonly used in Windows applications.</li>
+</ul>
+<p>You may also see other encodings like UTF-32, ISO-8859-1, or others. It all depends on the application and how it was developed. And in a single application, you may find different encodings used for different use cases, because some encodings are more efficient for certain types of data. For example, you may decide to use UTF-16 for a player name, to handle any language, but still use ASCII for internal item identifiers, because you don't need more than the English alphabet, and it uses up less memory.</p>
+<p>Let's take a look at some examples of how the same string is represented in memory with different encodings.</p>
+<h4 id="example-hello-world-in-different-encodings">Example: &quot;Hello, World!&quot; in different encodings</h4>
+<table>
+<thead>
+<tr>
+<th>Encoding</th>
+<th>Bytes in Hexadecimal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASCII</td>
+<td>48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21</td>
+</tr>
+<tr>
+<td>UTF-8</td>
+<td>48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21</td>
+</tr>
+<tr>
+<td>UTF-16</td>
+<td>48 00 65 00 6C 00 6C 00 6F 00 2C 00 20 00 57 00 6F 00 72 00 6C 00 64 00 21 00</td>
+</tr>
+</tbody>
+</table>
+<h4 id="example-2-こんにちは-hello-in-japanese-in-different-encodings">Example 2: &quot;こんにちは&quot; (Hello in Japanese) in different encodings</h4>
+<table>
+<thead>
+<tr>
+<th>Encoding</th>
+<th>Bytes in Hexadecimal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ASCII</td>
+<td>(This string cannot be represented in ASCII)</td>
+</tr>
+<tr>
+<td>UTF-8</td>
+<td>E3 81 93 E3 82 93 E3 81 AB E3 81 A1 E3 81 AF</td>
+</tr>
+<tr>
+<td>UTF-16</td>
+<td>53 30 93 30 6B 30 61 30 6F 30</td>
+</tr>
+</tbody>
+</table>
+<p>We can see several interesting things here:</p>
+<ul>
+<li>The ASCII and UTF-8 representations of &quot;Hello, World!&quot; are the same, because all characters in this string are part of the ASCII character set, and UTF-8 is designed to be backward compatible with ASCII.</li>
+<li>The Japanese string cannot be represented in ASCII, because it contains characters that are not part of the ASCII character set. However, it can be represented in both UTF-8 and UTF-16.</li>
+<li>UTF-16 always uses 2 bytes per character, which is kind of wasteful for ASCII-compatible strings like &quot;Hello, World!&quot; (you can see every second bit is a zero), but it ends up using way less space for the Japanese string. This is because it <em>always</em> uses 2 bytes per character, while UTF-8 has variable-length characters, meaning it has to dedicate extra bits to indicate one way or another how many bytes are used for each character in the string.</li>
+</ul>
+<p>So, after locating a string in memory, we need to find out what encoding is used to represent it.</p>
+<h3 id="knowing-where-the-string-stops">Knowing where the string stops</h3>
+<p>When reading a string from memory, we also need to know where it ends. Because bytes in memory are not delimited and keep going on pretty much forever, it's important to know when to stop reading. And to do that, there are 2 main ways that programming languages and libraries use:</p>
+<ul>
+<li><strong>Null-terminators</strong>: This is a special byte (<code>00</code>) or group of bytes (<code>00 00</code>) appended after the final character that indicates the end of the string. When reading a string, you keep reading bytes until you encounter a null terminator. This is common in C-style strings and is used in many programming languages.</li>
+<li><strong>Length prefix</strong>: This is a byte or group of bytes before the first character of the string, that indicates how many bytes or characters follow it. When reading a string, you read the length first, and then read that many bytes. This is common in stacks like .net and Java.</li>
+</ul>
+<p>Sometimes, both techniques are used together, for compatibility.</p>
+<h4 id="example-1-reading-a-string-with-a-null-terminator">Example 1: Reading a string with a null terminator</h4>
+<p>Let's say we have a string &quot;Hello, World!&quot; stored in memory as UTF-8, and we know it is null-terminated. The bytes in memory would look like this:</p>
+<pre><code>48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21 00
+</code></pre>
+<p>When reading this string, we would know to stop reading as soon as we encounter the null terminator <code>00</code>. The resulting string would be &quot;Hello, World!&quot;.</p>
+<h4 id="example-2-reading-a-string-with-a-length-prefix">Example 2: Reading a string with a length prefix</h4>
+<p>Now, let's say we have the same string &quot;Hello, World!&quot; stored in memory as UTF-8, but this time we have identified that it has a length prefix of 2 bytes. The bytes in memory would look like this:</p>
+<pre><code>0D 00 48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21
+</code></pre>
+<p>When reading this string, knowing that it has a length prefix of 2 bytes, we would start by reading the length prefix <code>0D 00</code>. This is the number 13, meaning that the string is 13 bytes long. Then we would know to read only the next 13 bytes, resulting in the string &quot;Hello, World!&quot;.</p>
+<h3 id="type-handles">Type handles</h3>
+<p>In some cases, especially in managed languages and frameworks like .net, strings, like any other object instance, start with a type handle. This is a pointer to a metadata structure that describes the type of the object (in this case, a string). This type handle is used for various purposes by the runtime.</p>
+<p>We don't care about this handle, but, when reading a string, we need to know if it exists and how long it is, so we can skip it. And when writing, we actually need to know the full handle, so we can write it properly, the way it would have been written by the runtime.</p>
+<h4 id="an-example-of-a-typical-net-string">An example of a typical .net string</h4>
+<p>The .net standard for strings has all the things we've discussed so far, which makes it ideal for a final example. So let's take a look at a &quot;Hello, World!&quot; string in .net:</p>
+<pre><code>C0 12 34 56 78 9A BC DE 0D 00 00 00 48 00 65 00 6C 00 6C 00 6F 00 2C 00 20 00 57 00 6F 00 72 00 6C 00 64 00 21 00 00 00
+</code></pre>
+<p>This string is represented in memory as follows:</p>
+<ul>
+<li><code>C0 12 34 56 78 9A BC DE</code>: This is the .net type handle, which is a pointer to the metadata structure that describes the string type. This is an example, the actual handle will be different in every application, and even in every run of the same application.</li>
+<li><code>0D 00 00 00</code>: This is the length prefix. In .net, length prefixes are 4 bytes long, and indicate the number of characters. This one reads as 13 (0x0D) characters long.</li>
+<li><code>48 00 65 00 6C 00 6C 00 6F 00 2C 00 20 00 57 00 6F 00 72 00 6C 00 64 00 21 00</code>: These are the UTF-16 encoded characters of the string &quot;Hello, World!&quot;, with each character taking up two bytes.</li>
+<li><code>00 00</code>: This is the null terminator, which indicates the end of the string. Because we are using UTF-16, the null terminator is represented as two bytes and not just one. We technically don't need it, because we have the length prefix, but .net still has this terminator for compatibility with other systems that expect it.</li>
+</ul>
+<h2 id="reading-strings-with-mindcontrol">Reading strings with MindControl</h2>
+<p>There are several options to read strings in MindControl, depending on your needs and preferences.</p>
+<h3 id="using-readstringpointer">Using ReadStringPointer</h3>
+<p>The <code>ReadStringPointer</code> method of the <code>ProcessMemory</code> class is the most versatile way to read strings from memory. It takes an address or a pointer path to the pointer to the string you want to read, along with a <code>StringSettings</code> object that defines how the string is represented in memory. This method will read the pointer, then read the string from the address it points to, and return the string value.</p>
+<p>Let's take an example to read the string from the previous example (a standard .net string):</p>
+<pre><code class="lang-csharp">var stringSettings = new StringSettings(
+    encoding: System.Text.Encoding.UTF8,
+    isNullTerminated: true,
+    lengthPrefix: new LengthPrefix(4, StringLengthUnit.Characters), // 4 byte length, counting characters (not bytes)
+    typePrefix: new byte[] { 0xC0, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE });
+
+string? result = processMemory.ReadStringPointer(&quot;GameAssembly.dll+12345678&quot;, stringSettings).ValueOrDefault();
+</code></pre>
+<p>In this example, we specify the encoding as UTF-8, the string is null-terminated, and it has a 4-byte length prefix that counts characters. We also provide the type handle as a byte array. The method will read the pointer at the specified address, then read the string from the address it points to, and return the string value.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>As stated before, this method takes the address of a pointer to the string, <strong>not</strong> the address of the start of the string itself.</p>
+</div>
+<h3 id="using-readrawstring">Using ReadRawString</h3>
+<p>An alternative to <code>ReadStringPointer</code> is the <code>ReadRawString</code> method, which reads a string directly from the address or pointer path to its first character byte, without needing to provide a pointer to the string. This method is useful when you don't have a pointer to the string, or if you prefer to read the string directly from its starting address.</p>
+<p>Instead of a <code>StringSettings</code> object, this method takes an <code>Encoding</code> parameter to specify how the string is encoded, a max length that indicates when to stop, and a boolean to indicate if the string is null-terminated.</p>
+<p>A matching example for the previous string would look like this:</p>
+<pre><code class="lang-csharp">// Note the 'C' offset at the end of the pointer path to skip the type handle (8 bytes) and the length prefix (4 bytes)
+string? result = processMemory.ReadRawString(&quot;GameAssembly.dll+12345678,C&quot;,
+    Encoding.UTF8,
+    maxLength: 100,
+    isNullTerminated: true).ValueOrDefault();
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>ReadRawString stops reading when it reaches the specified maximum length, or when it encounters a null terminator, whichever comes first. If you specify no null terminator, it will always read up to the maximum length.</p>
+</div>
+<h3 id="determining-the-string-settings-automatically">Determining the string settings automatically</h3>
+<p>If you don't know the string settings, you can use observation and trial and error to determine them. However, <code>MindControl</code> provides a method that helps you pinpoint the string settings automatically. The <code>FindStringSettings</code> method takes an address or pointer path to a pointer to a string, and the expected string value, and returns a <code>StringSettings</code> object that matches the string representation in memory.</p>
+<p>It may not be ideal for all cases, especially because it requires you to know a string value that you expect to find in memory, but it can be useful especially when dealing with strings with a type handle that changes every time the application is run.</p>
+<pre><code class="lang-csharp">// Determine the string settings automatically thanks to a known &quot;Hello, World!&quot; string somewhere in memory
+var expectedString = &quot;Hello, World!&quot;;
+StringSettings stringSettings = processMemory.FindStringSettings(&quot;GameAssembly.dll+12345678&quot;, expectedString)
+    .ValueOrDefault();
+
+// Now you can use the string settings to read another string that you don't know
+string? anotherString = processMemory.ReadStringPointer(&quot;GameAssembly.dll+ABCDEF012&quot;, stringSettings).ValueOrDefault();
+</code></pre>
+<h2 id="writing-strings-with-mindcontrol">Writing strings with MindControl</h2>
+<p>By design, MindControl does not have a method that directly writes strings to memory. This is because it would make it too easy for users to make mistakes and either corrupt memory, or bloat memory with hundreds of thousands of strings that are never erased.</p>
+<p>This is because, unless you are certain that your new string is smaller than the original string you want to replace, you cannot simply overwrite the bytes of the original string with the bytes of your new string. If the new string is longer, you would end up writing past the end of the original string, which could corrupt memory and lead to crashes or unexpected behavior.</p>
+<p>Instead, you can write strings to memory by chaining multiple operations:</p>
+<ul>
+<li>(Optional) Use <code>FindStringSettings</code> on a known string to determine the string settings for the string you want to write.</li>
+<li>Use <code>StoreString</code> to store the value of the string somewhere in an allocated space in memory.</li>
+<li>Use <code>Write</code> to overwrite the pointer to the string with the address of your newly stored string.</li>
+</ul>
+<p>Here is a concrete example of exactly that:</p>
+<pre><code class="lang-csharp">// Determine the string settings automatically thanks to a known &quot;Hello, World!&quot; string
+var expectedString = &quot;Hello, World!&quot;;
+StringSettings stringSettings = processMemory.FindStringSettings(&quot;GameAssembly.dll+12345678&quot;, expectedString)
+    .ValueOrDefault();
+    
+// Store the new string in memory using the determined string settings
+MemoryReservation reservation = processMemory.StoreString(&quot;New String Value&quot;, stringSettings).ValueOrDefault();
+
+// Write the pointer to the new string in the target process memory
+processMemory.Write(&quot;GameAssembly.dll+12345678&quot;, reservation.Address).ThrowOnFailure();
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Make sure to dispose of the <code>MemoryReservation</code> object when you no longer need it, to avoid memory leaks in the target process. If you constantly write new strings in this way without disposing of the old reservations, you will quickly end up consuming gigabytes of memory in the target process, which will lead to performance issues and crashes.</p>
+</div>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/strings.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

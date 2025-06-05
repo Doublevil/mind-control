@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class ProcessMemory | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class ProcessMemory | MindControl ">
+      
+      <meta name="description" content="Provides methods to manipulate the memory of a process.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_ProcessMemory.md&amp;value=---%0Auid%3A%20MindControl.ProcessMemory%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.ProcessMemory">
+
+
+
+  <h1 id="MindControl_ProcessMemory" data-uid="MindControl.ProcessMemory" class="text-break">
+Class ProcessMemory  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L8"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Provides methods to manipulate the memory of a process.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class ProcessMemory : IDisposable</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">ProcessMemory</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable">IDisposable</a></div>
+    </dd>
+  </dl>
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+  <dl class="typelist extensionMethods">
+    <dt>Extension Methods</dt>
+    <dd>
+  <div>
+      <a class="xref" href="MindControl.Code.ProcessMemoryCodeExtensions.html#MindControl_Code_ProcessMemoryCodeExtensions_DisableCodeAt_MindControl_ProcessMemory_MindControl_PointerPath_System_Int32_">ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory, PointerPath, int)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Code.ProcessMemoryCodeExtensions.html#MindControl_Code_ProcessMemoryCodeExtensions_DisableCodeAt_MindControl_ProcessMemory_System_UIntPtr_System_Int32_">ProcessMemoryCodeExtensions.DisableCodeAt(ProcessMemory, nuint, int)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Code.ProcessMemoryCodeExtensions.html#MindControl_Code_ProcessMemoryCodeExtensions_StoreCode_MindControl_ProcessMemory_Iced_Intel_Assembler_System_Nullable_System_UIntPtr__">ProcessMemoryCodeExtensions.StoreCode(ProcessMemory, Assembler, nuint?)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_Hook_MindControl_ProcessMemory_MindControl_PointerPath_Iced_Intel_Assembler_MindControl_Hooks_HookOptions_">ProcessMemoryHookExtensions.Hook(ProcessMemory, PointerPath, Assembler, HookOptions)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_Hook_MindControl_ProcessMemory_MindControl_PointerPath_System_Byte___MindControl_Hooks_HookOptions_">ProcessMemoryHookExtensions.Hook(ProcessMemory, PointerPath, byte[], HookOptions)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_Hook_MindControl_ProcessMemory_System_UIntPtr_Iced_Intel_Assembler_MindControl_Hooks_HookOptions_">ProcessMemoryHookExtensions.Hook(ProcessMemory, nuint, Assembler, HookOptions)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_Hook_MindControl_ProcessMemory_System_UIntPtr_System_Byte___MindControl_Hooks_HookOptions_">ProcessMemoryHookExtensions.Hook(ProcessMemory, nuint, byte[], HookOptions)</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_InsertCodeAt_MindControl_ProcessMemory_MindControl_PointerPath_Iced_Intel_Assembler_MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory, PointerPath, Assembler, params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_InsertCodeAt_MindControl_ProcessMemory_MindControl_PointerPath_System_Byte___MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory, PointerPath, byte[], params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_InsertCodeAt_MindControl_ProcessMemory_System_UIntPtr_Iced_Intel_Assembler_MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory, nuint, Assembler, params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_InsertCodeAt_MindControl_ProcessMemory_System_UIntPtr_System_Byte___MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.InsertCodeAt(ProcessMemory, nuint, byte[], params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_ReplaceCodeAt_MindControl_ProcessMemory_MindControl_PointerPath_System_Int32_Iced_Intel_Assembler_MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory, PointerPath, int, Assembler, params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_ReplaceCodeAt_MindControl_ProcessMemory_MindControl_PointerPath_System_Int32_System_Byte___MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory, PointerPath, int, byte[], params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_ReplaceCodeAt_MindControl_ProcessMemory_System_UIntPtr_System_Int32_Iced_Intel_Assembler_MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory, nuint, int, Assembler, params HookRegister[])</a>
+  </div>
+  <div>
+      <a class="xref" href="MindControl.Hooks.ProcessMemoryHookExtensions.html#MindControl_Hooks_ProcessMemoryHookExtensions_ReplaceCodeAt_MindControl_ProcessMemory_System_UIntPtr_System_Int32_System_Byte___MindControl_Hooks_HookRegister___">ProcessMemoryHookExtensions.ReplaceCodeAt(ProcessMemory, nuint, int, byte[], params HookRegister[])</a>
+  </div>
+  </dd></dl>
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="MindControl_ProcessMemory_Allocations_" data-uid="MindControl.ProcessMemory.Allocations*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Allocations" data-uid="MindControl.ProcessMemory.Allocations">
+  Allocations
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L16"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the ranges that have been allocated for this process. Dispose a range to free the memory and remove it
+from this list.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IReadOnlyList&lt;MemoryAllocation&gt; Allocations { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;<a class="xref" href="MindControl.MemoryAllocation.html">MemoryAllocation</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_DefaultRawStringMaxLength_" data-uid="MindControl.ProcessMemory.DefaultRawStringMaxLength*"></a>
+
+  <h3 id="MindControl_ProcessMemory_DefaultRawStringMaxLength" data-uid="MindControl.ProcessMemory.DefaultRawStringMaxLength">
+  DefaultRawStringMaxLength
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L16"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the default maximum length of strings to read with
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_ReadRawString_System_UIntPtr_System_Text_Encoding_System_Nullable_System_Int32__System_Boolean_">ReadRawString(nuint, Encoding, int?, bool)</a> when the length is not specified.
+The default value is an arbitrary 100.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int DefaultRawStringMaxLength { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_DefaultWriteStrategy_" data-uid="MindControl.ProcessMemory.DefaultWriteStrategy*"></a>
+
+  <h3 id="MindControl_ProcessMemory_DefaultWriteStrategy" data-uid="MindControl.ProcessMemory.DefaultWriteStrategy">
+  DefaultWriteStrategy
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L41"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets or sets the default way this instance deals with memory protection.
+This value is used when no strategy is specified in memory write operations.
+By default, this value will be <a class="xref" href="MindControl.MemoryProtectionStrategy.html#MindControl_MemoryProtectionStrategy_RemoveAndRestore">RemoveAndRestore</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MemoryProtectionStrategy DefaultWriteStrategy { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.MemoryProtectionStrategy.html">MemoryProtectionStrategy</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Is64Bit_" data-uid="MindControl.ProcessMemory.Is64Bit*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Is64Bit" data-uid="MindControl.ProcessMemory.Is64Bit">
+  Is64Bit
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L28"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a boolean indicating if the process is 64-bit.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool Is64Bit { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_IsAttached_" data-uid="MindControl.ProcessMemory.IsAttached*"></a>
+
+  <h3 id="MindControl_ProcessMemory_IsAttached" data-uid="MindControl.ProcessMemory.IsAttached">
+  IsAttached
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L23"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a value indicating if the process is currently attached or not.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsAttached { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ProcessHandle_" data-uid="MindControl.ProcessMemory.ProcessHandle*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ProcessHandle" data-uid="MindControl.ProcessMemory.ProcessHandle">
+  ProcessHandle
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L34"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the handle of the attached process.
+Use this if you need to manually call Win32 API functions.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public nint ProcessHandle { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.intptr">nint</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MindControl_ProcessMemory_Allocate_" data-uid="MindControl.ProcessMemory.Allocate*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Allocate_System_UInt64_System_Boolean_System_Nullable_MindControl_MemoryRange__System_Nullable_System_UIntPtr__" data-uid="MindControl.ProcessMemory.Allocate(System.UInt64,System.Boolean,System.Nullable{MindControl.MemoryRange},System.Nullable{System.UIntPtr})">
+  Allocate(ulong, bool, MemoryRange?, nuint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L27"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attempts to allocate a memory range of the given size within the process. Use this method only when automatic
+allocation management through the Store methods or <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_Reserve_System_UInt64_System_Boolean_System_Nullable_MindControl_MemoryRange__System_Nullable_System_UIntPtr__">Reserve(ulong, bool, MemoryRange?, nuint?)</a> method are not appropriate.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryAllocation&gt; Allocate(ulong size, bool forExecutableCode, MemoryRange? limitRange = null, nuint? nearAddress = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Size of the memory range to allocate.</p>
+</dd>
+    <dt><code>forExecutableCode</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>Determines if the memory range can be used to store executable code.</p>
+</dd>
+    <dt><code>limitRange</code> <a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>Specify this parameter to limit the allocation to a specific range of memory.</p>
+</dd>
+    <dt><code>nearAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>?</dt>
+    <dd><p>If specified, try to allocate as close as possible to this address.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryAllocation.html">MemoryAllocation</a>&gt;</dt>
+    <dd><p>A result holding either the allocated memory range, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Dispose_" data-uid="MindControl.ProcessMemory.Dispose*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Dispose" data-uid="MindControl.ProcessMemory.Dispose">
+  Dispose()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L221"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Dispose()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_EvaluateMemoryAddress_" data-uid="MindControl.ProcessMemory.EvaluateMemoryAddress*"></a>
+
+  <h3 id="MindControl_ProcessMemory_EvaluateMemoryAddress_MindControl_PointerPath_" data-uid="MindControl.ProcessMemory.EvaluateMemoryAddress(MindControl.PointerPath)">
+  EvaluateMemoryAddress(PointerPath)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Addressing.cs/#L15"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Evaluates the given pointer path to the memory address it points to in the process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;nuint&gt; EvaluateMemoryAddress(PointerPath pointerPath)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to evaluate.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>&gt;</dt>
+    <dd><p>The memory address pointed by the pointer path.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_FindBytes_" data-uid="MindControl.ProcessMemory.FindBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_FindBytes_MindControl_ByteSearchPattern_System_Nullable_MindControl_MemoryRange__MindControl_FindBytesSettings_" data-uid="MindControl.ProcessMemory.FindBytes(MindControl.ByteSearchPattern,System.Nullable{MindControl.MemoryRange},MindControl.FindBytesSettings)">
+  FindBytes(ByteSearchPattern, MemoryRange?, FindBytesSettings?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.FindBytes.cs/#L71"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Scans the memory of the target process for a byte pattern. Returns the address of each occurrence in the
+target range, or in the whole memory if no range is specified.
+Depending on the parameters, the scan may take a long time to complete. Use the asynchronous variant if you need
+to keep your program responsive while the scan is going on.
+Read the documentation to learn how to perform efficient scans.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;nuint&gt; FindBytes(ByteSearchPattern pattern, MemoryRange? range = null, FindBytesSettings? settings = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pattern</code> <a class="xref" href="MindControl.ByteSearchPattern.html">ByteSearchPattern</a></dt>
+    <dd><p>Byte pattern to look for. See <a class="xref" href="MindControl.ByteSearchPattern.html#MindControl_ByteSearchPattern_TryParse_System_String_">TryParse(string)</a>. You can use a
+string instead and it will be converted implicitly. An example would be &quot;1F ?? 4B 00 ?6&quot;.</p>
+</dd>
+    <dt><code>range</code> <a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>Range of memory to scan. Leave this to null (the default) to scan the whole process
+memory. Restricting the memory range can dramatically improve the performance of the scan.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.FindBytesSettings.html">FindBytesSettings</a></dt>
+    <dd><p>Settings for the search. Leave this to null (the default) to use the default settings.
+Using more restrictive settings can dramatically improve the performance of the scan.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>&gt;</dt>
+    <dd><p>An enumerable of addresses where the pattern was found.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_FindBytesAsync_" data-uid="MindControl.ProcessMemory.FindBytesAsync*"></a>
+
+  <h3 id="MindControl_ProcessMemory_FindBytesAsync_MindControl_ByteSearchPattern_System_Nullable_MindControl_MemoryRange__MindControl_FindBytesSettings_" data-uid="MindControl.ProcessMemory.FindBytesAsync(MindControl.ByteSearchPattern,System.Nullable{MindControl.MemoryRange},MindControl.FindBytesSettings)">
+  FindBytesAsync(ByteSearchPattern, MemoryRange?, FindBytesSettings?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.FindBytes.cs/#L94"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Scans the memory of the target process for a byte pattern. Returns the address of each occurrence in the
+target range, or in the whole memory if no range is specified.
+This is the asynchronous variant of <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_FindBytes_MindControl_ByteSearchPattern_System_Nullable_MindControl_MemoryRange__MindControl_FindBytesSettings_">FindBytes(ByteSearchPattern, MemoryRange?, FindBytesSettings?)</a>. Use this variant if you need to keep your program
+responsive while the scan is going on.
+Read the documentation to learn how to perform efficient scans.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IAsyncEnumerable&lt;nuint&gt; FindBytesAsync(ByteSearchPattern pattern, MemoryRange? range = null, FindBytesSettings? settings = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pattern</code> <a class="xref" href="MindControl.ByteSearchPattern.html">ByteSearchPattern</a></dt>
+    <dd><p>Byte pattern to look for. See <a class="xref" href="MindControl.ByteSearchPattern.html#MindControl_ByteSearchPattern_TryParse_System_String_">TryParse(string)</a>. You can use a
+string instead and it will be converted implicitly. An example would be &quot;1F ?? 4B 00 ?6&quot;.</p>
+</dd>
+    <dt><code>range</code> <a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>Range of memory to scan. Leave this to null (the default) to scan the whole process
+memory. Restricting the memory range can dramatically improve the performance of the scan.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.FindBytesSettings.html">FindBytesSettings</a></dt>
+    <dd><p>Settings for the search. Leave this to null (the default) to use the default settings.
+Using more restrictive settings can dramatically improve the performance of the scan.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1">IAsyncEnumerable</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>&gt;</dt>
+    <dd><p>An asynchronous enumerable of addresses where the pattern was found.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_FindStringSettings_" data-uid="MindControl.ProcessMemory.FindStringSettings*"></a>
+
+  <h3 id="MindControl_ProcessMemory_FindStringSettings_MindControl_PointerPath_System_String_" data-uid="MindControl.ProcessMemory.FindStringSettings(MindControl.PointerPath,System.String)">
+  FindStringSettings(PointerPath, string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L323"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attempts to find appropriate settings to read and write strings at the pointer referred by the given path,
+pointing to a known string.
+As this is based on guesses, the settings may not be determined correctly for every possible case, but they
+should be accurate most of the time.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;StringSettings&gt; FindStringSettings(PointerPath pointerPath, string expectedString)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Path to a pointer that points to a known string.</p>
+</dd>
+    <dt><code>expectedString</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Known string that the pointer points to. Very short strings consisting of only a
+few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
+better results.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.StringSettings.html">StringSettings</a>&gt;</dt>
+    <dd><p>A result holding the potential string settings if they were successfully determined, or a failure
+otherwise.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_FindStringSettings_" data-uid="MindControl.ProcessMemory.FindStringSettings*"></a>
+
+  <h3 id="MindControl_ProcessMemory_FindStringSettings_System_UIntPtr_System_String_" data-uid="MindControl.ProcessMemory.FindStringSettings(System.UIntPtr,System.String)">
+  FindStringSettings(nuint, string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L345"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attempts to find appropriate settings to read and write strings at the given address pointing to a known string.
+As this is based on guesses, the settings may not be determined correctly for every possible case, but they
+should be accurate most of the time.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;StringSettings&gt; FindStringSettings(nuint stringPointerAddress, string expectedString)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>stringPointerAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address to a pointer that points to a known string.</p>
+</dd>
+    <dt><code>expectedString</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Known string that the pointer points to. Very short strings consisting of only a
+few characters may lead to unaccurate results. Strings containing diacritics or non-Latin characters provide
+better results.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.StringSettings.html">StringSettings</a>&gt;</dt>
+    <dd><p>A result holding the potential string settings if they were successfully determined, or a failure
+otherwise.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetAnchor_" data-uid="MindControl.ProcessMemory.GetAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetAnchor__1_MindControl_PointerPath_" data-uid="MindControl.ProcessMemory.GetAnchor``1(MindControl.PointerPath)">
+  GetAnchor&lt;T&gt;(PointerPath)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L31"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a value of type <code class="typeparamref">T</code> at the address referred by the given
+pointer path. Anchors allow you to track and manipulate a specific value in memory. When not needed anymore,
+anchors should be disposed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;T&gt; GetAnchor&lt;T&gt;(PointerPath pointerPath) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the address of the value in memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;T&gt;</dt>
+    <dd><p>An anchor for the value at the specified address.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value to read and write.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetAnchor_" data-uid="MindControl.ProcessMemory.GetAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetAnchor__1_System_UIntPtr_" data-uid="MindControl.ProcessMemory.GetAnchor``1(System.UIntPtr)">
+  GetAnchor&lt;T&gt;(nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L16"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a value of type <code class="typeparamref">T</code> at the specified address. Anchors
+allow you to track and manipulate a specific value in memory. When not needed anymore, anchors should be
+disposed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;T&gt; GetAnchor&lt;T&gt;(nuint address) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the value in memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;T&gt;</dt>
+    <dd><p>An anchor for the value at the specified address.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value to read and write.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetAttachedProcessInstance_" data-uid="MindControl.ProcessMemory.GetAttachedProcessInstance*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetAttachedProcessInstance" data-uid="MindControl.ProcessMemory.GetAttachedProcessInstance">
+  GetAttachedProcessInstance()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L181"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a new instance of <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.diagnostics.process">Process</a> representing the attached process.
+The returned instance is owned by the caller and should be disposed when no longer needed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;Process&gt; GetAttachedProcessInstance()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.diagnostics.process">Process</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetByteArrayAnchor_" data-uid="MindControl.ProcessMemory.GetByteArrayAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetByteArrayAnchor_MindControl_PointerPath_System_Int32_" data-uid="MindControl.ProcessMemory.GetByteArrayAnchor(MindControl.PointerPath,System.Int32)">
+  GetByteArrayAnchor(PointerPath, int)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L58"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a byte array at the address referred by the given pointer path. Anchors allow
+you to track and manipulate a specific value in memory. When not needed anymore, anchors should be disposed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;byte[]&gt; GetByteArrayAnchor(PointerPath pointerPath, int size)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the address of the target array in memory.</p>
+</dd>
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Size of the target byte array.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>An anchor for the array at the specified address.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetByteArrayAnchor_" data-uid="MindControl.ProcessMemory.GetByteArrayAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetByteArrayAnchor_System_UIntPtr_System_Int32_" data-uid="MindControl.ProcessMemory.GetByteArrayAnchor(System.UIntPtr,System.Int32)">
+  GetByteArrayAnchor(nuint, int)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L45"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a byte array at the specified address. Anchors allow you to track and
+manipulate a specific value in memory. When not needed anymore, anchors should be disposed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;byte[]&gt; GetByteArrayAnchor(nuint address, int size)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of target byte array in memory.</p>
+</dd>
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Size of the target byte array.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>An anchor for the array at the specified address.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetMemoryStream_" data-uid="MindControl.ProcessMemory.GetMemoryStream*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetMemoryStream_MindControl_PointerPath_" data-uid="MindControl.ProcessMemory.GetMemoryStream(MindControl.PointerPath)">
+  GetMemoryStream(PointerPath)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Addressing.cs/#L91"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Creates and returns a new <a class="xref" href="MindControl.ProcessMemoryStream.html">ProcessMemoryStream</a> instance that starts at the address pointed by the
+given path.
+The stream can be used to read or write into the process memory. It is owned by the caller and must be disposed
+when no longer needed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;ProcessMemoryStream&gt; GetMemoryStream(PointerPath pointerPath)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the starting address of the stream.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.ProcessMemoryStream.html">ProcessMemoryStream</a>&gt;</dt>
+    <dd><p>A result holding either the created process memory stream, or a path evaluation failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetMemoryStream_" data-uid="MindControl.ProcessMemory.GetMemoryStream*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetMemoryStream_System_UIntPtr_" data-uid="MindControl.ProcessMemory.GetMemoryStream(System.UIntPtr)">
+  GetMemoryStream(nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Addressing.cs/#L125"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Creates and returns a new <a class="xref" href="MindControl.ProcessMemoryStream.html">ProcessMemoryStream</a> instance that starts at the given address.
+The stream can be used to read or write into the process memory. It is owned by the caller and must be disposed
+when no longer needed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ProcessMemoryStream GetMemoryStream(nuint startAddress)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>startAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Starting address of the stream.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.ProcessMemoryStream.html">ProcessMemoryStream</a></dt>
+    <dd><p>The created process memory stream.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetModule_" data-uid="MindControl.ProcessMemory.GetModule*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetModule_System_String_" data-uid="MindControl.ProcessMemory.GetModule(System.String)">
+  GetModule(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Addressing.cs/#L133"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the module with the given name, if it exists.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public RemoteModule? GetModule(string moduleName)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>moduleName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Name of the target module.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Modules.RemoteModule.html">RemoteModule</a></dt>
+    <dd><p>The module if found, null otherwise.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetStringPointerAnchor_" data-uid="MindControl.ProcessMemory.GetStringPointerAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetStringPointerAnchor_MindControl_PointerPath_MindControl_StringSettings_" data-uid="MindControl.ProcessMemory.GetStringPointerAnchor(MindControl.PointerPath,MindControl.StringSettings)">
+  GetStringPointerAnchor(PointerPath, StringSettings)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L86"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a string pointer at the address referred by the specified pointer path. Anchors
+allow you to track and manipulate a specific value in memory. When not needed anymore, anchors should be
+disposed. String anchors are read-only. To write strings, please see the documentation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;string&gt; GetStringPointerAnchor(PointerPath pointerPath, StringSettings stringSettings)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the address of the string pointer in memory.</p>
+</dd>
+    <dt><code>stringSettings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>Settings to read the string.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>An anchor for the value at the specified address.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_GetStringPointerAnchor_" data-uid="MindControl.ProcessMemory.GetStringPointerAnchor*"></a>
+
+  <h3 id="MindControl_ProcessMemory_GetStringPointerAnchor_System_UIntPtr_MindControl_StringSettings_" data-uid="MindControl.ProcessMemory.GetStringPointerAnchor(System.UIntPtr,MindControl.StringSettings)">
+  GetStringPointerAnchor(nuint, StringSettings)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Anchors.cs/#L72"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds and returns an anchor for a string pointer at the specified address. Anchors allow you to track and
+manipulate a specific value in memory. When not needed anymore, anchors should be disposed.
+String anchors are read-only. To write strings, please see the documentation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ValueAnchor&lt;string&gt; GetStringPointerAnchor(nuint address, StringSettings stringSettings)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the string pointer in memory.</p>
+</dd>
+    <dt><code>stringSettings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>Settings to read the string.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Anchors.ValueAnchor-1.html">ValueAnchor</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>An anchor for the value at the specified address.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_InjectLibrary_" data-uid="MindControl.ProcessMemory.InjectLibrary*"></a>
+
+  <h3 id="MindControl_ProcessMemory_InjectLibrary_System_String_" data-uid="MindControl.ProcessMemory.InjectLibrary(System.String)">
+  InjectLibrary(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Injection.cs/#L17"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Injects a library into the attached process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result InjectLibrary(string libraryPath)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>libraryPath</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Path to the library file to inject into the process.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating success or failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_InjectLibrary_" data-uid="MindControl.ProcessMemory.InjectLibrary*"></a>
+
+  <h3 id="MindControl_ProcessMemory_InjectLibrary_System_String_System_TimeSpan_" data-uid="MindControl.ProcessMemory.InjectLibrary(System.String,System.TimeSpan)">
+  InjectLibrary(string, TimeSpan)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Injection.cs/#L25"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Injects a library into the attached process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result InjectLibrary(string libraryPath, TimeSpan waitTimeout)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>libraryPath</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Path to the library file to inject into the process.</p>
+</dd>
+    <dt><code>waitTimeout</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></dt>
+    <dd><p>Time to wait for the injection thread to return.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating success or failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_OpenProcess_" data-uid="MindControl.ProcessMemory.OpenProcess*"></a>
+
+  <h3 id="MindControl_ProcessMemory_OpenProcess_System_Diagnostics_Process_" data-uid="MindControl.ProcessMemory.OpenProcess(System.Diagnostics.Process)">
+  OpenProcess(Process)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L97"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attaches to the given process, and returns the resulting <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Result&lt;ProcessMemory&gt; OpenProcess(Process target)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>target</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.diagnostics.process">Process</a></dt>
+    <dd><p>Process to attach to.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a>&gt;</dt>
+    <dd><p>A result holding either the attached process instance, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_OpenProcess_" data-uid="MindControl.ProcessMemory.OpenProcess*"></a>
+
+  <h3 id="MindControl_ProcessMemory_OpenProcess_System_Diagnostics_Process_MindControl_Native_IOperatingSystemService_" data-uid="MindControl.ProcessMemory.OpenProcess(System.Diagnostics.Process,MindControl.Native.IOperatingSystemService)">
+  OpenProcess(Process, IOperatingSystemService)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L108"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attaches to the given process, and returns the resulting <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance. This variant
+allows you to specify an implementation of <a class="xref" href="MindControl.Native.IOperatingSystemService.html">IOperatingSystemService</a> to use instead of the default
+implementation. Unless you have very specific needs, use another overload of this method.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Result&lt;ProcessMemory&gt; OpenProcess(Process target, IOperatingSystemService osService)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>target</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.diagnostics.process">Process</a></dt>
+    <dd><p>Process to attach to.</p>
+</dd>
+    <dt><code>osService</code> <a class="xref" href="MindControl.Native.IOperatingSystemService.html">IOperatingSystemService</a></dt>
+    <dd><p>Service that provides system-specific process-oriented features.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a>&gt;</dt>
+    <dd><p>A result holding either the attached process instance, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_OpenProcessById_" data-uid="MindControl.ProcessMemory.OpenProcessById*"></a>
+
+  <h3 id="MindControl_ProcessMemory_OpenProcessById_System_Int32_" data-uid="MindControl.ProcessMemory.OpenProcessById(System.Int32)">
+  OpenProcessById(int)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L78"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attaches to the process with the given identifier and returns the resulting <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a>
+instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Result&lt;ProcessMemory&gt; OpenProcessById(int pid)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pid</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>Identifier of the process to attach to.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a>&gt;</dt>
+    <dd><p>A result holding either the attached process instance, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_OpenProcessByName_" data-uid="MindControl.ProcessMemory.OpenProcessByName*"></a>
+
+  <h3 id="MindControl_ProcessMemory_OpenProcessByName_System_String_" data-uid="MindControl.ProcessMemory.OpenProcessByName(System.String)">
+  OpenProcessByName(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L56"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attaches to a process with the given name and returns the resulting <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance.
+If multiple processes with the specified name are running, a <a class="xref" href="MindControl.Results.MultipleTargetProcessesFailure.html">MultipleTargetProcessesFailure</a> will
+be returned.
+When there is any risk of this happening, it is recommended to use <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_OpenProcessById_System_Int32_">OpenProcessById(int)</a> instead.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Result&lt;ProcessMemory&gt; OpenProcessByName(string processName)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>processName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Name of the process to open.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a>&gt;</dt>
+    <dd><p>A result holding either the attached process instance, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Read_" data-uid="MindControl.ProcessMemory.Read*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Read_System_Type_MindControl_PointerPath_" data-uid="MindControl.ProcessMemory.Read(System.Type,MindControl.PointerPath)">
+  Read(Type, PointerPath)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L222"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a specific type of data from the address referred by the given pointer path, in the process memory.
+This method only supports value types (primitive types and structures).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;object&gt; Read(Type type, PointerPath pointerPath)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>type</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></dt>
+    <dd><p>Type of data to read. Only value types are supported (primitive types and structures).</p>
+</dd>
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the target address. Can be implicitly converted from a string.
+Example: &quot;MyGame.exe+1F1688,1F,4&quot;. Reuse <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instances to optimize execution time.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Read_" data-uid="MindControl.ProcessMemory.Read*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Read_System_Type_System_UIntPtr_" data-uid="MindControl.ProcessMemory.Read(System.Type,System.UIntPtr)">
+  Read(Type, nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L239"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a specific type of data from the given address, in the process memory. This method only supports value
+types (primitive types and structures).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;object&gt; Read(Type type, nuint address)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>type</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></dt>
+    <dd><p>Type of data to read. Only value types are supported (primitive types and structures).</p>
+</dd>
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytes_" data-uid="MindControl.ProcessMemory.ReadBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytes_MindControl_PointerPath_System_Int64_" data-uid="MindControl.ProcessMemory.ReadBytes(MindControl.PointerPath,System.Int64)">
+  ReadBytes(PointerPath, long)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L26"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;byte[]&gt; ReadBytes(PointerPath pointerPath, long length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Optimized, reusable path to the target address.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
+    <dd><p>Number of bytes to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytes_" data-uid="MindControl.ProcessMemory.ReadBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytes_MindControl_PointerPath_System_UInt64_" data-uid="MindControl.ProcessMemory.ReadBytes(MindControl.PointerPath,System.UInt64)">
+  ReadBytes(PointerPath, ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L42"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the address referred by the given pointer path, in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;byte[]&gt; ReadBytes(PointerPath pointerPath, ulong length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Optimized, reusable path to the target address.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Number of bytes to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytes_" data-uid="MindControl.ProcessMemory.ReadBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytes_System_UIntPtr_System_Int64_" data-uid="MindControl.ProcessMemory.ReadBytes(System.UIntPtr,System.Int64)">
+  ReadBytes(nuint, long)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L57"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the given address in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;byte[]&gt; ReadBytes(nuint address, long length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
+    <dd><p>Number of bytes to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytes_" data-uid="MindControl.ProcessMemory.ReadBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytes_System_UIntPtr_System_UInt64_" data-uid="MindControl.ProcessMemory.ReadBytes(System.UIntPtr,System.UInt64)">
+  ReadBytes(nuint, ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L73"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the given address in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;byte[]&gt; ReadBytes(nuint address, ulong length)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+    <dt><code>length</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Number of bytes to read.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytesPartial_" data-uid="MindControl.ProcessMemory.ReadBytesPartial*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytesPartial_MindControl_PointerPath_System_Byte___System_UInt64_" data-uid="MindControl.ProcessMemory.ReadBytesPartial(MindControl.PointerPath,System.Byte[],System.UInt64)">
+  ReadBytesPartial(PointerPath, byte[], ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the address pointed by the given path in the process memory. The resulting bytes
+are read into the provided buffer array. Unlike <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_ReadBytes_System_UIntPtr_System_Int64_">ReadBytes(nuint, long)</a>, this method succeeds even
+when only a part of the bytes are read.
+Use it when you are not sure how many bytes you need to read, or when you want to read as many bytes as
+possible.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;ulong&gt; ReadBytesPartial(PointerPath pointerPath, byte[] buffer, ulong maxLength)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the target address in the process memory.</p>
+</dd>
+    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Buffer to store the bytes read.</p>
+</dd>
+    <dt><code>maxLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Number of bytes to read, at most.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure in case no bytes could be read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadBytesPartial_" data-uid="MindControl.ProcessMemory.ReadBytesPartial*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadBytesPartial_System_UIntPtr_System_Byte___System_UInt64_" data-uid="MindControl.ProcessMemory.ReadBytesPartial(System.UIntPtr,System.Byte[],System.UInt64)">
+  ReadBytesPartial(nuint, byte[], ulong)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L117"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a sequence of bytes from the given address in the process memory. The resulting bytes are read into the
+provided buffer array. Unlike <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_ReadBytes_System_UIntPtr_System_Int64_">ReadBytes(nuint, long)</a>, this method succeeds even when only a part
+of the bytes are read.
+Use it when you are not sure how many bytes you need to read, or when you want to read as many bytes as
+possible.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;ulong&gt; ReadBytesPartial(nuint address, byte[] buffer, ulong maxLength)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Buffer to store the bytes read.</p>
+</dd>
+    <dt><code>maxLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Number of bytes to read, at most.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure in case no bytes could be read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadRawString_" data-uid="MindControl.ProcessMemory.ReadRawString*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadRawString_MindControl_PointerPath_System_Text_Encoding_System_Nullable_System_Int32__System_Boolean_" data-uid="MindControl.ProcessMemory.ReadRawString(MindControl.PointerPath,System.Text.Encoding,System.Nullable{System.Int32},System.Boolean)">
+  ReadRawString(PointerPath, Encoding, int?, bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L492"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a string from the address referred by the given pointer path, in the process memory.
+The address must point to the start of the actual string bytes. Consider
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_ReadStringPointer_MindControl_PointerPath_MindControl_StringSettings_">ReadStringPointer(PointerPath, StringSettings)</a> to read strings from pointers more efficiently.
+Read the documentation for more information.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;string&gt; ReadRawString(PointerPath pointerPath, Encoding encoding, int? maxLength = null, bool isNullTerminated = true)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Path to the first byte of the raw string in the process memory.</p>
+</dd>
+    <dt><code>encoding</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding">Encoding</a></dt>
+    <dd><p>Encoding of the string to use when decoding. Try changing this parameter if you get
+garbage characters or empty strings. Common values include <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding.utf8">UTF8</a> and
+<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding.unicode">Unicode</a>.</p>
+</dd>
+    <dt><code>maxLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>?</dt>
+    <dd><p>Maximum length of the string to read, in characters. If left null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultRawStringMaxLength">DefaultRawStringMaxLength</a> will be used.</p>
+</dd>
+    <dt><code>isNullTerminated</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>Boolean indicating if the string is null-terminated. If true, the string will be
+read until the first null character. If false, the string will be read up to the maximum length specified.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>The string read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadRawString_" data-uid="MindControl.ProcessMemory.ReadRawString*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadRawString_System_UIntPtr_System_Text_Encoding_System_Nullable_System_Int32__System_Boolean_" data-uid="MindControl.ProcessMemory.ReadRawString(System.UIntPtr,System.Text.Encoding,System.Nullable{System.Int32},System.Boolean)">
+  ReadRawString(nuint, Encoding, int?, bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L520"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a string from the given address in the process memory.
+The address must point to the start of the actual string bytes. Consider
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_ReadStringPointer_System_UIntPtr_MindControl_StringSettings_">ReadStringPointer(nuint, StringSettings)</a> to read strings from pointers more efficiently.
+Read the documentation for more information.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;string&gt; ReadRawString(nuint address, Encoding encoding, int? maxLength = null, bool isNullTerminated = true)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the first byte of the raw string in the process memory.</p>
+</dd>
+    <dt><code>encoding</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding">Encoding</a></dt>
+    <dd><p>Encoding of the string to use when decoding. Try changing this parameter if you get
+garbage characters or empty strings. Common values include <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding.utf8">UTF8</a> and
+<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.encoding.unicode">Unicode</a>.</p>
+</dd>
+    <dt><code>maxLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>?</dt>
+    <dd><p>Maximum length of the string to read, in characters. If left null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultRawStringMaxLength">DefaultRawStringMaxLength</a> will be used.</p>
+</dd>
+    <dt><code>isNullTerminated</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>Boolean indicating if the string is null-terminated. If true, the string will be
+read until the first null character. If false, the string will be read up to the maximum length specified.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>The string read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadStringPointer_" data-uid="MindControl.ProcessMemory.ReadStringPointer*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadStringPointer_MindControl_PointerPath_MindControl_StringSettings_" data-uid="MindControl.ProcessMemory.ReadStringPointer(MindControl.PointerPath,MindControl.StringSettings)">
+  ReadStringPointer(PointerPath, StringSettings)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L573"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the string pointed by the pointer evaluated from the given pointer path from the process memory.
+This method uses a <a class="xref" href="MindControl.StringSettings.html">StringSettings</a> instance to determine how to read the string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;string&gt; ReadStringPointer(PointerPath pointerPath, StringSettings settings)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the pointer to the string in the process memory.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>Settings that define how to read the string. If you cannot figure out what settings to
+use, try <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_FindStringSettings_System_UIntPtr_System_String_">FindStringSettings(nuint, string)</a> to automatically determine the right settings for a
+known string pointer. See the documentation for more information.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>The string read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_ReadStringPointer_" data-uid="MindControl.ProcessMemory.ReadStringPointer*"></a>
+
+  <h3 id="MindControl_ProcessMemory_ReadStringPointer_System_UIntPtr_MindControl_StringSettings_" data-uid="MindControl.ProcessMemory.ReadStringPointer(System.UIntPtr,MindControl.StringSettings)">
+  ReadStringPointer(nuint, StringSettings)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L592"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the string pointed by the pointer at the given address from the process memory.
+This method uses a <a class="xref" href="MindControl.StringSettings.html">StringSettings</a> instance to determine how to read the string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;string&gt; ReadStringPointer(nuint address, StringSettings settings)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the pointer to the string in the process memory.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>Settings that define how to read the string. If you cannot figure out what settings to
+use, try <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_FindStringSettings_System_UIntPtr_System_String_">FindStringSettings(nuint, string)</a> to automatically determine the right settings for a
+known string pointer. See the documentation for more information.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>The string read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Read_" data-uid="MindControl.ProcessMemory.Read*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Read__1_MindControl_PointerPath_" data-uid="MindControl.ProcessMemory.Read``1(MindControl.PointerPath)">
+  Read&lt;T&gt;(PointerPath)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L148"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a specific type of data from the address referred by the given pointer path, in the process memory.
+This method only supports value types (primitive types and structures).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;T&gt; Read&lt;T&gt;(PointerPath pointerPath) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>pointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the target address. Can be implicitly converted from a string.
+Example: &quot;MyGame.exe+1F1688,1F,4&quot;. Reuse <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instances to optimize execution time.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;T&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of data to read. Only value types are supported (primitive types and structures).</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Read_" data-uid="MindControl.ProcessMemory.Read*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Read__1_System_UIntPtr_" data-uid="MindControl.ProcessMemory.Read``1(System.UIntPtr)">
+  Read&lt;T&gt;(nuint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Read.cs/#L165"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads a specific type of data from the given address, in the process memory. This method only supports value
+types (primitive types and structures).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;T&gt; Read&lt;T&gt;(nuint address) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;T&gt;</dt>
+    <dd><p>The value read from the process memory, or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of data to read. Only value types are supported (primitive types and structures).</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_RefreshModuleCache_" data-uid="MindControl.ProcessMemory.RefreshModuleCache*"></a>
+
+  <h3 id="MindControl_ProcessMemory_RefreshModuleCache" data-uid="MindControl.ProcessMemory.RefreshModuleCache">
+  RefreshModuleCache()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Addressing.cs/#L107"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Refreshes the module cache used when evaluating pointer paths.
+Call this method when your process' modules have changed due to external factors such as plugins being loaded,
+or other third-party software interacting with the process.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void RefreshModuleCache()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Reserve_" data-uid="MindControl.ProcessMemory.Reserve*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Reserve_System_UInt64_System_Boolean_System_Nullable_MindControl_MemoryRange__System_Nullable_System_UIntPtr__" data-uid="MindControl.ProcessMemory.Reserve(System.UInt64,System.Boolean,System.Nullable{MindControl.MemoryRange},System.Nullable{System.UIntPtr})">
+  Reserve(ulong, bool, MemoryRange?, nuint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L207"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reserves a range of memory of the given size. If no suitable range is found within the current allocations,
+a new range is allocated, and a reservation is made on it.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; Reserve(ulong size, bool requireExecutable, MemoryRange? limitRange = null, nuint? nearAddress = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Size of the memory range to reserve.</p>
+</dd>
+    <dt><code>requireExecutable</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>Set to true if the memory range must be executable (to store code).</p>
+</dd>
+    <dt><code>limitRange</code> <a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>Specify this parameter to limit the reservation to allocations within a specific range
+of memory. If left null (default), any allocation can be used. Otherwise, only allocations within the specified
+range will be considered, and if none are available, a new allocation will be attempted within that range.</p>
+</dd>
+    <dt><code>nearAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>?</dt>
+    <dd><p>If specified, prioritize allocations by their proximity to this address. If no
+matching allocation is found, a new allocation as close as possible to this address will be attempted.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the resulting reservation, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_RunThread_" data-uid="MindControl.ProcessMemory.RunThread*"></a>
+
+  <h3 id="MindControl_ProcessMemory_RunThread_MindControl_PointerPath_System_Nullable_System_UIntPtr__" data-uid="MindControl.ProcessMemory.RunThread(MindControl.PointerPath,System.Nullable{System.UIntPtr})">
+  RunThread(PointerPath, nuint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Threading.cs/#L48"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Starts a new thread in the target process, running the function at the address pointed by the given pointer
+path. This method will not wait for the thread to finish execution. Use the resulting
+<a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a> instance to wait for the thread to finish if you need to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;RemoteThread&gt; RunThread(PointerPath functionPointerPath, nuint? parameter = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>functionPointerPath</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path to the function (or start instruction) to run in the target
+process.</p>
+</dd>
+    <dt><code>parameter</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>?</dt>
+    <dd><p>An optional parameter to pass to the function. It can be either an address or a value.
+This input value will be stored in register RCX for x64, or EBX for x86. If this does not match the call
+conventions of the target function, the thread must execute a &quot;trampoline&quot; code that arranges the parameter in
+the expected way before calling the function. See the documentation for more info.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a>&gt;</dt>
+    <dd><p>A result holding either the thread instance that you can use to wait for the thread to return, or a
+failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_RunThread_" data-uid="MindControl.ProcessMemory.RunThread*"></a>
+
+  <h3 id="MindControl_ProcessMemory_RunThread_System_String_System_String_System_Nullable_System_UIntPtr__" data-uid="MindControl.ProcessMemory.RunThread(System.String,System.String,System.Nullable{System.UIntPtr})">
+  RunThread(string, string, nuint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Threading.cs/#L74"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Starts a new thread in the target process, running the specified exported function from a module loaded into the
+target process. This method will not wait for the thread to finish execution. Use the resulting
+<a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a> instance to wait for the thread to finish if you need to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;RemoteThread&gt; RunThread(string moduleName, string functionName, nuint? parameter = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>moduleName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Name of the module containing the function to run (e.g. &quot;kernel32.dll&quot;).</p>
+</dd>
+    <dt><code>functionName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Name of the exported function to run from the specified module.</p>
+</dd>
+    <dt><code>parameter</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>?</dt>
+    <dd><p>An optional parameter to pass to the function. It can be either an address or a value.
+This input value will be stored in register RCX for x64, or EBX for x86. If this does not match the call
+conventions of the target function, the thread must execute a &quot;trampoline&quot; code that arranges the parameter in
+the expected way before calling the function. See the documentation for more info.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a>&gt;</dt>
+    <dd><p>A result holding either the thread instance that you can use to wait for the thread to return, or a
+failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_RunThread_" data-uid="MindControl.ProcessMemory.RunThread*"></a>
+
+  <h3 id="MindControl_ProcessMemory_RunThread_System_UIntPtr_System_Nullable_System_UIntPtr__" data-uid="MindControl.ProcessMemory.RunThread(System.UIntPtr,System.Nullable{System.UIntPtr})">
+  RunThread(nuint, nuint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Threading.cs/#L24"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Starts a new thread in the target process, running the function at the specified address. This method will not
+wait for the thread to finish execution. Use the resulting <a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a> instance to wait for the
+thread to finish if you need to.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;RemoteThread&gt; RunThread(nuint functionAddress, nuint? parameter = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>functionAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the function (starting instruction) to run in the target process.</p>
+</dd>
+    <dt><code>parameter</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a>?</dt>
+    <dd><p>An optional parameter to pass to the function. It can be either an address or a value.
+This input value will be stored in register RCX for x64, or EBX for x86. If this does not match the call
+conventions of the target function, the thread must execute a &quot;trampoline&quot; code that arranges the parameter in
+the expected way before calling the function. See the documentation for more info.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.Threading.RemoteThread.html">RemoteThread</a>&gt;</dt>
+    <dd><p>A result holding either the thread instance that you can use to wait for the thread to return, or a
+failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Store_" data-uid="MindControl.ProcessMemory.Store*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Store_System_Byte___MindControl_MemoryAllocation_" data-uid="MindControl.ProcessMemory.Store(System.Byte[],MindControl.MemoryAllocation)">
+  Store(byte[], MemoryAllocation)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L293"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given data in the specified allocated range. Returns the reservation that holds the data.
+In most situations, you can use the <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_Store__1___0_">Store&lt;T&gt;(T)</a> or <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_Store_System_Byte___System_Boolean_">Store(byte[], bool)</a> signatures
+instead, to have the <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance handle allocations automatically. Use this signature
+if you need to manage allocations and reservations manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; Store(byte[] data, MemoryAllocation allocation)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Data to store.</p>
+</dd>
+    <dt><code>allocation</code> <a class="xref" href="MindControl.MemoryAllocation.html">MemoryAllocation</a></dt>
+    <dd><p>Allocated memory to store the data.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reservation storing the data, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Store_" data-uid="MindControl.ProcessMemory.Store*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Store_System_Byte___System_Boolean_" data-uid="MindControl.ProcessMemory.Store(System.Byte[],System.Boolean)">
+  Store(byte[], bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L261"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given data in the process memory. If needed, memory is allocated to store the data. Returns the
+reserved range that you can utilize to use the data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; Store(byte[] data, bool isCode = false)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Data to store.</p>
+</dd>
+    <dt><code>isCode</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>Set to true if the data is executable code. Defaults to false.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reserved memory range, or an allocation failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_StoreString_" data-uid="MindControl.ProcessMemory.StoreString*"></a>
+
+  <h3 id="MindControl_ProcessMemory_StoreString_System_String_MindControl_StringSettings_" data-uid="MindControl.ProcessMemory.StoreString(System.String,MindControl.StringSettings)">
+  StoreString(string, StringSettings)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L347"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given string in the process memory. If needed, memory is allocated to store the string.
+Returns the reservation that holds the string.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; StoreString(string value, StringSettings settings)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>value</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>String to store.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>String settings to use to write the string.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reservation where the string has been written, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_StoreString_" data-uid="MindControl.ProcessMemory.StoreString*"></a>
+
+  <h3 id="MindControl_ProcessMemory_StoreString_System_String_MindControl_StringSettings_MindControl_MemoryAllocation_" data-uid="MindControl.ProcessMemory.StoreString(System.String,MindControl.StringSettings,MindControl.MemoryAllocation)">
+  StoreString(string, StringSettings, MemoryAllocation)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L371"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given string in the specified range of memory. Returns the reservation that holds the string.
+In most situations, you should use the <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_StoreString_System_String_MindControl_StringSettings_">StoreString(string, StringSettings)</a> signature instead, to
+have the <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance handle allocations automatically. Use this signature if you need
+to manage allocations and reservations manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; StoreString(string value, StringSettings settings, MemoryAllocation allocation)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>value</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>String to store.</p>
+</dd>
+    <dt><code>settings</code> <a class="xref" href="MindControl.StringSettings.html">StringSettings</a></dt>
+    <dd><p>String settings to use to write the string.</p>
+</dd>
+    <dt><code>allocation</code> <a class="xref" href="MindControl.MemoryAllocation.html">MemoryAllocation</a></dt>
+    <dd><p>Range of memory to store the string in.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reservation where the string has been written, or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Store_" data-uid="MindControl.ProcessMemory.Store*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Store__1___0_" data-uid="MindControl.ProcessMemory.Store``1(``0)">
+  Store&lt;T&gt;(T)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L322"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given value or structure in the process memory. If needed, memory is allocated to store the data.
+Returns the reservation that holds the data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; Store&lt;T&gt;(T value)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>value</code> <span class="xref">T</span></dt>
+    <dd><p>Value or structure to store.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reservation where the data has been written, or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value or structure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Store_" data-uid="MindControl.ProcessMemory.Store*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Store__1___0_MindControl_MemoryAllocation_" data-uid="MindControl.ProcessMemory.Store``1(``0,MindControl.MemoryAllocation)">
+  Store&lt;T&gt;(T, MemoryAllocation)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Allocation.cs/#L336"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Stores the given value or structure in the specified range of memory. Returns the reservation that holds the
+data.
+In most situations, you can use the <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_Store__1___0_">Store&lt;T&gt;(T)</a> or <a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_Store_System_Byte___System_Boolean_">Store(byte[], bool)</a> signatures
+instead, to have the <a class="xref" href="MindControl.ProcessMemory.html">ProcessMemory</a> instance handle allocations automatically. Use this signature
+if you need to manage allocations and reservations manually.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DisposableResult&lt;MemoryReservation&gt; Store&lt;T&gt;(T value, MemoryAllocation allocation) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>value</code> <span class="xref">T</span></dt>
+    <dd><p>Value or structure to store.</p>
+</dd>
+    <dt><code>allocation</code> <a class="xref" href="MindControl.MemoryAllocation.html">MemoryAllocation</a></dt>
+    <dd><p>Range of memory to store the data in.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.DisposableResult-1.html">DisposableResult</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding either the reservation where the data has been written, or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value or structure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_WriteBytes_" data-uid="MindControl.ProcessMemory.WriteBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_WriteBytes_MindControl_PointerPath_System_Byte___System_Nullable_MindControl_MemoryProtectionStrategy__" data-uid="MindControl.ProcessMemory.WriteBytes(MindControl.PointerPath,System.Byte[],System.Nullable{MindControl.MemoryProtectionStrategy})">
+  WriteBytes(PointerPath, byte[], MemoryProtectionStrategy?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L20"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Writes a sequence of bytes to the address referred by the given pointer path in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result WriteBytes(PointerPath path, byte[] value, MemoryProtectionStrategy? memoryProtectionStrategy = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Optimized, reusable path to the target address.</p>
+</dd>
+    <dt><code>value</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>[]</dt>
+    <dd><p>Value to write.</p>
+</dd>
+    <dt><code>memoryProtectionStrategy</code> <a class="xref" href="MindControl.MemoryProtectionStrategy.html">MemoryProtectionStrategy</a>?</dt>
+    <dd><p>Strategy to use to deal with memory protection. If null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultWriteStrategy">DefaultWriteStrategy</a> of this instance is used.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_WriteBytes_" data-uid="MindControl.ProcessMemory.WriteBytes*"></a>
+
+  <h3 id="MindControl_ProcessMemory_WriteBytes_System_UIntPtr_System_Span_System_Byte__System_Nullable_MindControl_MemoryProtectionStrategy__" data-uid="MindControl.ProcessMemory.WriteBytes(System.UIntPtr,System.Span{System.Byte},System.Nullable{MindControl.MemoryProtectionStrategy})">
+  WriteBytes(nuint, Span&lt;byte&gt;, MemoryProtectionStrategy?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L39"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Writes a sequence of bytes to the given address in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result WriteBytes(nuint address, Span&lt;byte&gt; value, MemoryProtectionStrategy? memoryProtectionStrategy = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+    <dt><code>value</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.span-1">Span</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
+    <dd><p>Value to write.</p>
+</dd>
+    <dt><code>memoryProtectionStrategy</code> <a class="xref" href="MindControl.MemoryProtectionStrategy.html">MemoryProtectionStrategy</a>?</dt>
+    <dd><p>Strategy to use to deal with memory protection. If null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultWriteStrategy">DefaultWriteStrategy</a> of this instance is used.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_ProcessMemory_Write_" data-uid="MindControl.ProcessMemory.Write*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Write__1_MindControl_PointerPath___0_System_Nullable_MindControl_MemoryProtectionStrategy__" data-uid="MindControl.ProcessMemory.Write``1(MindControl.PointerPath,``0,System.Nullable{MindControl.MemoryProtectionStrategy})">
+  Write&lt;T&gt;(PointerPath, T, MemoryProtectionStrategy?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Writes a value to the address referred by the given pointer path in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result Write&lt;T&gt;(PointerPath path, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Optimized, reusable path to the target address.</p>
+</dd>
+    <dt><code>value</code> <span class="xref">T</span></dt>
+    <dd><p>Value to write.</p>
+</dd>
+    <dt><code>memoryProtectionStrategy</code> <a class="xref" href="MindControl.MemoryProtectionStrategy.html">MemoryProtectionStrategy</a>?</dt>
+    <dd><p>Strategy to use to deal with memory protection. If null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultWriteStrategy">DefaultWriteStrategy</a> of this instance is used.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value to write.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the type of the value is not supported.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="MindControl_ProcessMemory_Write_" data-uid="MindControl.ProcessMemory.Write*"></a>
+
+  <h3 id="MindControl_ProcessMemory_Write__1_System_UIntPtr___0_System_Nullable_MindControl_MemoryProtectionStrategy__" data-uid="MindControl.ProcessMemory.Write``1(System.UIntPtr,``0,System.Nullable{MindControl.MemoryProtectionStrategy})">
+  Write&lt;T&gt;(nuint, T, MemoryProtectionStrategy?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L115"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Writes a value to the given address in the process memory.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result Write&lt;T&gt;(nuint address, T value, MemoryProtectionStrategy? memoryProtectionStrategy = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Target address in the process memory.</p>
+</dd>
+    <dt><code>value</code> <span class="xref">T</span></dt>
+    <dd><p>Value to write.</p>
+</dd>
+    <dt><code>memoryProtectionStrategy</code> <a class="xref" href="MindControl.MemoryProtectionStrategy.html">MemoryProtectionStrategy</a>?</dt>
+    <dd><p>Strategy to use to deal with memory protection. If null (default), the
+<a class="xref" href="MindControl.ProcessMemory.html#MindControl_ProcessMemory_DefaultWriteStrategy">DefaultWriteStrategy</a> of this instance is used.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result.html">Result</a></dt>
+    <dd><p>A result indicating either a success or a failure.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>Type of the value to write.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="events">Events
+</h2>
+
+
+
+  <h3 id="MindControl_ProcessMemory_ProcessDetached" data-uid="MindControl.ProcessMemory.ProcessDetached">
+  ProcessDetached
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.cs/#L46"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Event raised when the process detaches for any reason.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public event EventHandler? ProcessDetached</code></pre>
+  </div>
+
+
+
+
+
+
+  <h4 class="section">Event Type</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.eventhandler">EventHandler</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/ProcessMemory/ProcessMemory.Write.cs/#L8" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

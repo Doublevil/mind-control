@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class MemoryAllocation | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class MemoryAllocation | MindControl ">
+      
+      <meta name="description" content="Represents a range of memory that has been allocated in a process. Can be used to safely manage data or code storage using reservations.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_MemoryAllocation.md&amp;value=---%0Auid%3A%20MindControl.MemoryAllocation%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.MemoryAllocation">
+
+
+
+  <h1 id="MindControl_MemoryAllocation" data-uid="MindControl.MemoryAllocation" class="text-break">
+Class MemoryAllocation  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L9"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Represents a range of memory that has been allocated in a process.
+Can be used to safely manage data or code storage using reservations.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class MemoryAllocation : IDisposable</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">MemoryAllocation</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable">IDisposable</a></div>
+    </dd>
+  </dl>
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="MindControl_MemoryAllocation_IsDisposed_" data-uid="MindControl.MemoryAllocation.IsDisposed*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_IsDisposed" data-uid="MindControl.MemoryAllocation.IsDisposed">
+  IsDisposed
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L31"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a boolean indicating if this instance has been disposed. If True, the instance is no longer usable.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsDisposed { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_IsExecutable_" data-uid="MindControl.MemoryAllocation.IsExecutable*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_IsExecutable" data-uid="MindControl.MemoryAllocation.IsExecutable">
+  IsExecutable
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L26"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a value indicating if the memory range has been allocated with executable permissions.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsExecutable { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_Range_" data-uid="MindControl.MemoryAllocation.Range*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_Range" data-uid="MindControl.MemoryAllocation.Range">
+  Range
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L14"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the memory range allocated.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MemoryRange Range { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_Reservations_" data-uid="MindControl.MemoryAllocation.Reservations*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_Reservations" data-uid="MindControl.MemoryAllocation.Reservations">
+  Reservations
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L21"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the reservations managed by this allocation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IReadOnlyList&lt;MemoryReservation&gt; Reservations { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MindControl_MemoryAllocation_ClearReservations_" data-uid="MindControl.MemoryAllocation.ClearReservations*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_ClearReservations" data-uid="MindControl.MemoryAllocation.ClearReservations">
+  ClearReservations()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L216"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Removes all reservations from the range, meaning the whole allocated range will be available for reservations.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void ClearReservations()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_Dispose_" data-uid="MindControl.MemoryAllocation.Dispose*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_Dispose" data-uid="MindControl.MemoryAllocation.Dispose">
+  Dispose()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L231"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Releases all reservations, and frees up the allocated space. After this method is called, this instance will be
+made unusable, and you may no longer be able to read or write memory in this range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Dispose()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_FreeRange_" data-uid="MindControl.MemoryAllocation.FreeRange*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_FreeRange_MindControl_MemoryRange_" data-uid="MindControl.MemoryAllocation.FreeRange(MindControl.MemoryRange)">
+  FreeRange(MemoryRange)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L174"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Makes reserved space overlapping the specified range available for future reservations. Affected reservations
+will be disposed, and may be either completely gone, reduced, or split into two ranges.
+Consider disposing reservations instead, unless you want more control over the range to free.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void FreeRange(MemoryRange rangeToFree)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>rangeToFree</code> <a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a></dt>
+    <dd><p>The range of memory to free from reservations in this instance.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_GetLargestReservableSpace_" data-uid="MindControl.MemoryAllocation.GetLargestReservableSpace*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_GetLargestReservableSpace" data-uid="MindControl.MemoryAllocation.GetLargestReservableSpace">
+  GetLargestReservableSpace()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L80"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the largest contiguous, unreserved space in the range. This is the largest space that can be reserved in a
+single allocation.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MemoryRange? GetLargestReservableSpace()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>The largest contiguous, unreserved space in the range.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_GetNextRangeFittingSize_" data-uid="MindControl.MemoryAllocation.GetNextRangeFittingSize*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_GetNextRangeFittingSize_System_UInt64_System_Nullable_System_UInt32__" data-uid="MindControl.MemoryAllocation.GetNextRangeFittingSize(System.UInt64,System.Nullable{System.UInt32})">
+  GetNextRangeFittingSize(ulong, uint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L119"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the first free range that can fit the specified size, with an optional alignment. Returns null if no range
+is large enough to fit the requested size with the specified alignment.
+Note that this method does not reserve the range. Most of the time, you should use <a class="xref" href="MindControl.MemoryAllocation.html#MindControl_MemoryAllocation_ReserveRange_System_UInt64_System_Nullable_System_UInt32__">ReserveRange(ulong, uint?)</a>
+instead of this method.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MemoryRange? GetNextRangeFittingSize(ulong size, uint? byteAlignment = 8)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Requested size of the range to find, in bytes.</p>
+</dd>
+    <dt><code>byteAlignment</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a>?</dt>
+    <dd><p>Optional byte alignment for the range. When null, values are not aligned. The
+default value is 8, meaning that for example a range of [0x15,0x3C] will be aligned to [0x18,0x38] and thus
+only accomodate 32 bytes. Alignment means the resulting range might be bigger than the <code class="paramref">size</code>,
+but will never make it smaller. An alignment of 4 or 8 usually provide better performance when reading or
+writing memory.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.MemoryRange.html">MemoryRange</a>?</dt>
+    <dd><p>The first free range that can fit the specified size, or null if no range is large enough.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_GetRemainingSpace_" data-uid="MindControl.MemoryAllocation.GetRemainingSpace*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_GetRemainingSpace" data-uid="MindControl.MemoryAllocation.GetRemainingSpace">
+  GetRemainingSpace()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L67"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the total space available for reservation in the range, in bytes.
+Note that space might be fragmented and thus unavailable for a single reservation. Use
+<a class="xref" href="MindControl.MemoryAllocation.html#MindControl_MemoryAllocation_GetNextRangeFittingSize_System_UInt64_System_Nullable_System_UInt32__">GetNextRangeFittingSize(ulong, uint?)</a> if you want to make sure your data fits in the range.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ulong GetRemainingSpace()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>The total space available for reservation in the range.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_GetTotalReservedSpace_" data-uid="MindControl.MemoryAllocation.GetTotalReservedSpace*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_GetTotalReservedSpace" data-uid="MindControl.MemoryAllocation.GetTotalReservedSpace">
+  GetTotalReservedSpace()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L52"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the total space reserved in the allocated range, in bytes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ulong GetTotalReservedSpace()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>The total space reserved in the allocated range, in bytes.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_MemoryAllocation_ReserveRange_" data-uid="MindControl.MemoryAllocation.ReserveRange*"></a>
+
+  <h3 id="MindControl_MemoryAllocation_ReserveRange_System_UInt64_System_Nullable_System_UInt32__" data-uid="MindControl.MemoryAllocation.ReserveRange(System.UInt64,System.Nullable{System.UInt32})">
+  ReserveRange(ulong, uint?)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L152"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reserves and returns the next available range with the specified size.
+Data stored in the returned range will not be overwritten by future reservations until the reservation is freed.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Result&lt;MemoryReservation&gt; ReserveRange(ulong size, uint? byteAlignment = 8)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>size</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>Minimal size that the range to get must be able to accomodate, in bytes.</p>
+</dd>
+    <dt><code>byteAlignment</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a>?</dt>
+    <dd><p>Optional byte alignment for the range. When null, values are not aligned. The
+default value is 8, meaning that for example a range of [0x15,0x3C] will be aligned to [0x18,0x38] and thus
+only accomodate 32 bytes. Alignment means the actual reserved space might be bigger than the
+<code class="paramref">size</code>, but will never make it smaller.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.Results.Result-1.html">Result</a>&lt;<a class="xref" href="MindControl.MemoryReservation.html">MemoryReservation</a>&gt;</dt>
+    <dd><p>A result holding the resulting reservation or a reservation failure.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Allocation/MemoryAllocation.cs/#L9" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

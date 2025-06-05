@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class PointerPath | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class PointerPath | MindControl ">
+      
+      <meta name="description" content="Holds a string expression consisting in a base address followed by a sequence of pointer offsets. Allows programs to consistently retrieve data in the process memory by following pointers to reach a dynamic address. A pointer path instance can be reused to optimize performance, as it is only parsed once, when constructed.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_PointerPath.md&amp;value=---%0Auid%3A%20MindControl.PointerPath%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.PointerPath">
+
+
+
+  <h1 id="MindControl_PointerPath" data-uid="MindControl.PointerPath" class="text-break">
+Class PointerPath  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L9"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Holds a string expression consisting in a base address followed by a sequence of pointer offsets.
+Allows programs to consistently retrieve data in the process memory by following pointers to reach a dynamic
+address.
+A pointer path instance can be reused to optimize performance, as it is only parsed once, when constructed.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class PointerPath</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">PointerPath</span></div>
+    </dd>
+  </dl>
+
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="MindControl_PointerPath__ctor_" data-uid="MindControl.PointerPath.#ctor*"></a>
+
+  <h3 id="MindControl_PointerPath__ctor_System_String_" data-uid="MindControl.PointerPath.#ctor(System.String)">
+  PointerPath(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L88"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a pointer path from the given expression.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PointerPath(string expression)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>expression</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Pointer path expression. Some examples include &quot;myprocess.exe+001F468B,1B,0,A0&quot;,
+or &quot;1F07A314&quot;, or &quot;1F07A314+A0&quot;, or &quot;1F07A314-A0,4&quot;.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></dt>
+    <dd><p>Thrown when the expression is not valid.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="MindControl_PointerPath__ctor_" data-uid="MindControl.PointerPath.#ctor*"></a>
+
+  <h3 id="MindControl_PointerPath__ctor_System_String_System_UIntPtr_System_Int64___" data-uid="MindControl.PointerPath.#ctor(System.String,System.UIntPtr,System.Int64[])">
+  PointerPath(string, nuint, params long[])
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L132"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a pointer path from a base module name, a base module offset, and a series of offsets.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PointerPath(string baseModuleName, nuint baseModuleOffset, params long[] pointerOffsets)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>baseModuleName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Name of the base module, where the starting pointer is found. For example, in
+&quot;mygame.exe+3FF0,4,1C&quot;, this would be &quot;mygame.exe&quot; (without the quotes).</p>
+</dd>
+    <dt><code>baseModuleOffset</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Offset applied to the base module to get the address of the first pointer to
+evaluate. For example, in &quot;mygame.exe+3FF0,4,1C&quot;, this would be 0x3FF0.</p>
+</dd>
+    <dt><code>pointerOffsets</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a>[]</dt>
+    <dd><p>Collection of offsets to follow sequentially in order to evaluate the
+final memory address. For example, in &quot;mygame.exe+3FF0,4,1C&quot;, this would be [0x4, 0x1C].</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath__ctor_" data-uid="MindControl.PointerPath.#ctor*"></a>
+
+  <h3 id="MindControl_PointerPath__ctor_System_UIntPtr_System_Int64___" data-uid="MindControl.PointerPath.#ctor(System.UIntPtr,System.Int64[])">
+  PointerPath(nuint, params long[])
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L112"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Builds a pointer path from a pointer and a series of offsets.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PointerPath(nuint basePointerAddress, params long[] pointerOffsets)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>basePointerAddress</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>Address of the base pointer, which is the first address to evaluate.
+For example, in &quot;1F07A314,4,1C&quot;, this would be 0x1F07A314.</p>
+</dd>
+    <dt><code>pointerOffsets</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a>[]</dt>
+    <dd><p>Collection of offsets to follow sequentially in order to evaluate the
+final memory address. For example, in &quot;1F07A314,4,1C&quot;, this would be [0x4, 0x1C].</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="MindControl_PointerPath_BaseModuleName_" data-uid="MindControl.PointerPath.BaseModuleName*"></a>
+
+  <h3 id="MindControl_PointerPath_BaseModuleName" data-uid="MindControl.PointerPath.BaseModuleName">
+  BaseModuleName
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L58"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the base module name.
+For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets &quot;myprocess.exe&quot;.
+For expression with no module name, like &quot;01F4684-4,18&quot;, gets a null value.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? BaseModuleName { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_BaseModuleOffset_" data-uid="MindControl.PointerPath.BaseModuleOffset*"></a>
+
+  <h3 id="MindControl_PointerPath_BaseModuleOffset" data-uid="MindControl.PointerPath.BaseModuleOffset">
+  BaseModuleOffset
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L65"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the offset of the base module name.
+For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets 0x1F4680.
+For expressions without a module offset, like &quot;01F4684-4,18&quot; or &quot;myprocess.exe&quot;, gets 0.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PointerOffset BaseModuleOffset { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.PointerOffset.html">PointerOffset</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_Expression_" data-uid="MindControl.PointerPath.Expression*"></a>
+
+  <h3 id="MindControl_PointerPath_Expression" data-uid="MindControl.PointerPath.Expression">
+  Expression
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L49"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the pointer path expression. Some examples include &quot;myprocess.exe+001F468B,1B,0,A0&quot;,
+or &quot;1F07A314&quot;, or &quot;1F07A314+A0&quot;, or &quot;1F07A314-A0,4&quot;.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Expression { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_IsStrictly64Bit_" data-uid="MindControl.PointerPath.IsStrictly64Bit*"></a>
+
+  <h3 id="MindControl_PointerPath_IsStrictly64Bit" data-uid="MindControl.PointerPath.IsStrictly64Bit">
+  IsStrictly64Bit
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L80"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bit
+process.
+For example, for the expression &quot;app.dll+0000F04AA1218410&quot;, this boolean would be True.
+For the expression &quot;app.dll+00000000F04AA121&quot;, this boolean would be False.
+Note that evaluating a 32-bit-compatible address may still end up overflowing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IsStrictly64Bit { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_PointerOffsets_" data-uid="MindControl.PointerPath.PointerOffsets*"></a>
+
+  <h3 id="MindControl_PointerPath_PointerOffsets" data-uid="MindControl.PointerPath.PointerOffsets">
+  PointerOffsets
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L71"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the collection of pointer offsets to follow sequentially in order to evaluate the memory address.
+For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets [0x1C, 0xC].</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public PointerOffset[] PointerOffsets { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.PointerOffset.html">PointerOffset</a>[]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MindControl_PointerPath_IsValid_" data-uid="MindControl.PointerPath.IsValid*"></a>
+
+  <h3 id="MindControl_PointerPath_IsValid_System_String_System_Boolean_" data-uid="MindControl.PointerPath.IsValid(System.String,System.Boolean)">
+  IsValid(string, bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L156"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Checks the given expression and returns a boolean indicating if it is valid or not.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool IsValid(string expression, bool allowOnly32Bit = false)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>expression</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Expression to check.</p>
+</dd>
+    <dt><code>allowOnly32Bit</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>If set to True, valid 64-bit expressions will still cause False to be returned.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>True if the expression is valid.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_ToString_" data-uid="MindControl.PointerPath.ToString*"></a>
+
+  <h3 id="MindControl_PointerPath_ToString" data-uid="MindControl.PointerPath.ToString">
+  ToString()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L440"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Returns a string that represents the current object.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>A string that represents the current object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MindControl_PointerPath_TryParse_" data-uid="MindControl.PointerPath.TryParse*"></a>
+
+  <h3 id="MindControl_PointerPath_TryParse_System_String_System_Boolean_" data-uid="MindControl.PointerPath.TryParse(System.String,System.Boolean)">
+  TryParse(string, bool)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L171"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attempts to parse the given expression. Returns the resulting <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instance if the
+expression was successfully parsed, or null if the expression is not valid.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static PointerPath? TryParse(string expression, bool allowOnly32Bit = false)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>expression</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>Expression to check.</p>
+</dd>
+    <dt><code>allowOnly32Bit</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>If set to True, valid 64-bit expressions will still cause null to be returned.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>The resulting <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instance if the expression was successfully parsed, or
+null if the expression is not valid.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="operators">Operators
+</h2>
+
+
+  <a id="MindControl_PointerPath_op_Implicit_" data-uid="MindControl.PointerPath.op_Implicit*"></a>
+
+  <h3 id="MindControl_PointerPath_op_Implicit_System_String__MindControl_PointerPath" data-uid="MindControl.PointerPath.op_Implicit(System.String)~MindControl.PointerPath">
+  implicit operator PointerPath(string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L147"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Implicitly converts the given string to a <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instance using the constructor.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static implicit operator PointerPath(string s)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>s</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>String to convert.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MindControl.PointerPath.html">PointerPath</a></dt>
+    <dd><p>Pointer path instance built from the string.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerPath.cs/#L9" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

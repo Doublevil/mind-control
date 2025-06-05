@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Attaching to a process | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Attaching to a process | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/attaching.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="attaching-to-a-process">Attaching to a process</h1>
+
+<p>Manipulating the memory of a running process with MindControl requires attaching to that process to get a <code>ProcessMemory</code> instance. In this section, we will cover how to attach to a process using the <code>MindControl</code> library.</p>
+<h2 id="the-process-tracker">The Process Tracker</h2>
+<p>In most cases, the best way to attach to a process is to use the <code>ProcessTracker</code> class. This class has a very simple API: you specify the name of the process you want to attach to, and then you can get a <code>ProcessMemory</code> instance whenever you want to perform a memory manipulation operation. If the process is not running at the time of the call, it will return <code>null</code>.</p>
+<p>Here is an example of how to use a <code>ProcessTracker</code> in a class:</p>
+<pre><code class="lang-csharp">public class SlimeRancherProcess
+{
+    // Keep an instance of the ProcessTracker in your class and give it the name of the target process.
+    private readonly ProcessTracker _processTracker = new(&quot;SlimeRancher&quot;);
+    
+    public int? GetCoinCount()
+    {
+        // Attempt to get the ProcessMemory instance for the target process
+        // If the process is not running, this will return null
+        var process = _processTracker.GetProcessMemory();
+        if (process == null)
+            return null;
+        
+        // Use the ProcessMemory instance to read a value from the target process
+        var coinCountResult = process.Read&lt;int&gt;(&quot;UnityPlayer.dll+0168EEA0,8,100,28,20,80&quot;);
+        return coinCountResult.ValueOr(0);
+    }
+}
+</code></pre>
+<p>The <code>ProcessTracker</code> class allows you to easily attach to your target process, without having to worry about:</p>
+<ul>
+<li>The order in which the processes are started: if your program starts first, <code>GetProcessMemory</code> will just return <code>null</code> until the target process is started.</li>
+<li>The process being closed: if the target process is closed, <code>GetProcessMemory</code> will return <code>null</code> after the process is closed.</li>
+<li>The process being restarted: if the target process is restarted, <code>GetProcessMemory</code> will return a new <code>ProcessMemory</code> instance for the new process. You don't have to care about this.</li>
+</ul>
+<h2 id="attaching-directly-through-the-processmemory-class">Attaching directly through the <code>ProcessMemory</code> class</h2>
+<p>There are cases where you might want to attach to a process directly without using the <code>ProcessTracker</code>. For example:</p>
+<ul>
+<li>You know the process ID of the target process and want to attach to it directly.</li>
+<li>You are building a &quot;one-shot&quot; tool that attaches to a process, performs some operations, and then exits.</li>
+<li>You want to attach to multiple processes with the same name.</li>
+</ul>
+<p>For these cases, you can use the <code>ProcessMemory</code> class directly. Here are examples of how to do this:</p>
+<h3 id="attaching-to-a-process-by-name">Attaching to a process by name</h3>
+<pre><code class="lang-csharp">using MindControl;
+
+var result = ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;); // Replace with the actual process name
+result.ThrowOnFailure(); // Throws an exception if the process could not be opened
+var processMemory = result.Value;
+</code></pre>
+<h3 id="attaching-to-a-process-by-pid-process-id">Attaching to a process by PID (process ID)</h3>
+<pre><code class="lang-csharp">using MindControl;
+
+var result = ProcessMemory.OpenProcessById(1234); // Replace with the actual process ID
+result.ThrowOnFailure(); // Throws an exception if the process could not be opened
+var processMemory = result.Value;
+</code></pre>
+<h3 id="attaching-to-a-process-with-a-systemdiagnosticsprocess-instance">Attaching to a process with a System.Diagnostics.Process instance</h3>
+<pre><code class="lang-csharp">using MindControl;
+
+var process = System.Diagnostics.Process.GetProcessById(1234); // You can use other methods to get the Process instance
+var result = ProcessMemory.OpenProcess(process);
+result.ThrowOnFailure(); // Throws an exception if the process could not be opened
+var processMemory = result.Value;
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/attaching.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

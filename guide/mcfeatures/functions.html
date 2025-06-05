@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Executing remote functions | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Executing remote functions | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/functions.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="executing-remote-functions">Executing remote functions</h1>
+
+<p>This section covers how to execute functions in your target process. This can allow you to perform actions in the target process from your program, or to call your own functions after injecting a DLL into the target process.</p>
+<p>You can execute functions with the method <code>RunThread</code>. There are two main ways to call this method:</p>
+<h2 id="with-an-address-or-pointer-path">With an address or pointer path</h2>
+<p>You can call a function by providing its address or a pointer path to it. This is useful when you know the exact location of the function in memory.</p>
+<pre><code class="lang-csharp">var result = processMemory.RunThread(&quot;UnityPlayer.dll+0168EEA0,8,100,28,20,80&quot;);
+result.ThrowOnFailure(); // Throws an exception if the function could not be executed
+
+// Wait for the function to complete, with a timeout of 10 seconds
+result.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
+
+// Dispose the result when done to ensure resources are released
+result.Dispose();
+</code></pre>
+<h2 id="with-a-module-and-function-name">With a module and function name</h2>
+<p>You can also call a function by providing the module name and the function name. This is useful when you want to call a function in a specific module without needing to know its address. This uses the module's export table to find the function, and thus requires the module to explicitly export the function.</p>
+<p>In the following example, we call the <code>ExitProcess</code> function from the Windows kernel library <code>kernel32.dll</code>. This module is loaded in every Windows process, so you can use its functions without having to inject a DLL.</p>
+<pre><code class="lang-csharp">var result = processMemory.RunThread(&quot;kernel32.dll&quot;, &quot;ExitProcess&quot;);
+result.ThrowOnFailure(); // Throws an exception if the function could not be executed
+
+// Wait for the function to complete, with a timeout of 10 seconds
+result.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
+
+// Dispose the result when done to ensure resources are released
+result.Dispose();
+</code></pre>
+<h2 id="function-parameters">Function parameters</h2>
+<p>You can also pass parameters to the function you are calling. This is an advanced feature that requires you to understand how the target function expects its parameters to be passed. In MindControl, parameters are passed through a single pointer. You can arrange your parameters in a structure, store them in memory (e.g. using <code>Store&lt;T&gt;</code>), and then pass the pointer to that memory as the parameter.</p>
+<pre><code class="lang-csharp">struct MyFunctionParams { public int Param1; public float Param2;}
+var myParams = new MyFunctionParams { Param1 = 42, Param2 = 3.14f };
+var paramsPointer = processMemory.Store(myParams).Value.Address;
+var result = processMemory.RunThread(&quot;myprocess.exe+019BAEA1&quot;, paramsPointer);
+result.Value.WaitForCompletion(TimeSpan.FromSeconds(10));
+result.Dispose();
+</code></pre>
+<p>However, this will only work for a specific argument passing convention. What this does is store the pointer in the RCX register (or EBX for 32-bit processes) before calling the function.</p>
+<p>If the function is not designed to accept parameters in this way, you will need to use a different approach, such as writing a wrapper function that prepares the parameters and calls the target function (also called a trampoline).</p>
+<p>Here is an example where we call the <code>GetCurrentDirectoryW</code> function from <code>kernel32.dll</code>, which expects two parameters: a buffer size and a pointer to a buffer where the current directory will be stored.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The following example is complex and requires some understanding of assembly code and registers. For most use cases, you won't need to perform trampoline calls. Don't worry about this unless you need it.</p>
+</div>
+<pre><code class="lang-csharp">// Define the structure that holds the parameters for GetCurrentDirectoryW
+// The attribute prevents the compiler from adding padding bytes, ensuring the structure is packed tightly in memory.
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+struct GetCurrentDirectoryWArgs { public uint BufferSize; public ulong BufferAddress; }
+
+// Reserve memory for the buffer where the current directory will be stored
+var bufferReservation = processMemory.Reserve(2048, false).Value;
+
+// Create an instance of the structure and store it in memory
+var args = new GetCurrentDirectoryWArgs { BufferSize = 2048, BufferAddress = bufferReservation.Address };
+var argsReservation = processMemory.Store(args).Value;
+
+// Retrieve the address of the GetCurrentDirectoryW function
+var kernel32Module = processMemory.GetModule(&quot;kernel32.dll&quot;);
+var functionAddress = kernel32Module!.ReadExportTable().Value[&quot;GetCurrentDirectoryW&quot;];
+
+// Using Iced.Intel, prepare the trampoline code to call GetCurrentDirectoryW
+// Make sure to use &quot;using static Iced.Intel.AssemblerRegisters;&quot; to use the registers in a readable way
+var assembler = new Assembler(64);
+// In x64, the function uses the fastcall calling convention, i.e. RCX and RDX are used for the two arguments.
+// When the thread is created, the thread parameter is in RCX. In this case, our parameter is going to be the
+// address of a GetCurrentDirectoryWArgs struct holding the parameters we want.
+assembler.mov(rax, rcx); // Move the address of the GetCurrentDirectoryWArgs struct to RAX, to free up RCX
+assembler.mov(ecx, __dword_ptr[rax]); // Move the buffer size (first argument) to ECX/RCX
+assembler.mov(rdx, __[rax+4]); // Move the buffer address (second argument) to RDX
+assembler.call(functionAddress.ToUInt64()); // Call GetCurrentDirectoryW
+assembler.ret();
+
+// Store the trampoline code in the target process memory
+// The nearAddress parameter is used to favor allocations close to the kernel32.dll module, for more efficient jumps
+// This code requires the MindControl.Code package
+var codeReservation = processMemory.StoreCode(assembler, nearAddress: kernel32Module.GetRange().Start).Value;
+
+// Now we can run the trampoline code in a new thread, passing the address of the GetCurrentDirectoryWArgs struct
+var threadResult = processMemory.RunThread(codeReservation.Address, argsReservation.Address);
+threadResult.Value.WaitForCompletion(TimeSpan.FromSeconds(10)).ThrowOnFailure();
+
+// Read the resulting string from the allocated buffer
+var resultingString = processMemory.ReadRawString(bufferReservation.Address, Encoding.Unicode, 512).Value;
+Console.WriteLine($&quot;Current Directory: {resultingString}&quot;); // This should print the directory of the target process
+
+// Dispose everything to ensure resources are released
+bufferReservation.Dispose();
+argsReservation.Dispose();
+codeReservation.Dispose();
+threadResult.Dispose();
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/functions.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

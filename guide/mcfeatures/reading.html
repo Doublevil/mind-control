@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Reading memory | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Reading memory | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/reading.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="reading-memory">Reading memory</h1>
+
+<p>This section will explain how to read data from the target process using MindControl.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Reading string values is a more complex topic and is covered in the <a href="strings.html">Manipulating string</a> section of this guide.</p>
+</div>
+<h2 id="reading-numeric-values">Reading numeric values</h2>
+<p>To read numeric values from the target process, you can use the <code>Read&lt;T&gt;</code> method of the <code>ProcessMemory</code> class. This method takes either an address or a pointer path, and returns a result containing either the read value in the asked type, or a failure in case the read operation failed.</p>
+<p>Most numeric types are supported, including <code>int</code>, <code>float</code>, <code>double</code>, <code>long</code>, <code>bool</code>, and others. The read operation will attempt to read the value from the specified address or pointer path in the target process's memory.</p>
+<p>Here are some examples of how to read numeric values from the target process:</p>
+<h3 id="reading-an-integer-value-from-a-pointer-path">Reading an integer value from a pointer path</h3>
+<pre><code class="lang-csharp">var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+// Read an integer value from the specified address. Default to 0 if the read fails.
+int health = processMemory.Read&lt;int&gt;(&quot;GameAssembly.dll+12345678&quot;).ValueOr(0);
+</code></pre>
+<h3 id="reading-a-float-value-from-an-address">Reading a float value from an address</h3>
+<pre><code class="lang-csharp">var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+// Read a float value from the specified address. Default to 0.0f if the read fails.
+float speed = processMemory.Read&lt;float&gt;(0x1A2B3C4).ValueOr(0.0f);
+</code></pre>
+<h2 id="reading-arbitrary-structures">Reading arbitrary structures</h2>
+<p>When you need to read multiple values in the same structure, you can define a struct that represents the data structure you want to read, and then use the same <code>Read&lt;T&gt;</code> method to read the entire structure at once. This is more performant than reading each field individually, especially when using pointer paths.</p>
+<p>In most cases, you won't need all the fields of the structure, so you can define only the fields you are interested in. To handle these cases, you can use <code>[FieldOffset]</code> attributes to specify the offset of each field in the structure. This allows you to define a structure that only contains the fields you need, while still being able to read the entire structure in a single read operation.</p>
+<p>Here are some examples:</p>
+<h3 id="reading-a-custom-unmarked-structure">Reading a custom unmarked structure</h3>
+<pre><code class="lang-csharp">// Define a structure that represents the data you want to read
+// Fields must be in the same order as they are in memory
+struct PlayerStats
+{
+    public int Health;
+    public float Speed;
+    public long Score;
+}
+
+var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+PlayerStats playerStats = processMemory.Read&lt;PlayerStats&gt;(&quot;GameAssembly.dll+12345678&quot;).ValueOrDefault();
+</code></pre>
+<h3 id="reading-a-custom-structure-with-field-offsets">Reading a custom structure with field offsets</h3>
+<pre><code class="lang-csharp">using System.Runtime.InteropServices;
+// Define a structure with explicit field offsets
+// This allows you to read only the fields you are interested in, even if they are not contiguous in memory.
+[StructLayout(LayoutKind.Explicit)] // This is required for field offsets to be respected
+struct PlayerStats
+{
+    [FieldOffset(0x00)] public int Health;
+    [FieldOffset(0x0A)] public float Speed;
+    [FieldOffset(0xF0)] public long Score;
+}
+
+var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+PlayerStats playerStats = processMemory.Read&lt;PlayerStats&gt;(&quot;GameAssembly.dll+12345678&quot;).ValueOrDefault();
+// Remarks: even though only 3 fields are defined, the structure is 0xF8 bytes long, because it covers the whole memory
+// area from 0x00 to the highest field offset plus its length. Don't use this approach if your fields are too far apart.
+</code></pre>
+<h2 id="reading-raw-bytes">Reading raw bytes</h2>
+<p>Sometimes, you may want to read raw bytes, without interpreting them as a specific type. You can use the <code>ReadBytes</code> method of the <code>ProcessMemory</code> class to read a specified number of bytes from a given address or pointer path.</p>
+<pre><code class="lang-csharp">// Read 16 bytes from the specified address in the target process
+byte[] rawData = processMemory.ReadBytes(&quot;GameAssembly.dll+12345678&quot;, 16).ValueOr([]);
+</code></pre>
+<p>There is also a <code>ReadBytesPartial</code> method variant that takes a <code>byte[]</code> array as a parameter, and populates it with the read data. Contrary to <code>ReadBytes</code>, this method will not fail if only some bytes could be read, and will return the number of bytes that were actually read.</p>
+<pre><code class="lang-csharp">// Read up to 2048 bytes into a buffer, and get the number of bytes actually read
+byte[] buffer = new byte[2048];
+int bytesRead = processMemory.ReadBytesPartial(&quot;GameAssembly.dll+12345678&quot;, buffer, 2048).ValueOr(0);
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p><code>ReadBytesPartial</code> is only useful in particular cases, when reading large batches of an unreliable memory area. Most of the time, <code>ReadBytes</code> is simpler to use and preferable.</p>
+</div>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/reading.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

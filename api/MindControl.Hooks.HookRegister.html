@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Enum HookRegister | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Enum HookRegister | MindControl ">
+      
+      <meta name="description" content="Registers or register groups that can be saved and restored in hooks.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_Hooks_HookRegister.md&amp;value=---%0Auid%3A%20MindControl.Hooks.HookRegister%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MindControl.Hooks.HookRegister">
+
+
+
+
+  <h1 id="MindControl_Hooks_HookRegister" data-uid="MindControl.Hooks.HookRegister" class="text-break">
+Enum HookRegister  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl.Code/Hooks/HookRegister.cs/#L8"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MindControl.html">MindControl</a>.<a class="xref" href="MindControl.Hooks.html">Hooks</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MindControl.Code.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Registers or register groups that can be saved and restored in hooks.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public enum HookRegister</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+  <h2 id="fields">Fields
+</h2>
+  <dl class="parameters">
+    <dt id="MindControl_Hooks_HookRegister_Flags"><code>Flags = 0</code></dt>
+  
+  <dd><p>Represents the RFLAGS (in 64-bit) or EFLAGS (in 32-bit) register, holding CPU flags.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_FpuStack"><code>FpuStack = 41</code></dt>
+  
+  <dd><p>Represents all ST registers (ST0-ST7). Since they work as a stack, the whole stack is saved and
+restored coordinatedly. These registers are not normally used. They are shared with the MMX registers (MM0-MM7).
+Do not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm0"><code>Mm0 = 33</code></dt>
+  
+  <dd><p>Represents the MM0 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm1"><code>Mm1 = 34</code></dt>
+  
+  <dd><p>Represents the MM1 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm2"><code>Mm2 = 35</code></dt>
+  
+  <dd><p>Represents the MM2 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm3"><code>Mm3 = 36</code></dt>
+  
+  <dd><p>Represents the MM3 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm4"><code>Mm4 = 37</code></dt>
+  
+  <dd><p>Represents the MM4 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm5"><code>Mm5 = 38</code></dt>
+  
+  <dd><p>Represents the MM5 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm6"><code>Mm6 = 39</code></dt>
+  
+  <dd><p>Represents the MM6 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Mm7"><code>Mm7 = 40</code></dt>
+  
+  <dd><p>Represents the MM7 register. This register is not normally used. It is shared with the FPU stack. Do
+not use both at the same time.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R10"><code>R10 = 11</code></dt>
+  
+  <dd><p>Represents the R10 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R11"><code>R11 = 12</code></dt>
+  
+  <dd><p>Represents the R11 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R12"><code>R12 = 13</code></dt>
+  
+  <dd><p>Represents the R12 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R13"><code>R13 = 14</code></dt>
+  
+  <dd><p>Represents the R13 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R14"><code>R14 = 15</code></dt>
+  
+  <dd><p>Represents the R14 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R15"><code>R15 = 16</code></dt>
+  
+  <dd><p>Represents the R15 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R8"><code>R8 = 9</code></dt>
+  
+  <dd><p>Represents the R8 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_R9"><code>R9 = 10</code></dt>
+  
+  <dd><p>Represents the R9 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RaxEax"><code>RaxEax = 1</code></dt>
+  
+  <dd><p>Represents the RAX (in 64-bit) or EAX (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RbpEbp"><code>RbpEbp = 7</code></dt>
+  
+  <dd><p>Represents the RBP (in 64-bit) or EBP (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RbxEbx"><code>RbxEbx = 2</code></dt>
+  
+  <dd><p>Represents the RBX (in 64-bit) or EBX (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RcxEcx"><code>RcxEcx = 3</code></dt>
+  
+  <dd><p>Represents the RCX (in 64-bit) or ECX (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RdiEdi"><code>RdiEdi = 6</code></dt>
+  
+  <dd><p>Represents the RDI (in 64-bit) or EDI (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RdxEdx"><code>RdxEdx = 4</code></dt>
+  
+  <dd><p>Represents the RDX (in 64-bit) or EDX (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RsiEsi"><code>RsiEsi = 5</code></dt>
+  
+  <dd><p>Represents the RSI (in 64-bit) or ESI (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_RspEsp"><code>RspEsp = 8</code></dt>
+  
+  <dd><p>Represents the RSP (in 64-bit) or ESP (in 32-bit) register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm0"><code>Xmm0 = 17</code></dt>
+  
+  <dd><p>Represents the XMM0 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm1"><code>Xmm1 = 18</code></dt>
+  
+  <dd><p>Represents the XMM1 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm10"><code>Xmm10 = 27</code></dt>
+  
+  <dd><p>Represents the XMM10 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm11"><code>Xmm11 = 28</code></dt>
+  
+  <dd><p>Represents the XMM11 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm12"><code>Xmm12 = 29</code></dt>
+  
+  <dd><p>Represents the XMM12 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm13"><code>Xmm13 = 30</code></dt>
+  
+  <dd><p>Represents the XMM13 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm14"><code>Xmm14 = 31</code></dt>
+  
+  <dd><p>Represents the XMM14 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm15"><code>Xmm15 = 32</code></dt>
+  
+  <dd><p>Represents the XMM15 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm2"><code>Xmm2 = 19</code></dt>
+  
+  <dd><p>Represents the XMM2 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm3"><code>Xmm3 = 20</code></dt>
+  
+  <dd><p>Represents the XMM3 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm4"><code>Xmm4 = 21</code></dt>
+  
+  <dd><p>Represents the XMM4 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm5"><code>Xmm5 = 22</code></dt>
+  
+  <dd><p>Represents the XMM5 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm6"><code>Xmm6 = 23</code></dt>
+  
+  <dd><p>Represents the XMM6 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm7"><code>Xmm7 = 24</code></dt>
+  
+  <dd><p>Represents the XMM7 register.</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm8"><code>Xmm8 = 25</code></dt>
+  
+  <dd><p>Represents the XMM8 register (64-bit only).</p>
+</dd>
+    <dt id="MindControl_Hooks_HookRegister_Xmm9"><code>Xmm9 = 26</code></dt>
+  
+  <dd><p>Represents the XMM9 register (64-bit only).</p>
+</dd>
+  </dl>
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl.Code/Hooks/HookRegister.cs/#L8" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

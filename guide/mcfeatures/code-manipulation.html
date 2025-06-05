@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Manipulating code | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Manipulating code | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/code-manipulation.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="manipulating-code">Manipulating code</h1>
+
+<p>This section is a bit more advanced and will explain how to manipulate code in the target process using MindControl.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>This section requires the <code>MindControl.Code</code> package to be installed in addition to the <code>MindControl</code> package.</p>
+</div>
+<h2 id="what-is-code-manipulation">What is code manipulation?</h2>
+<p>Code manipulation refers to the ability to modify the executable code of a running process. This can include removing or changing instructions, injecting new code, or redirecting execution flow. Code manipulation is often used in game hacking, reverse engineering, and debugging scenarios.</p>
+<p>Executable code is stored in the process memory, just like any other data, under the form of instruction bytes called opcodes. These opcodes are executed by the CPU to perform various operations, such as arithmetic calculations, memory access, and control flow changes (jumping to a different instruction, often depending on various conditions).</p>
+<p>Manipulating code can be challenging, because messing up a single bit in an instruction often leads to crashes or unexpected behavior. Injecting new code without modifying the existing code is especially difficult, because you cannot just insert new instructions in the middle of existing code without breaking the flow of execution.</p>
+<h2 id="opcodes">Opcodes</h2>
+<p>Opcodes are the machine-level instructions that the CPU executes. Each opcode corresponds to a specific operation, usually very basic, such as adding two numbers, jumping to a different instruction, or calling a function. Opcodes are represented as byte sequences in memory, and they can vary depending on the CPU architecture (e.g., x86, x64).</p>
+<p>When using a memory hacking tool such as Cheat Engine, you can view the disassembled code, which shows the opcodes in a human-readable format (assembly language). This allows you to see what the code is doing and how it is structured, but it is still very complex to understand, because meaningful operations (like &quot;fire a bullet&quot;) are made of thousands of opcodes, each performing a basic operation that has no obvious meaning by itself.</p>
+<p>Here are some examples of common opcodes in x64 architecture:</p>
+<pre><code class="lang-assembly">mov eax, 1          ; B8 01 00 00 00 - Move the value 1 into the EAX register.
+add eax, 2          ; 05 02 00 00 00 - Add the value 2 to the EAX register.
+jmp 0x12345678      ; (Bytes depend on multiple factors) - Jump to the instruction at address 0x12345678.
+call 0x12345678     ; (Bytes depend on multiple factors) - Call the function at address 0x12345678
+nop                 ; 90 - No operation, does nothing.
+</code></pre>
+<p>Note that the opcodes are not always the same length, and some operations can take different forms depending on the operands used. For example, the <code>jmp</code> and <code>call</code> instructions can have different byte sequences depending on whether they use absolute addresses, relative offsets, or other addressing modes.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>When diving into code manipulation, it is very advisable to learn the basics of assembly language. This is outside the scope of this guide, but there are many resources available online to help you get started.</p>
+</div>
+<h2 id="removing-code-instructions">Removing code instructions</h2>
+<p>The easiest code manipulation operation is to remove code instructions. This can be done by overwriting the instructions with <code>NOP</code> (No Operation) instructions, which effectively make the code do nothing.</p>
+<p>Fortunately, <code>NOP</code> instructions are only one byte long, so you can replace any instruction with a number of <code>NOP</code> instructions without changing the size of the code. For example, removing a <code>mov eax, 1</code> instruction would be as simple as writing 5 bytes of <code>0x90</code> (the opcode for <code>NOP</code>) at the address of the instruction.</p>
+<p>MindControl provides easy-to-use methods to remove code instructions. The <code>DisableCodeAt</code> method disables a number of instructions at a specific address by overwriting them with <code>NOP</code> instructions.</p>
+<pre><code class="lang-csharp">// Disable 5 instructions, starting at the address &quot;mygame.exe+0168EEA0&quot;
+CodeChange codeRemoval = processMemory.DisableCodeAt(&quot;mygame.exe+0168EEA0&quot;, 5);
+
+// Disposing the CodeChange object will restore the original code
+codeRemoval.Dispose();
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>It is important to consider that removing code instructions can lead to unexpected behavior, especially if the removed instruction is part of a larger control flow structure (like a loop or a conditional statement). If you don't know what the removed instructions do, chances are you will cause a crash.</p>
+</div>
+<h2 id="injecting-code">Injecting code</h2>
+<p>Injecting code is a more advanced operation that allows you to add new instructions to the target process. This can be used to implement custom functionalities or to modify existing behavior.</p>
+<p>Because we cannot just insert new instructions in the middle of existing code and shift everything around, this is usually done through a hook. A hook is a technique that intercepts the execution flow of the target process and redirects it to your custom code, usually redirecting it back to the original code afterward.</p>
+<p>The steps are the following:</p>
+<ol>
+<li>Allocate executable memory in the target process to store the new code. Ideally, the code is located near the original code, to optimize performance.</li>
+<li>Write the new code to the allocated memory.</li>
+<li>Overwrite the original code at the address of the target instruction with a jump instruction that redirects execution to the new code.</li>
+</ol>
+<p>Typically, the code you write at step 2 will end with a jump instruction that redirects execution back to the original code, so that the original code can continue executing after your custom code has run. This is often referred to as a &quot;trampoline&quot;. (So now you know how to build trampoline hooks.)</p>
+<p>If you want to inject code without replacing functionality, the code you write at step 2 may start with whatever instructions end up being replaced by the jump instruction at step 3.</p>
+<p>There is a big issue with that though. The code you write will often use registers and set CPU flags, meaning that, when you redirect execution back to the original code, the state of the CPU will not be what the original code expects. This often leads to crashes or unexpected behavior. To protect against this, you need to save the state of the CPU before executing your custom code, and restore it afterward. This is often done by pushing the registers onto the stack at the start of your custom code, and popping them back at the end.</p>
+<p>We won't go into the details of how to write assembly code for this, but we will see how to do it using MindControl.</p>
+<p>Whatever you want to achieve, MindControl provides three ways to inject code.</p>
+<h3 id="using-insertcodeat">Using InsertCodeAt</h3>
+<p>The <code>InsertCodeAt</code> method of <code>ProcessMemory</code> allows you to inject code at a specific instruction in the target process. It takes either the address of a pointer path to the address of an instruction, and the code to inject. In this variant, the code is going to be executed before the original instruction, and the original instruction will be executed afterward. No instructions are removed, the original code is preserved entirely.</p>
+<p>The code you provide is either a byte array, or a <code>Iced.Intel.Assembler</code> object that contains some code ready to be assembled. The <code>Iced.Intel.Assembler</code> class is part of the Iced project, which is a library for disassembling and assembling x86/x64 code. You can use it to line up assembly code in your .net project that you can then inject through MindControl.</p>
+<pre><code class="lang-csharp">// Create an assembler and write some code to it
+var assembler = new Assembler(64);
+assembler.mov(rcx, value);
+// ...
+
+// Insert the code at the address &quot;mygame.exe+0168EEA0&quot;
+CodeChange codeInjection = processMemory.InsertCodeAt(&quot;mygame.exe+0168EEA0&quot;, assembler).Value;
+
+// Disposing the CodeChange object restores the original code and frees the memory reservation where code was written
+codeInjection.Dispose();
+</code></pre>
+<h3 id="using-replacecodeat">Using ReplaceCodeAt</h3>
+<p>Similarly, the <code>ReplaceCodeAt</code> method allows you to replace one or more instructions with your own code. This is useful when you want to modify the behavior of existing code.</p>
+<p>The differences with <code>InsertCodeAt</code> are:</p>
+<ul>
+<li>You can specify the number of instructions to replace, and the code you provide will be executed <strong>instead of</strong> the original instructions.</li>
+<li>If your code is shorter or equal in size to the original instructions, the original code will simply be overwritten. If your code is longer, a hook will be performed. You don't have to worry about that.</li>
+</ul>
+<pre><code class="lang-csharp">// Create an assembler and write some code to it
+var assembler = new Assembler(64);
+assembler.mov(rcx, value);
+// ...
+
+// Replace 3 instructions, starting at the instruction at address &quot;mygame.exe+0168EEA0&quot;, with the code we just prepared
+CodeChange codeInjection = processMemory.ReplaceCodeAt(&quot;mygame.exe+0168EEA0&quot;, 3, assembler).Value;
+
+// Disposing the CodeChange object restores the original code and frees the memory reservation where code was written
+// (in cases where a hook was necessary).
+codeInjection.Dispose();
+</code></pre>
+<h3 id="using-hook">Using Hook</h3>
+<p>Finally, the <code>Hook</code> method allows you to specify what kind of hook to perform, through a <code>HookOptions</code> object. This method provides slightly more control over the hook, but it's almost always possible to achieve the same result using either <code>InsertCodeAt</code> or <code>ReplaceCodeAt</code>.</p>
+<pre><code class="lang-csharp">// Create an assembler and write some code to it
+var assembler = new Assembler(64);
+assembler.mov(rcx, value);
+// ...
+
+// Create hook options to specify the type of hook to perform
+HookOptions hookOptions = new HookOptions(HookExecutionMode.ExecuteInjectedCodeFirst);
+
+// Hook the instruction at address &quot;mygame.exe+0168EEA0&quot; with the code we just prepared
+CodeChange codeInjection = processMemory.Hook(&quot;mygame.exe+0168EEA0&quot;, assembler, hookOptions).Value;
+
+// Disposing the CodeChange object restores the original code and frees the memory reservation where code was written
+codeInjection.Dispose();
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>It's generally discouraged to use the <code>Hook</code> method directly, as it is more complex and less intuitive than the other two methods. The <code>InsertCodeAt</code> and <code>ReplaceCodeAt</code> methods are usually better and easier to read.</p>
+</div>
+<h3 id="code-isolation">Code isolation</h3>
+<p>As we have previously touched, injecting code can lead to unexpected behavior if the injected code does not properly handle the CPU state. To make sure that your injected code does not interfere with the original code, you have to save and restore the CPU registers and flags before and after executing your custom code.</p>
+<p>You can do this manually by pushing the registers onto the stack at the start of your custom code, and popping them back at the end. However, MindControl provides a more convenient way to do this through an additional parameter in both <code>InsertCodeAt</code> and <code>ReplaceCodeAt</code>.</p>
+<p>This parameter is an array of <code>HookRegister</code>, an enumeration that you can use to list the registers that your code uses. When performing the code manipulation, MindControl will automatically save and restore the state of these registers.</p>
+<p>Additionally, if your injected code is very complex or if you want to make sure that it does not interfere with the original code, you can use one of the pre-made arrays available through the <code>HookRegisters</code> static class. For example, <code>HookRegisters.AllCommonRegisters</code> is a pre-made array of all commonly used registers, and using it in a code manipulation operation will almost always guarantee that your code does not interfere with the original code.</p>
+<p>In performance-critical scenarios, you should try to list only the registers that your code actually uses, to avoid the overhead of saving and restoring unnecessary registers.</p>
+<h4 id="example-using-a-few-registers">Example using a few registers</h4>
+<pre><code class="lang-csharp">// Save and restore the state of the RCX and RBX registers, and the CPU flags
+CodeChange codeInjection = processMemory.InsertCodeAt(&quot;mygame.exe+0168EEA0&quot;, assembler,
+    HookRegister.RcxEcx, HookRegister.RbxEbx, HookRegister.Flags).Value;
+</code></pre>
+<h4 id="example-using-all-common-registers">Example using all common registers</h4>
+<pre><code class="lang-csharp">// Using all common registers is a catch-all solution, but runs slower
+CodeChange codeInjection = processMemory.InsertCodeAt(&quot;mygame.exe+0168EEA0&quot;, assembler,
+    HookRegisters.AllCommonRegisters).Value;
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>In the <code>HookRegister</code> enumeration, x64 and x86 versions of the same register are grouped together, because MindControl is not compiled against a specific architecture. For example, <code>HookRegister.RcxEcx</code> refers to the x64 <code>RCX</code> register if your target process is x64, or the x86 <code>ECX</code> register if your target process is x86.</p>
+</div>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/code-manipulation.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

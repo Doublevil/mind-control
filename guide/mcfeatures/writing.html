@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Writing to memory | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Writing to memory | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/writing.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="writing-to-memory">Writing to memory</h1>
+
+<p>This section will guide you through writing to memory in a target process using <code>MindControl</code>.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Writing string values is a more complex topic and is covered in the <a href="strings.html">Manipulating string</a> section of this guide.</p>
+</div>
+<h2 id="writing-numeric-values">Writing numeric values</h2>
+<p>To write numeric values to the target process, you can use the <code>Write</code> method of the <code>ProcessMemory</code> class. This method takes either an address or a pointer path, and the value to write, and returns a result indicating whether the write operation was successful.</p>
+<p>Here are some examples of how to write numeric values to the target process:</p>
+<h3 id="writing-an-integer-value-to-a-pointer-path">Writing an integer value to a pointer path</h3>
+<pre><code class="lang-csharp">var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+bool success = processMemory.Write(&quot;GameAssembly.dll+12345678&quot;, 100).IsSuccess;
+</code></pre>
+<h3 id="writing-a-float-value-to-an-address">Writing a float value to an address</h3>
+<pre><code class="lang-csharp">var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+bool success = processMemory.Write(0x1A2B3C4, 3.14f).IsSuccess;
+</code></pre>
+<h2 id="writing-arbitrary-structures">Writing arbitrary structures</h2>
+<p>Just like when reading, you can define a struct that represents the data structure you want to write, and then use the <code>Write&lt;T&gt;</code> method to write the entire structure at once. This is more efficient than writing each field individually.</p>
+<p>Here are some examples:</p>
+<h3 id="writing-a-custom-unmarked-structure">Writing a custom unmarked structure</h3>
+<pre><code class="lang-csharp">// Define a structure that represents the data you want to write
+// Fields must be in the same order as they are in memory
+struct PlayerStats
+{
+    public int Health;
+    public float Speed;
+    public long Score;
+}
+var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+bool success = processMemory.Write(&quot;GameAssembly.dll+12345678&quot;, new PlayerStats { Health = 100, Speed = 5.0f, Score = 1000 }).IsSuccess;
+</code></pre>
+<h3 id="writing-a-custom-structure-with-field-offsets">Writing a custom structure with field offsets</h3>
+<pre><code class="lang-csharp">using System.Runtime.InteropServices;
+// See the previous section for more details on how to define structures with field offsets.
+[StructLayout(LayoutKind.Explicit)]
+struct PlayerStats
+{
+    [FieldOffset(0x00)] public int Health;
+    [FieldOffset(0x0A)] public float Speed;
+    [FieldOffset(0xF0)] public long Score;
+}
+var processMemory = MindControl.ProcessMemory.OpenProcessByName(&quot;MyTargetProcess&quot;).Value;
+bool success = processMemory.Write(&quot;GameAssembly.dll+12345678&quot;, new PlayerStats { Health = 100, Speed = 5.0f, Score = 1000 }).IsSuccess;
+</code></pre>
+<h2 id="writing-raw-bytes">Writing raw bytes</h2>
+<p>If you need to write raw bytes to a specific address or pointer path, you can use the <code>WriteBytes</code> method. This method takes a byte array and writes it to the specified location in the target process.</p>
+<pre><code class="lang-csharp">byte[] dataToWrite = new byte[] { 0x90, 0x90, 0x90 };
+bool success = processMemory.WriteBytes(&quot;GameAssembly.dll+12345678&quot;, dataToWrite).IsSuccess;
+</code></pre>
+<h2 id="memory-protection-strategies">Memory protection strategies</h2>
+<p>All writing methods in <code>MindControl</code> have an additional parameter that allows you to specify how to handle memory protection. There are three options:</p>
+<ul>
+<li><code>MemoryProtectionStrategy.Ignore</code>: No protection removal. The write will fail if the memory is protected, but if you know it isn't, this is the most performant option.</li>
+<li><code>MemoryProtectionStrategy.Remove</code>: Removes the memory protection before writing. Memory protection will not be restored after the write operation, which may cause issues in some cases, but may be more performant than restoring it.</li>
+<li><code>MemoryProtectionStrategy.RemoveAndRestore</code>: Temporarily removes the memory protection to allow writing, then restores it. This is the safest, but least performant option.</li>
+</ul>
+<p>The default strategy is <code>MemoryProtectionStrategy.RemoveAndRestore</code>, for best compatibility. You can change this by passing a different strategy to the <code>Write</code> method.</p>
+<pre><code class="lang-csharp">bool success = processMemory.Write(&quot;GameAssembly.dll+12345678&quot;, 100, MemoryProtectionStrategy.Ignore).IsSuccess;
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/mcfeatures/writing.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Introduction | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Introduction | MindControl ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/introduction.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="introduction">Introduction</h1>
+
+<p>This guide is intended to demonstrate how to use the <code>MindControl</code> .net library to interact with the memory of a running process. However, to make sure your understanding of the basics of memory hacking is aligned with the library's design, we will first cover some fundamental concepts. If you are new to memory hacking, this guide will help you get started on your journey. If you are already familiar with process hacking, you can skip ahead to the <a href="project-setup/creating-mc-project.html">Project setup</a> section.</p>
+<h2 id="what-is-memory-hacking-and-what-can-we-do-with-it">What is memory hacking and what can we do with it?</h2>
+<p>Memory hacking is basically manipulating the internal values used by a process that is running on your system, while it's running.</p>
+<p>Every program that runs on your system is loaded into memory. This memory stores everything the program needs to run, including the values of variables, the code that is being executed, and the data that is being processed. By changing these values, you can manipulate the behavior of the program.</p>
+<p>Usually, each program minds its own business and has a separate set of memory. However, using system functions, you can read and write to the memory of any process running on your system. A memory hacking program will make use of these functions to access the memory of its target program.</p>
+<p>This technique is often used in gaming, to build all sorts of tools, such as game trainers, cheats, bots, overlays, and automation tools. Mods can also be built using memory hacking, although they typically also require other skills. It can also be used in general-purpose software, for debugging, reverse engineering, security testing, and more.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Just a reminder before you keep going: <strong>using memory hacking for cheating in online games or to gain any kind of advantage (no matter how small) in a competitive space is wrong and will get you banned</strong>. Always respect the rules of the games you play. Keep it fair and don't ruin the fun for others. <strong>If you ignore this, I will do my best to shut down your project.</strong></p>
+</div>
+<h2 id="what-mindcontrol-is-about">What MindControl is about</h2>
+<p>MindControl is a .net library that provides a set of tools to interact with the memory of a running process. It allows you to easily build memory hacking programs that read and write values, search for patterns, inject code, and more. It's designed to be simple to use, reliable, and efficient.</p>
+<p>As stated before, operating systems like Windows provide functions to do that already. However, these functions are low-level, complex to understand and cumbersome to use. MindControl provides an additional layer on top of that, that considerably simplifies the process.</p>
+<h2 id="next-step">Next step</h2>
+<p>The next section will be about gathering everything you need to follow this guide.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/introduction.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

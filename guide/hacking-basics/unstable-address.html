@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Unstable addresses | MindControl </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Unstable addresses | MindControl ">
+      
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../toc.html">
+      <meta name="docfx:tocrel" content="../toc.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/hacking-basics/unstable-address.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="MindControl">
+            MindControl
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="unstable-addresses">Unstable addresses</h1>
+
+<p>In the previous section, we learned how to find a memory address that stores a specific value. We found the address that stores the coin count in the Slime Rancher demo, and we changed it to a different value. This is a very basic form of memory hacking, but it's already quite powerful. However, there is a catch.</p>
+<h2 id="the-issue">The issue</h2>
+<p>With the address of the coin count still in the address list in Cheat Engine, try to go back to the main menu of the game, and then start a new game. You will notice that the value at this address doesn't change. It's stuck with the same old value, and won't reflect the coin count in our new game.</p>
+<p>Worse, if you exit the demo (close it entirely) and then start it back up and load into a new game (don't forget to re-attach to the game in Cheat Engine every time you do that!), the address will either be invalid (the value will show up as <code>??</code>), or it will hold a value that doesn't have anything to do with the coin count.</p>
+<p>If you try to find the address again using the same technique we used in the previous section, you will notice that it's not the same as before. It's a different address.</p>
+<p><strong>Why is that?</strong></p>
+<p>Programs manipulate structures in memory all the time. They allocate memory for variables, use it, and then deallocate it. They move things around, they change the size of structures, they create new structures, and they destroy them. This is all part of the normal operation of a program.</p>
+<p>When a program does this, the memory addresses that we found before can be discarded or reused for other purposes. The address that holds the coin count is now different because the memory of the game has been shuffled around when we started a new game or booted up the game again. This is why we call these addresses <strong>unstable</strong>.</p>
+<p>To solve this issue, we need to understand two key concepts: <strong>structures</strong> and <strong>pointers</strong>.</p>
+<h2 id="understanding-structures">Understanding structures</h2>
+<p>A structure is a set of variables that are grouped together under a single name. Each variable in the structure is called a member. If you think about it in terms of object-oriented programming, a structure is like a class, and a member is like a field. Members are always organized in the same order across different structures of the same type, and will always be of the same length.</p>
+<p>Let's take some examples and define the following two structures (these are simplified examples, not actual structures in Slime Rancher or any other game):</p>
+<p><em>The <code>Player</code> structure</em></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>healthPoints</td>
+<td>float</td>
+<td>0x08</td>
+</tr>
+<tr>
+<td>weaponHeld</td>
+<td>pointer</td>
+<td>0x10</td>
+</tr>
+<tr>
+<td>coinCount</td>
+<td>4-byte int</td>
+<td>0x18</td>
+</tr>
+</tbody>
+</table>
+<p><em>The <code>Weapon</code> structure</em></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Offset</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cost</td>
+<td>4-byte int</td>
+<td>0x08</td>
+</tr>
+<tr>
+<td>damage</td>
+<td>4-byte int</td>
+<td>0x0C</td>
+</tr>
+<tr>
+<td>swingTime</td>
+<td>float</td>
+<td>0x10</td>
+</tr>
+</tbody>
+</table>
+<p>In these tables, the <code>Offset</code> column tells us where the field is located within the structure. For example, if we know the address of a <code>Player</code> structure, we can find the <code>coinCount</code> field by adding <code>0x18</code> (hexadecimal notation for the number <code>24</code>) to the address, no matter where the <code>Player</code> structure itself is located. Doing a little bit of math, if we know our <code>Player</code> structure starts at the address <code>182F359202C</code>, the <code>coinCount</code> member will be at the address <code>182F3592034</code>.</p>
+<p>Now, you'll notice that the <code>weaponHeld</code> member is a pointer, which is the second concept we need to understand to solve our issue.</p>
+<h2 id="understanding-pointers">Understanding pointers</h2>
+<h3 id="what-is-a-pointer">What is a pointer?</h3>
+<p>A pointer is simply a variable that holds the address of another variable. It's like a note that says &quot;the value you are looking for is at this address&quot;. In our examples, the <code>weaponHeld</code> member of the <code>Player</code> structure is a pointer to a <code>Weapon</code> structure. This means that the <code>weaponHeld</code> member holds the address of a <code>Weapon</code> structure, and not the <code>Weapon</code> structure itself.</p>
+<p>Looking at the offsets and value types, we can see that a <code>Weapon</code> structure is 24 bytes long. Regardless of that, the <code>Player</code> structure can have a <code>weaponHeld</code> member that is always 8 bytes long, because it only holds the address of the <code>Weapon</code> structure. The <code>Weapon</code> structure itself can be located anywhere else in memory.</p>
+<h3 id="how-do-pointers-solve-our-issue">How do pointers solve our issue?</h3>
+<p>Let's take a look back at our &quot;weapon held&quot; example. Say we want to track our current weapon damage. We have found that the address of the <code>Weapon</code> structure for the weapon we are currently holding is <code>182F3593120</code>. Using the offset, we know that the damage value is at <code>182F359312C</code>. Now imagine that, in game, we equip a different weapon.</p>
+<p>What happens in that case is that the game will update the value of the <code>weaponHeld</code> member in our <code>Player</code> structure to hold the address of the new weapon structure (this can also be called &quot;pointing to&quot; the new weapon structure). The previously held <code>Weapon</code> structure will not be touched.</p>
+<p>When we look at our <code>182F359312C</code> address, we still see the same damage value as before, because it still is a field within the old <code>Weapon</code> structure. Even worse, if it doesn't need the old weapon anymore, maybe the game will discard the old structure, and the address may become invalid, or be reused to hold different data.</p>
+<p><img src="../../images/il-pointers-firstscenario.gif" alt="An illustration describing the scenario when observing a fixed address"><br>
+<em>We observe the same address, regardless of the change, so we still get the same value of 5 after the weapon changes.</em></p>
+<p>Now, let's say that instead of having a fixed <code>182F359312C</code> address that we watch, we first read the address of the <code>weaponHeld</code> member in the <code>Player</code> structure, to know where the weapon structure is stored. Then, we can add the <code>damage</code> member offset (<code>+C</code>) to that address, and we will always get the correct damage value, no matter how many times the game moves things around in memory.</p>
+<p><img src="../../images/il-pointers-secondscenario.gif" alt="An illustration describing the scenario when using pointers"><br>
+<em>We observe the pointer to the equipped weapon, and follow it with an added +0C offset to get to the damage value. This time, we get the correct value of 17 after the weapon changes.</em></p>
+<p>The thing is, the <code>Player</code> structure itself can move around, especially if we do things like going back to the menu and loading back in, or even worse, close the game and start it back again. So, following the same logic, we have to find a pointer within a different structure that holds the address of the <code>Player</code> structure. Maybe there's a <code>GameManager</code> structure that has a <code>player</code> pointer member. And then maybe there's a <code>Game</code> structure that has a <code>gameManager</code> pointer member. And maybe that <code>GameManager</code> structure is always located at the same address, relative to a module (more on that later).</p>
+<p>If we can figure out this whole chain, we can follow the pointer path:</p>
+<blockquote>
+<p><code>Game</code> structure address + <code>gameManager</code> member offset → <code>GameManager</code> structure address + <code>player</code> member offset → <code>Player</code> structure address + <code>weaponHeld</code> member offset → weapon structure address + <code>damage</code> member offset</p>
+</blockquote>
+<p>And that pointer path would always be stable, meaning that no matter how much the game moves things around in memory, and no matter how many times we restart the game, we can always get to the <code>damage</code> member of the weapon we are holding.</p>
+<p><img src="../../images/il-pointerchain.png" alt="An illustration showing a pointer path with a stable address"><br>
+<em>We observe the stable address <code>game.exe + 1FC08</code> (we'll learn more about these in the next section) that starts a sequence of pointers, that we follow with known offsets added each time, to finally get to the damage value of the weapon held by the player.</em></p>
+<p>The key to these pointer paths is to find the first address in the chain that never moves around. This is called a <strong>stable address</strong>.</p>
+<h2 id="next-part">Next part</h2>
+<p>In the next section, we will learn techniques to find stable addresses and follow pointer paths to get to the values we want to read or write. This will allow us to build memory hacking programs that are robust and reliable, even when the game moves things around in memory.</p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/docs/guide/hacking-basics/unstable-address.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
