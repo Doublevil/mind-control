@@ -123,9 +123,9 @@ public partial class ProcessMemory
             return new IncompatibleBitnessPointerFailure(address);
         if (value == null)
             return new InvalidArgumentFailure(nameof(value), "The value to write cannot be null.");
-        if (value is IntPtr ptr && ptr.ToInt64() > uint.MaxValue)
+        if (!Is64Bit && value is IntPtr ptr && ptr.ToInt64() > uint.MaxValue)
             return new IncompatibleBitnessPointerFailure((UIntPtr)ptr);
-        if (value is UIntPtr uptr && uptr.ToUInt64() > uint.MaxValue)
+        if (!Is64Bit && value is UIntPtr uptr && uptr.ToUInt64() > uint.MaxValue)
             return new IncompatibleBitnessPointerFailure(uptr);
         
         return value switch
