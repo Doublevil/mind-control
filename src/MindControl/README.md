@@ -9,15 +9,21 @@ MindControl is a .net hacking library for Windows that allows you to manipulate 
 Here is a quick example to get you started.
 
 ```csharp
-var myGame = ProcessMemory.OpenProcess("mygame"); // A process with this name must be running
+var myGame = ProcessMemory.OpenProcess("mygame").Result; // A process with this name must be running
 var hpAddress = new PointerPath("mygame.exe+1D005A70,1C,8"); // See the docs for how to determine these
 
 // Read values
-int currentHp = myGame.ReadInt(hpAddress);
+var currentHp = myGame.Read<int>(hpAddress);
 Console.WriteLine($"You have {currentHp}HP"); // Example output: "You have 50HP"
 
 // Write values
-myGame.WriteInt(hpAddress, 9999);
+myGame.Write(hpAddress, 9999);
+
+// Find the first occurrence of a pattern in memory, with wildcard bytes
+UIntPtr targetAddress = myGame.FindBytes("4D 79 ?? ?? ?? ?? ?? ?? 56 61 6C 75 65")
+    .FirstOrDefault();
+
+// ... And many more features
 ```
 
-See [the full documentation on GitHub](https://github.com/Doublevil/mind-control) for more info.
+See [the documentation](https://doublevil.github.io/mind-control/guide/introduction.html) to get started, whether you already dabble in memory hacking or are completely new to it.

@@ -1,5 +1,7 @@
 # MindControl
 
+[![NuGet Version](https://img.shields.io/nuget/v/mindcontrol?style=for-the-badge)](https://www.nuget.org/packages/mindcontrol)[![Downloads](https://img.shields.io/nuget/dt/mindcontrol?style=for-the-badge)](https://www.nuget.org/packages/mindcontrol)[![License](https://img.shields.io/github/license/Doublevil/mind-control?style=for-the-badge)](https://github.com/Doublevil/mind-control/blob/main/LICENSE)
+
 MindControl is a .net hacking library for Windows that allows you to manipulate a game or any other process and its internal memory.
 
 > **DO NOT use this library to cheat in online competitive games. Cheaters ruins the fun for everyone. If you ignore this warning, I will do my best to shut down your project.**
@@ -26,7 +28,7 @@ UIntPtr targetAddress = myGame.FindBytes("4D 79 ?? ?? ?? ?? ?? ?? 56 61 6C 75 65
 // ... And many more features
 ```
 
-See [the documentation](doc/GetStarted.md) to get started, whether you already dabble in memory hacking or are completely new to it.
+See [the documentation](https://doublevil.github.io/mind-control/guide/introduction.html) to get started, whether you already dabble in memory hacking or are completely new to it.
 
 ## Features
 

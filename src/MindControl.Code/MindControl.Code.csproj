@@ -1,35 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <RootNamespace>MindControl</RootNamespace>
-        <Title>MindControl.Code</Title>
-        <RepositoryUrl>https://github.com/Doublevil/mind-control</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <Version>1.0.0-alpha-25053101</Version>
-    </PropertyGroup>
-
-    <!-- Package-related features -->
-    <PropertyGroup>
-        <EnablePackageValidation>true</EnablePackageValidation>
-        <GenerateDocumentationFile>True</GenerateDocumentationFile>
-        <Authors>Doublevil</Authors>
-        <Description>An extension library for MindControl that gives access to advanced ASM code-related features like
-            hooks.</Description>
-        <PackageTags>library, process, memory, win32, game, hacking, hack, trainer, cheat, cheating</PackageTags>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageIcon>icon.png</PackageIcon>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-    </PropertyGroup>
     
-    <ItemGroup>
-      <ProjectReference Include="..\MindControl\MindControl.csproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MindControl</RootNamespace>
+    <Title>MindControl.Code</Title>
+    <RepositoryUrl>https://github.com/Doublevil/mind-control</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>1.0.0-alpha-25060601</Version>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Iced" Version="1.21.0" />
-    </ItemGroup>
+  <!-- Package-related features -->
+  <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>Doublevil</Authors>
+    <Description>An extension library for MindControl that gives access to advanced code-related features like hooks.</Description>
+    <PackageTags>library, process, memory, win32, game, hacking, hack, trainer, cheat, cheating</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+    
+  <ItemGroup>
+    <ProjectReference Include="..\MindControl\MindControl.csproj" />
+  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Iced" Version="1.21.0" />
+  </ItemGroup>
 </Project>
