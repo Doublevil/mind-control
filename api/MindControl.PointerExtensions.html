@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-05/apiSpec/new?filename=MindControl_PointerExtensions.md&amp;value=---%0Auid%3A%20MindControl.PointerExtensions%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-06/apiSpec/new?filename=MindControl_PointerExtensions.md&amp;value=---%0Auid%3A%20MindControl.PointerExtensions%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -89,7 +89,7 @@
 
 
   <h1 id="MindControl_PointerExtensions" data-uid="MindControl.PointerExtensions" class="text-break">
-Class PointerExtensions  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerExtensions.cs/#L6"><i class="bi bi-code-slash"></i></a>
+Class PointerExtensions  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-06/src/MindControl/Addressing/PointerExtensions.cs/#L6"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -153,11 +153,52 @@ Class PointerExtensions  <a class="header-action link-secondary" title="View sou
 </h2>
 
 
+  <a id="MindControl_PointerExtensions_AlignToClosest_" data-uid="MindControl.PointerExtensions.AlignToClosest*"></a>
+
+  <h3 id="MindControl_PointerExtensions_AlignToClosest_System_UIntPtr_System_UInt32_" data-uid="MindControl.PointerExtensions.AlignToClosest(System.UIntPtr,System.UInt32)">
+  AlignToClosest(nuint, uint)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-06/src/MindControl/Addressing/PointerExtensions.cs/#L49"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Aligns the given address to the closest boundary of the specified alignment.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static nuint AlignToClosest(this nuint address, uint alignment)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>address</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd><p>The address to align.</p>
+</dd>
+    <dt><code>alignment</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a></dt>
+    <dd><p>The alignment boundary to align to, must be a power of two.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uintptr">nuint</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
   <a id="MindControl_PointerExtensions_DistanceTo_" data-uid="MindControl.PointerExtensions.DistanceTo*"></a>
 
   <h3 id="MindControl_PointerExtensions_DistanceTo_System_UIntPtr_System_UIntPtr_" data-uid="MindControl.PointerExtensions.DistanceTo(System.UIntPtr,System.UIntPtr)">
   DistanceTo(nuint, nuint)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerExtensions.cs/#L18"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-06/src/MindControl/Addressing/PointerExtensions.cs/#L18"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Determines the distance between two pointers, without wrap-around.</p>
@@ -203,7 +244,7 @@ distance between 0 and <a class="xref" href="https://learn.microsoft.com/dotnet/
 
   <h3 id="MindControl_PointerExtensions_GetRangeAround_System_UIntPtr_System_UInt64_" data-uid="MindControl.PointerExtensions.GetRangeAround(System.UIntPtr,System.UInt64)">
   GetRangeAround(nuint, ulong)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerExtensions.cs/#L32"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-06/src/MindControl/Addressing/PointerExtensions.cs/#L32"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets a range of memory around the given address, with the specified size and without wrap-around.</p>
@@ -246,7 +287,7 @@ beginning or end of the address space.</p>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-05/src/MindControl/Addressing/PointerExtensions.cs/#L6" class="edit-link">Edit this page</a>
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-06/src/MindControl/Addressing/PointerExtensions.cs/#L6" class="edit-link">Edit this page</a>
         </div>
 
 

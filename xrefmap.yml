@@ -3109,6 +3109,22 @@ references:
   commentId: T:MindControl.PointerExtensions
   fullName: MindControl.PointerExtensions
   nameWithType: PointerExtensions
+- uid: MindControl.PointerExtensions.AlignToClosest(System.UIntPtr,System.UInt32)
+  name: AlignToClosest(nuint, uint)
+  href: api/MindControl.PointerExtensions.html#MindControl_PointerExtensions_AlignToClosest_System_UIntPtr_System_UInt32_
+  commentId: M:MindControl.PointerExtensions.AlignToClosest(System.UIntPtr,System.UInt32)
+  name.vb: AlignToClosest(UIntPtr, UInteger)
+  fullName: MindControl.PointerExtensions.AlignToClosest(nuint, uint)
+  fullName.vb: MindControl.PointerExtensions.AlignToClosest(System.UIntPtr, UInteger)
+  nameWithType: PointerExtensions.AlignToClosest(nuint, uint)
+  nameWithType.vb: PointerExtensions.AlignToClosest(UIntPtr, UInteger)
+- uid: MindControl.PointerExtensions.AlignToClosest*
+  name: AlignToClosest
+  href: api/MindControl.PointerExtensions.html#MindControl_PointerExtensions_AlignToClosest_
+  commentId: Overload:MindControl.PointerExtensions.AlignToClosest
+  isSpec: "True"
+  fullName: MindControl.PointerExtensions.AlignToClosest
+  nameWithType: PointerExtensions.AlignToClosest
 - uid: MindControl.PointerExtensions.DistanceTo(System.UIntPtr,System.UIntPtr)
   name: DistanceTo(nuint, nuint)
   href: api/MindControl.PointerExtensions.html#MindControl_PointerExtensions_DistanceTo_System_UIntPtr_System_UIntPtr_
