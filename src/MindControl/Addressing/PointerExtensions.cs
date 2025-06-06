@@ -40,4 +40,22 @@ public static class PointerExtensions
         ulong end = ulong.MaxValue - addressValue <= halfSize ? ulong.MaxValue : addressValue + halfSize;
         return new MemoryRange(new UIntPtr(start), new UIntPtr(end));
     }
+    
+    /// <summary>
+    /// Aligns the given address to the closest boundary of the specified alignment.
+    /// </summary>
+    /// <param name="address">The address to align.</param>
+    /// <param name="alignment">The alignment boundary to align to, must be a power of two.</param>
+    public static UIntPtr AlignToClosest(this UIntPtr address, uint alignment)
+    {
+        ulong addressValue = address.ToUInt64();
+        ulong remainder = addressValue % alignment;
+    
+        // If already aligned, return as is
+        if (remainder == 0)
+            return address;
+    
+        // Round up to the next page boundary
+        return (UIntPtr)(addressValue + (alignment - remainder));
+    }
 }

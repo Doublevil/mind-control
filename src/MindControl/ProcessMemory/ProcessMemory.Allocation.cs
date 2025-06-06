@@ -70,123 +70,226 @@ public partial class ProcessMemory
     /// <returns>A result holding either the memory range found, or a failure.</returns>
     /// <remarks>The reason why the method performs the allocation itself is because we cannot know if the range can
     /// actually be allocated without performing the allocation.</remarks>
-    private Result<MemoryRange> FindAndAllocateFreeMemory(ulong sizeNeeded,
-        bool forExecutableCode, MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
+    private Result<MemoryRange> FindAndAllocateFreeMemory(ulong sizeNeeded, bool forExecutableCode,
+        MemoryRange? limitRange = null, UIntPtr? nearAddress = null)
     {
-        var maxRange = _osService.GetFullMemoryRange(Is64Bit);
-        var actualRange = limitRange == null ? maxRange : maxRange.Intersect(limitRange.Value);
-
-        // If the given range is not within the process applicative memory, return null
-        if (actualRange == null)
-            return new LimitRangeOutOfBoundsFailure(maxRange);
-
-        // Compute the minimum multiple of the system page size that can fit the size needed
-        // This will be the maximum size that we are going to allocate
+        // Calculate the required page-aligned size
         uint pageSize = _osService.GetPageSize();
         bool isDirectMultiple = sizeNeeded % pageSize == 0;
-        uint minFittingPageSize = (uint)(sizeNeeded / pageSize + (isDirectMultiple ? (ulong)0 : 1)) * pageSize;
+        uint requiredSize = (uint)(sizeNeeded / pageSize + (isDirectMultiple ? (ulong)0 : 1)) * pageSize;
         
-        // Browse through regions in the memory range to find the first one that satisfies the size needed
-        // If a near address is specified, start there. Otherwise, start at the beginning of the memory range.
-        // For near address search, we are going to search back and forth around the address, which complicates the
-        // process a bit. It means we have to keep track of both the next lowest address and next highest address.
-        var nextAddress = nearAddress ?? actualRange.Value.Start;
-        var nextRegionStartAddress = nextAddress;
-        var previousRegionEndAddress = nextAddress;
-        var highestAddressAttempted = nextAddress;
-        var lowestAddressAttempted = nextAddress;
-        bool goingForward = true;
-        
-        MemoryRange? freeRange = null;
-        MemoryRangeMetadata currentMetadata;
-        while (nextAddress.ToUInt64() <= actualRange.Value.End.ToUInt64()
-            && nextAddress.ToUInt64() >= actualRange.Value.Start.ToUInt64()
-            && (currentMetadata = _osService.GetRegionMetadata(ProcessHandle, nextAddress)
-                .ValueOrDefault()).Size.ToUInt64() > 0)
+        // With no constraints, let the OS decide where to allocate
+        if (limitRange == null && nearAddress == null)
         {
-            nextRegionStartAddress = (UIntPtr)Math.Max(nextRegionStartAddress.ToUInt64(),
-                nextAddress.ToUInt64() + currentMetadata.Size.ToUInt64());
-            previousRegionEndAddress = (UIntPtr)Math.Min(previousRegionEndAddress.ToUInt64(),
-                currentMetadata.StartAddress.ToUInt64() - 1);
-            highestAddressAttempted = Math.Max(highestAddressAttempted, nextAddress);
-            lowestAddressAttempted = Math.Min(lowestAddressAttempted, nextAddress);
-            
-            var currentAddress = nextAddress;
-            
-            // If the current region cannot be used, reinitialize the current free range and keep iterating
-            if (!currentMetadata.IsFree)
-            {
-                freeRange = null;
-                
-                // In a near address search, we may change direction there depending on which next address is closest.
-                if (nearAddress != null)
-                {
-                    var forwardDistance = nearAddress.Value.DistanceTo(nextRegionStartAddress);
-                    var backwardDistance = nearAddress.Value.DistanceTo(previousRegionEndAddress);
-                    goingForward = forwardDistance <= backwardDistance
-                        && nextRegionStartAddress.ToUInt64() <= actualRange.Value.End.ToUInt64();
-                }
-                
-                // Travel to the next region
-                nextAddress = goingForward ? nextRegionStartAddress : previousRegionEndAddress;
-                continue;
-            }
-            
-            // Build a range with the current region
-            // Extend the free range if it's not null, so that we can have ranges that span across multiple regions.
-            if (goingForward)
-            {
-                freeRange = new MemoryRange(freeRange?.Start ?? currentAddress,
-                    (UIntPtr)(currentMetadata.StartAddress.ToUInt64() + currentMetadata.Size.ToUInt64() - 1));
-            }
-            else
-            {
-                freeRange = new MemoryRange(currentMetadata.StartAddress,
-                    (UIntPtr)(freeRange?.End.ToUInt64() ?? currentMetadata.StartAddress.ToUInt64()
-                        + currentMetadata.Size.ToUInt64() - 1));
-            }
+            var allocResult = _osService.AllocateMemory(ProcessHandle,
+                (int)requiredSize, MemoryAllocationType.Commit | MemoryAllocationType.Reserve,
+                forExecutableCode ? MemoryProtection.ExecuteReadWrite : MemoryProtection.ReadWrite);
 
-            if (freeRange.Value.GetSize() >= sizeNeeded)
-            {
-                // The free range is large enough.
-                // If the free range is larger than the size needed, we will allocate the minimum multiple of the
-                // system page size that can fit the requested size.
-                ulong neededSize = Math.Min(freeRange.Value.GetSize(), minFittingPageSize);
-                var finalRange = MemoryRange.FromStartAndSize(freeRange.Value.Start, neededSize);
-                
-                // Even if they are free, some regions cannot be allocated.
-                // The only way to know if a region can be allocated is to try to allocate it.
-                var allocateResult = _osService.AllocateMemory(ProcessHandle, finalRange.Start,
-                    (int)finalRange.GetSize(), MemoryAllocationType.Commit | MemoryAllocationType.Reserve,
-                    forExecutableCode ? MemoryProtection.ExecuteReadWrite : MemoryProtection.ReadWrite);
-                
-                // If the allocation succeeded, return the range.
-                if (allocateResult.IsSuccess)
-                    return finalRange;
-                
-                // The allocation failed. Reset the current range and keep iterating.
-                freeRange = null;
-                
-                // In a near address search, we may change direction there depending on which next address is closest.
-                var nextAddressForward = highestAddressAttempted + pageSize;
-                var nextAddressBackward = lowestAddressAttempted - pageSize;
-                if (nearAddress != null)
-                {
-                    var forwardDistance = nearAddress.Value.DistanceTo(nextAddressForward);
-                    var backwardDistance = nearAddress.Value.DistanceTo(nextAddressBackward);
-                    goingForward = forwardDistance <= backwardDistance
-                                   && nextRegionStartAddress.ToUInt64() <= actualRange.Value.End.ToUInt64();
-                }
-                
-                // Travel one page size forward or backward
-                nextAddress = goingForward ? nextAddressForward : nextAddressBackward;
+            if (allocResult.IsFailure)
+                return allocResult.Failure;
 
-                continue;
-            }
+            return MemoryRange.FromStartAndSize(allocResult.Value, requiredSize);
         }
 
-        // We reached the end of the memory range and didn't find a suitable free range.
-        return new NoFreeMemoryFailure(actualRange.Value, nextAddress);
+        // Define the search boundaries
+        var maxRange = _osService.GetFullMemoryRange(Is64Bit);
+        var searchRange = limitRange == null ? maxRange : maxRange.Intersect(limitRange.Value);
+        
+        if (searchRange == null)
+            return new LimitRangeOutOfBoundsFailure(maxRange);
+
+        // Determine the starting address for the search
+        UIntPtr startAddress = nearAddress ?? searchRange.Value.Start;
+        
+        // For near address searches, we'll try both directions
+        if (nearAddress != null)
+        {
+            // Try to allocate memory close to the requested address
+            var result = TryAllocateNear(startAddress, requiredSize, pageSize, forExecutableCode, searchRange.Value);
+            if (result.IsSuccess)
+                return result;
+        }
+        else
+        {
+            // When no near address is specified, just scan forward from start to end
+            return AllocateNextFreeMemoryRange(startAddress, searchRange.Value.End, requiredSize, pageSize, forExecutableCode);
+        }
+
+        return new NoFreeMemoryFailure(searchRange.Value, startAddress);
+    }
+
+    /// <summary>
+    /// Attempts to allocate a memory range as close as possible to the specified target address.
+    /// </summary>
+    /// <param name="targetAddress">Target address to allocate memory near.</param>
+    /// <param name="requiredSize">Size of the memory range required.</param>
+    /// <param name="pageSize">Size of the memory pages to use for allocation. This is used to align the addresses.
+    /// </param>
+    /// <param name="forExecutableCode">Set to true if the memory range can be used to store executable code.</param>
+    /// <param name="searchRange">Range that defines the boundaries of the free memory search.</param>
+    private Result<MemoryRange> TryAllocateNear(UIntPtr targetAddress, ulong requiredSize, uint pageSize,
+        bool forExecutableCode, MemoryRange searchRange)
+    {
+        // Try to allocate at the target address first, just in case
+        var directResult = TryAllocateAt(targetAddress, requiredSize, forExecutableCode);
+        if (directResult.IsSuccess)
+            return directResult;
+        
+        var targetRegion = _osService.GetRegionMetadata(ProcessHandle, targetAddress).ValueOrDefault();
+        
+        UIntPtr highAddress = targetAddress.AlignToClosest(pageSize);
+        MemoryRangeMetadata highRegion = highAddress < targetRegion.StartAddress + targetRegion.Size ?
+            targetRegion : GetNextFreeRegion(targetRegion, searchRange, goForward: true).ValueOrDefault();
+        UIntPtr lowAddress = highAddress < pageSize ? 0 : highAddress - pageSize;
+        MemoryRangeMetadata lowRegion = lowAddress >= targetRegion.StartAddress ?
+            targetRegion : GetNextFreeRegion(targetRegion, searchRange, goForward: false).ValueOrDefault();
+        
+        // Track whether we've exhausted either direction
+        bool canGoHigher = highRegion.Size != 0 && highAddress < searchRange.End;
+        bool canGoLower = lowRegion.Size != 0 && lowAddress >= searchRange.Start;
+        
+        while (canGoHigher || canGoLower)
+        {
+            // Try above the target (increasing addresses) if the high address is closer
+            if (canGoHigher &&
+                (!canGoLower || targetAddress.DistanceTo(highAddress) <= targetAddress.DistanceTo(lowAddress)))
+            {
+                var result = TryAllocateAt(highAddress, requiredSize, forExecutableCode);
+                if (result.IsSuccess)
+                    return result;
+                
+                highAddress += pageSize;
+
+                if (highAddress >= highRegion.StartAddress + highRegion.Size)
+                {
+                    var nextRegion = GetNextFreeRegion(highRegion, searchRange, goForward: true);
+                    if (nextRegion.IsFailure)
+                        canGoHigher = false;
+                    else
+                    {
+                        highRegion = nextRegion.Value;
+                        highAddress = highRegion.StartAddress;
+                    }
+                }
+                
+                if (highAddress >= searchRange.End)
+                    canGoHigher = false;
+            }
+            
+            // Try below the target (decreasing addresses) if the low address is closer
+            if (canGoLower &&
+                (!canGoHigher || targetAddress.DistanceTo(lowAddress) <= targetAddress.DistanceTo(highAddress)))
+            {
+                var result = TryAllocateAt(lowAddress, requiredSize, forExecutableCode);
+                if (result.IsSuccess)
+                    return result;
+                
+                lowAddress -= pageSize;
+                
+                if (lowAddress < lowRegion.StartAddress)
+                {
+                    var nextRegion = GetNextFreeRegion(lowRegion, searchRange, goForward: false);
+                    if (nextRegion.IsFailure)
+                        canGoLower = false;
+                    else
+                    {
+                        lowRegion = nextRegion.Value;
+                        lowAddress = lowRegion.StartAddress + lowRegion.Size - pageSize;
+                    }
+                }
+                
+                if (lowAddress < searchRange.Start)
+                    canGoLower = false;
+            }
+        }
+        
+        return new NoFreeMemoryFailure(searchRange, targetAddress);
+    }
+    
+    /// <summary>
+    /// Starting at the given region, searches for the next free memory region within the specified search range.
+    /// </summary>
+    /// <param name="startRegion">Starting region to search from.</param>
+    /// <param name="searchRange">Range of memory to search for free regions.</param>
+    /// <param name="goForward">Set to true to search forward from the start region, or false to search backward.
+    /// </param>
+    private Result<MemoryRangeMetadata> GetNextFreeRegion(MemoryRangeMetadata startRegion, MemoryRange searchRange,
+        bool goForward)
+    {
+        MemoryRangeMetadata currentRegion = startRegion;
+        while (currentRegion.Size != 0 && currentRegion.StartAddress.ToUInt64() < searchRange.End.ToUInt64())
+        {
+            var nextAddress = goForward
+                ? currentRegion.StartAddress + currentRegion.Size
+                : currentRegion.StartAddress - 1;
+            
+            currentRegion = _osService.GetRegionMetadata(ProcessHandle, nextAddress).ValueOrDefault();
+            
+            if (currentRegion.IsFree)
+                return currentRegion;
+        }
+        
+        return new NoFreeMemoryFailure(searchRange, searchRange.End);
+    }
+    
+    /// <summary>
+    /// Allocates the next free memory range within the specified start and end addresses that can hold the
+    /// required size.
+    /// </summary>
+    /// <param name="startAddress">Address to start searching for a free memory range.</param>
+    /// <param name="endAddress">Address to end searching for a free memory range.</param>
+    /// <param name="requiredSize">Size of the memory range required.</param>
+    /// <param name="pageSize">Size of the memory pages to use for allocation. This is used to align the addresses.
+    /// </param>
+    /// <param name="forExecutableCode">Set to true if the memory range can be used to store executable code.</param>
+    private Result<MemoryRange> AllocateNextFreeMemoryRange(UIntPtr startAddress, UIntPtr endAddress, 
+        ulong requiredSize, uint pageSize, bool forExecutableCode)
+    {
+        var currentAddress = startAddress;
+        
+        while (currentAddress.ToUInt64() <= endAddress.ToUInt64())
+        {
+            var metadata = _osService.GetRegionMetadata(ProcessHandle, currentAddress).ValueOrDefault();
+            
+            // If we got invalid metadata or reached the end
+            if (metadata.Size == 0)
+                break;
+                
+            // Check if the region is free
+            if (metadata.IsFree && metadata.Size >= requiredSize)
+            {
+                var finalRange = MemoryRange.FromStartAndSize(metadata.StartAddress, requiredSize);
+                var result = TryAllocateAt(finalRange.Start, requiredSize, forExecutableCode);
+                if (result.IsSuccess)
+                    return result;
+                
+                currentAddress += pageSize;
+                continue;
+            }
+            
+            // Move to the next region
+            currentAddress = metadata.StartAddress + metadata.Size;
+        }
+        
+        return new NoFreeMemoryFailure(new MemoryRange(startAddress, endAddress), startAddress);
+    }
+
+    /// <summary>
+    /// Attempts to allocate a memory range at the specified address with the given size.
+    /// </summary>
+    /// <param name="address">The address to allocate memory at.</param>
+    /// <param name="size">Size of the memory range to allocate.</param>
+    /// <param name="forExecutableCode">Set to true if the memory range can be used to store executable code.</param>
+    private Result<MemoryRange> TryAllocateAt(UIntPtr address, ulong size, bool forExecutableCode)
+    {
+        var allocResult = _osService.AllocateMemory(ProcessHandle, address,
+            (int)size, MemoryAllocationType.Commit | MemoryAllocationType.Reserve,
+            forExecutableCode ? MemoryProtection.ExecuteReadWrite : MemoryProtection.ReadWrite);
+            
+        if (allocResult.IsSuccess)
+            return MemoryRange.FromStartAndSize(address, size);
+            
+        return allocResult.Failure;
     }
     
     #region Store

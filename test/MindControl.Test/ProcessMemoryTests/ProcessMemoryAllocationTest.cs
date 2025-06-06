@@ -55,19 +55,14 @@ public class ProcessMemoryAllocationTest : BaseProcessMemoryTest
 
     /// <summary>
     /// Tests the <see cref="ProcessMemory.Allocate"/> method.
-    /// Performs two allocations: one with a range and one without a range.
-    /// The range starts after the expected range of the rangeless allocation.
-    /// Expect the rangeless allocation to be outside of the range, and the ranged allocation to be within the range.
+    /// Performs an allocation within a specific range and verifies that the resulting allocation is within that range.
     /// </summary>
     [Test]
     public void AllocateWithinRangeTest()
     {
         var range = new MemoryRange(new UIntPtr(0x120000), UIntPtr.MaxValue);
-        var allocationWithoutRangeResult = TestProcessMemory!.Allocate(0x1000, false);
         var allocationWithRangeResult = TestProcessMemory!.Allocate(0x1000, false, range);
-        Assert.That(allocationWithoutRangeResult.IsSuccess, Is.True, allocationWithoutRangeResult.ToString());
         Assert.That(allocationWithRangeResult.IsSuccess, Is.True, allocationWithRangeResult.ToString());
-        Assert.That(range.Contains(allocationWithoutRangeResult.Value.Range), Is.False);
         Assert.That(range.Contains(allocationWithRangeResult.Value.Range), Is.True);
     }
 
