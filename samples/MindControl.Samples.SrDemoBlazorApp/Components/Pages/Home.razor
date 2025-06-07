@@ -1,0 +1,15 @@
+﻿@page "/"
+@using MindControl.Samples.SrDemoBlazorApp.Components.Components
+
+<PageTitle>Slime Rancher Demo MindControl Blazor App</PageTitle>
+
+<h1>Slime Rancher Demo MindControl Blazor App</h1>
+
+<p>
+    This application is a demo for the MindControl library.<br/>
+    Start the free Slime Rancher demo to see and edit the game state.<br/>
+    Slime Rancher belongs to Monomi Park. They are not responsible for this software.
+</p>
+
+<h2>Game state</h2>
+<GameStateComponent @rendermode="InteractiveServer" />

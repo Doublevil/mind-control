@@ -365,3 +365,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /CommandCenter.App/.config
 /CommandCenter.App/Plugins/
+
+# docfx
+docs/_site/
+docs/api/

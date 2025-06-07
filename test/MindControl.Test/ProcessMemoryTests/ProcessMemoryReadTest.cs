@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MindControl.Results;
 using NUnit.Framework;
 
 namespace MindControl.Test.ProcessMemoryTests;
@@ -7,149 +8,466 @@ namespace MindControl.Test.ProcessMemoryTests;
 /// Tests the memory reading methods of <see cref="ProcessMemory"/>.
 /// </summary>
 [FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public class ProcessMemoryReadTest : ProcessMemoryTest
+public class ProcessMemoryReadTest : BaseProcessMemoryTest
 {
+    #region Bytes reading
+    
+    #region ReadBytes
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/>.
+    /// Reads a known byte array from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadBytesTest()
+    {
+        PointerPath pointerPath = GetPointerPathForValueAtIndex(IndexOfOutputByteArray);
+        Assert.That(TestProcessMemory!.ReadBytes(pointerPath, 4).ValueOrDefault(),
+            Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.ReadBytes(pointerPath, 4).ValueOrDefault(),
+            Is.EqualTo(new byte[] { 0x55, 0x66, 0x77, 0x88 }));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with a zero pointer.
+    /// Expect the result to be a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.ReadBytes(UIntPtr.Zero, 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with an unreadable address.
+    /// Expect the result to be a <see cref="OperatingSystemCallFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithUnreadableAddressTest()
+    {
+        var result = TestProcessMemory!.ReadBytes(GetMaxPointerValue(), 1);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+        var systemError = (OperatingSystemCallFailure)result.Failure;
+        Assert.That(systemError, Is.Not.Null);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/> with a bad pointer path.
+    /// Expect a failure.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithInvalidPathTest()
+    {
+        var result = TestProcessMemory!.ReadBytes("bad pointer path", 4);
+        Assert.That(result.IsSuccess, Is.False);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/> with a zero length.
+    /// Expect the result to be an empty array of bytes.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithZeroLengthTest()
+    {
+        var result = TestProcessMemory!.ReadBytes(OuterClassPointer, 0);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        Assert.That(result.Value, Is.Empty);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with a negative length.
+    /// Expect the result to be a <see cref="InvalidArgumentFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithNegativeLengthTest()
+    {
+        var result = TestProcessMemory!.ReadBytes(OuterClassPointer, -4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(InvalidArgumentFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with an address and length that would make the read
+    /// start on a readable address but end on an unreadable one.
+    /// Expect the result to be a <see cref="OperatingSystemCallFailure"/>. 
+    /// </summary>
+    /// <remarks>This is what <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> is for.</remarks>
+    [Test]
+    public void ReadBytesOnPartiallyUnreadableRangeTest()
+    {
+        // Prepare a segment of memory that is isolated from other memory regions, and get an address near the edge.
+        var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var targetAddress = allocatedMemory.Range.End - 4;
+
+        // Read 8 bytes, which should result in reading 4 bytes from the readable region and 4 bytes from the unreadable
+        // one.
+        var result = TestProcessMemory.ReadBytes(targetAddress, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytes(OuterClassPointer, 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(PointerPath,ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytes(OuterClassPointer.ToString("X"), 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    #endregion
+    
+    #region ReadBytesPartial
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(PointerPath,byte[],ulong)"/>.
+    /// Reads a known byte array from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialTest()
+    {
+        PointerPath pointerPath = GetPointerPathForValueAtIndex(IndexOfOutputByteArray);
+        var firstBuffer = new byte[4];
+        var firstResult = TestProcessMemory!.ReadBytesPartial(pointerPath, firstBuffer, 4);
+        ProceedToNextStep();
+        var secondBuffer = new byte[4];
+        var secondResult = TestProcessMemory.ReadBytesPartial(pointerPath, secondBuffer, 4);
+
+        Assert.That(firstResult.IsSuccess);
+        Assert.That(firstResult.Value, Is.EqualTo(4));
+        Assert.That(firstBuffer, Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
+        
+        Assert.That(secondResult.IsSuccess);
+        Assert.That(secondResult.Value, Is.EqualTo(4));
+        Assert.That(secondBuffer, Is.EqualTo(new byte[] { 0x55, 0x66, 0x77, 0x88 }));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a zero pointer.
+    /// Expect the result to be a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.ReadBytesPartial(UIntPtr.Zero, new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with an unreadable address.
+    /// Expect the result to be a <see cref="OperatingSystemCallFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithUnreadableAddressTest()
+    {
+        var result = TestProcessMemory!.ReadBytesPartial(1, new byte[1], 1);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+        var systemError = (OperatingSystemCallFailure)result.Failure;
+        Assert.That(systemError, Is.Not.Null);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(PointerPath,byte[],ulong)"/> with a bad pointer path.
+    /// Expect a failure.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithInvalidPathTest()
+    {
+        var result = TestProcessMemory!.ReadBytesPartial("bad pointer path", new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(PointerPath,byte[],ulong)"/> with a zero length.
+    /// Expect the result to be an empty array of bytes.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithZeroLengthTest()
+    {
+        var result = TestProcessMemory!.ReadBytesPartial(OuterClassPointer, [], 0);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        Assert.That(result.Value, Is.Zero);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a length exceeding the buffer
+    /// capacity.
+    /// Expect the result to be a <see cref="InvalidArgumentFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithExcessiveLengthTest()
+    {
+        var result = TestProcessMemory!.ReadBytesPartial(OuterClassPointer, new byte[4], 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(InvalidArgumentFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with an address and length that would
+    /// make the read start on a readable address but end on an unreadable one.
+    /// Expect the result to be 5 (as in 5 bytes read) and the buffer to contain the 5 bytes that were readable. 
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialOnPartiallyUnreadableRangeTest()
+    {
+        // Prepare a segment of memory that is isolated from other memory regions, and has a known sequence of bytes
+        // at the end.
+        var bytesAtTheEnd = new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5 };
+        var allocatedMemory = TestProcessMemory!.Allocate(0x1000, false).Value;
+        var targetAddress = allocatedMemory.Range.End - 4;
+        var writeResult = TestProcessMemory.WriteBytes(targetAddress, bytesAtTheEnd, MemoryProtectionStrategy.Ignore);
+        Assert.That(writeResult.IsSuccess, Is.True, writeResult.ToString());
+
+        // Read 8 bytes, which should result in reading 5 bytes from the readable region and 3 bytes from the unreadable
+        // one.
+        var buffer = new byte[8];
+        var result = TestProcessMemory.ReadBytesPartial(targetAddress, buffer, 8);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        Assert.That(result.Value, Is.EqualTo(5));
+        Assert.That(buffer, Is.EqualTo(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0, 0, 0 }));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytesPartial(OuterClassPointer, new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(PointerPath,byte[],ulong)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadBytesPartial(OuterClassPointer.ToString("X"), new byte[4], 4);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    #endregion
+    
+    #endregion
+    
+    #region Primitive type reading
+    
     /// <summary>
     /// Tests <see cref="ProcessMemory.Read(Type,UIntPtr)"/>.
     /// Reads a first time after initialization, and then a second time after value are modified.
     /// The values are expected to match the specified ones.
     /// </summary>
     /// <param name="targetType">Type of data to read.</param>
-    /// <param name="pointerOffset">Offset to add up with the outer class pointer to get the address of the value to
-    /// read.</param>
+    /// <param name="valueIndexInOutput">Index of the value to read, by order of output in the target app.</param>
     /// <param name="expectedResultBeforeBreak">Expected value on the first read (after initialization).</param>
     /// <param name="expectedResultAfterBreak">Expected value on the second read (after modification).</param>
-    [TestCase(typeof(bool), 0x48, true, false)]
-    [TestCase(typeof(byte), 0x49, 0xAC, 0xDC)]
-    [TestCase(typeof(short), 0x44, -7777, -8888)]
-    [TestCase(typeof(ushort), 0x46, 8888, 9999)]
-    [TestCase(typeof(int), 0x38, -7651, 987411)]
-    [TestCase(typeof(uint), 0x3C, 6781631, 444763)]
-    [TestCase(typeof(long), 0x20, -65746876815103L, -777654646516513L)]
-    [TestCase(typeof(ulong), 0x28, 76354111324644L, 34411111111164L)]
-    [TestCase(typeof(float), 0x40, 3456765.323f, -123444.147f)]
-    [TestCase(typeof(double), 0x30, 79879131651.33345, -99879416311.4478)]
-    public void ReadTwoStepGenericTest(Type targetType, int pointerOffset, object? expectedResultBeforeBreak,
+    [TestCase(typeof(bool), IndexOfOutputBool, InitialBoolValue, ExpectedFinalBoolValue)]
+    [TestCase(typeof(byte), IndexOfOutputByte, InitialByteValue, ExpectedFinalByteValue)]
+    [TestCase(typeof(short), IndexOfOutputShort, InitialShortValue, ExpectedFinalShortValue)]
+    [TestCase(typeof(ushort), IndexOfOutputUShort, InitialUShortValue, ExpectedFinalUShortValue)]
+    [TestCase(typeof(int), IndexOfOutputInt, InitialIntValue, ExpectedFinalIntValue)]
+    [TestCase(typeof(uint), IndexOfOutputUInt, InitialUIntValue, ExpectedFinalUIntValue)]
+    [TestCase(typeof(long), IndexOfOutputLong, InitialLongValue, ExpectedFinalLongValue)]
+    [TestCase(typeof(ulong), IndexOfOutputULong, InitialULongValue, ExpectedFinalULongValue)]
+    [TestCase(typeof(float), IndexOfOutputFloat, InitialFloatValue, ExpectedFinalFloatValue)]
+    [TestCase(typeof(double), IndexOfOutputDouble, InitialDoubleValue, ExpectedFinalDoubleValue)]
+    public void ReadTwoStepGenericTest(Type targetType, int valueIndexInOutput, object? expectedResultBeforeBreak,
         object? expectedResultAfterBreak)
     {
-        UIntPtr targetIntAddress = OuterClassPointer + pointerOffset;
-        object? resultBefore = TestProcessMemory!.Read(targetType, targetIntAddress);
+        UIntPtr targetIntAddress = GetAddressForValueAtIndex(valueIndexInOutput);
+        object resultBefore = TestProcessMemory!.Read(targetType, targetIntAddress).Value;
         Assert.That(resultBefore, Is.EqualTo(expectedResultBeforeBreak));
         ProceedToNextStep();
-        object? resultAfter = TestProcessMemory.Read(targetType, targetIntAddress);
+        object resultAfter = TestProcessMemory.Read(targetType, targetIntAddress).Value;
         Assert.That(resultAfter, Is.EqualTo(expectedResultAfterBreak));
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBool(UIntPtr)"/>.
-    /// Reads a known boolean from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known boolean from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadBoolTest() => Assert.That(TestProcessMemory!.ReadBool(OuterClassPointer + 0x48), Is.EqualTo(true));
-    
+    public void ReadBoolTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputBool);
+        Assert.That(TestProcessMemory!.Read<bool>(address).ValueOrDefault(), Is.EqualTo(InitialBoolValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<bool>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalBoolValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadByte(UIntPtr)"/>.
-    /// Reads a known byte from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known byte from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadByteTest() => Assert.That(TestProcessMemory!.ReadByte(OuterClassPointer + 0x49), Is.EqualTo(0xAC));
-    
+    public void ReadByteTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputByte);
+        Assert.That(TestProcessMemory!.Read<byte>(address).ValueOrDefault(), Is.EqualTo(InitialByteValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<byte>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalByteValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadShort(UIntPtr)"/>.
-    /// Reads a known short from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known short from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadShortTest() => Assert.That(
-        TestProcessMemory!.ReadShort(OuterClassPointer + 0x44), Is.EqualTo(-7777));
-    
+    public void ReadShortTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputShort);
+        Assert.That(TestProcessMemory!.Read<short>(address).ValueOrDefault(), Is.EqualTo(InitialShortValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<short>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalShortValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUShort(UIntPtr)"/>.
-    /// Reads a known unsigned short from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned short from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadUShortTest() => Assert.That(
-        TestProcessMemory!.ReadUShort(OuterClassPointer + 0x46), Is.EqualTo(8888));
-    
+    public void ReadUShortTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputUShort);
+        Assert.That(TestProcessMemory!.Read<ushort>(address).ValueOrDefault(), Is.EqualTo(InitialUShortValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<ushort>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalUShortValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadInt(UIntPtr)"/>.
-    /// Reads a known integer from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known integer from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadIntTest() => Assert.That(TestProcessMemory!.ReadInt(OuterClassPointer + 0x38), Is.EqualTo(-7651));
-    
+    public void ReadIntTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputInt);
+        Assert.That(TestProcessMemory!.Read<int>(address).ValueOrDefault(), Is.EqualTo(InitialIntValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<int>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalIntValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadUInt(UIntPtr)"/>.
-    /// Reads a known unsigned integer from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned integer from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadUIntTest() => Assert.That(
-        TestProcessMemory!.ReadUInt(OuterClassPointer + 0x3C), Is.EqualTo(6781631));
-    
+    public void ReadUIntTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputUInt);
+        Assert.That(TestProcessMemory!.Read<uint>(address).ValueOrDefault(), Is.EqualTo(InitialUIntValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<uint>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalUIntValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadLong(UIntPtr)"/>.
-    /// Reads a known long from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known long from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadLongTest() => Assert.That(
-        TestProcessMemory!.ReadLong(OuterClassPointer + 0x20), Is.EqualTo(-65746876815103L));
-    
+    public void ReadLongTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputLong);
+        Assert.That(TestProcessMemory!.Read<long>(address).ValueOrDefault(), Is.EqualTo(InitialLongValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<long>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalLongValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadULong(UIntPtr)"/>.
-    /// Reads a known unsigned long from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known unsigned long from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadULongTest() => Assert.That(
-        TestProcessMemory!.ReadULong(OuterClassPointer + 0x28), Is.EqualTo(76354111324644L));
-    
+    public void ReadULongTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputULong);
+        Assert.That(TestProcessMemory!.Read<ulong>(address).ValueOrDefault(), Is.EqualTo(InitialULongValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<ulong>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalULongValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadFloat(UIntPtr)"/>.
-    /// Reads a known float from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known float from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadFloatTest() => Assert.That(
-        TestProcessMemory!.ReadFloat(OuterClassPointer + 0x40), Is.EqualTo(3456765.323f));
-    
+    public void ReadFloatTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputFloat);
+        Assert.That(TestProcessMemory!.Read<float>(address).ValueOrDefault(), Is.EqualTo(InitialFloatValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<float>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalFloatValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadDouble(UIntPtr)"/>.
-    /// Reads a known double from the target process after initialization.
-    /// It should be equal to its known value.
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/>.
+    /// Reads a known double from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
-    public void ReadDoubleTest() => Assert.That(
-        TestProcessMemory!.ReadDouble(OuterClassPointer + 0x30), Is.EqualTo(79879131651.33345));
-    
+    public void ReadDoubleTest()
+    {
+        var address = GetAddressForValueAtIndex(IndexOfOutputDouble);
+        Assert.That(TestProcessMemory!.Read<double>(address).ValueOrDefault(), Is.EqualTo(InitialDoubleValue));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<double>(address).ValueOrDefault(), Is.EqualTo(ExpectedFinalDoubleValue));
+    }
+
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,ulong)"/>.
-    /// Reads a known byte array from the target process after initialization.
-    /// It should be equal to its known value.
-    /// </summary>
-    [Test]
-    public void ReadBytesTest() => Assert.That(
-        TestProcessMemory!.ReadBytes($"{OuterClassPointer:X}+18,10", 4),
-        Is.EqualTo(new byte[] { 0x11, 0x22, 0x33, 0x44 }));
-    
-    /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadLong(PointerPath)"/>.
-    /// Reads a known long from the target process after initialization.
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads a known long from the target process before and after the process changes their value.
     /// This method uses a <see cref="PointerPath"/> and reads a value that is nested in the known instance.
-    /// It should be equal to its known value.
+    /// It should be equal to its known values before and after modification.
     /// </summary>
     [Test]
     public void ReadNestedLongTest() => Assert.That(
-        TestProcessMemory!.ReadLong($"{OuterClassPointer:X}+10,8"), Is.EqualTo(999999999999L));
+        TestProcessMemory!.Read<long>(GetPointerPathForValueAtIndex(IndexOfOutputInnerLong)).ValueOrDefault(),
+        Is.EqualTo(InitialInnerLongValue));
 
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadIntPtr(PointerPath)"/>.
-    /// Reads an ulong with the max value from the target process after initialization.
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads an ulong with the max value from the target process before and after the process changes their value.
     /// This method uses a <see cref="PointerPath"/> and reads a value that is nested in the known instance.
     /// Reading this value as a pointer should yield a valid pointer. This test validates that there is no arithmetic
     /// overflow caused by signed pointer usage.
@@ -157,157 +475,922 @@ public class ProcessMemoryReadTest : ProcessMemoryTest
     [Test]
     public void ReadUIntPtrMaxValueTest()
     {
-        var ptr = TestProcessMemory!.ReadIntPtr($"{OuterClassPointer:X}+10,10");
-        Assert.That(ptr.GetValueOrDefault().ToUInt64(), Is.EqualTo(ulong.MaxValue));
+        var ptr = TestProcessMemory!.Read<UIntPtr>(GetPathToPointerToMaxAddress()).ValueOrDefault();
+        Assert.That(ptr, Is.EqualTo(GetMaxPointerValue()));
     }
 
     /// <summary>
     /// Tests an edge case where the pointer path given to a read operation points to the last possible byte in memory
     /// (the maximum value of a UIntPtr).
-    /// The read operation is expected to fail gracefully and return null (this memory region is not valid).
+    /// The read operation is expected to fail with a <see cref="OperatingSystemCallFailure"/> (this memory region is
+    /// not readable).
     /// </summary>
     [Test]
     public void ReadAtMaxPointerValueTest()
     {
-        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,0");
-        Assert.That(result, Is.Null);
+        var result = TestProcessMemory!.Read<byte>(GetMaxPointerValue());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+        var systemError = (OperatingSystemCallFailure)result.Failure;
+        Assert.That(systemError.ErrorCode, Is.GreaterThan(0));
+        Assert.That(systemError.Message, Is.Not.Empty);
     }
-    
-    /// <summary>
-    /// Tests an edge case where the pointer path given to a read operation points to a value located after the last
-    /// possible byte in memory (the maximum value of a UIntPtr + 1).
-    /// The read operation is expected to fail gracefully and return null (the target pointer is not addressable).
-    /// </summary>
-    [Test]
-    public void ReadOverMaxPointerValueTest()
-    {
-        var result = TestProcessMemory!.ReadByte($"{OuterClassPointer:X}+10,10,1");
-        Assert.That(result, Is.Null);
-    }
-    
-    /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, without using any parameter beyond the
-    /// pointer path.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// It should be equal to its known value.
-    /// </summary>
-    [Test]
-    public void ReadStringWithNoParametersTest()
-    {
-        var pointerPath = new PointerPath($"{OuterClassPointer:X}+8,8");
-        Assert.That(TestProcessMemory!.ReadString(pointerPath), Is.EqualTo("ThisIsÄString"));
-        ProceedToNextStep();
-        Assert.That(TestProcessMemory!.ReadString(pointerPath), Is.EqualTo("ThisIsALongerStrîngWith文字化けチェック"));
-    }
-    
-    /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a max length of 10 bytes.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// It should be equal to the first 5 characters of its known value, because in memory, the string is stored as in
-    /// UTF-16, so it uses 2 bytes per ASCII-friendly character, so 10 bytes would be 5 characters.
-    /// Despite the length prefix being read correctly as more than 10, only the 10 first bytes should be read.
-    /// </summary>
-    [Test]
-    public void ReadStringWithLimitedLengthTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,8", 10), Is.EqualTo("ThisI"));
-    
-    /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance similar to the
-    /// .net preset but with no length prefix.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position, after its length prefix.
-    /// It should be equal to its full known value. Despite not being able to know the length of the string because we
-    /// specify that there is no length prefix, we still use a setting that specifies a null terminator, and the string
-    /// is indeed null-terminated, so it should properly cut after the last character.
-    /// </summary>
-    [Test]
-    public void ReadStringWithoutLengthPrefixTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,C",
-            stringSettings: new StringSettings(Encoding.Unicode, true, null)), Is.EqualTo("ThisIsÄString"));
-    
-    /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance similar to the
-    /// .net preset but not null-terminated.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// It should be equal to its full known value. Despite not being able to identify a null terminator as the end of
-    /// the string, we do use a setting that specifies a correct length prefix, so only the right number of bytes should
-    /// be read.
-    /// </summary>
-    [Test]
-    public void ReadStringWithLengthPrefixWithoutNullTerminatorTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,8",
-            stringSettings: new StringSettings(Encoding.Unicode, false, new StringLengthPrefixSettings(4, 2))),
-            Is.EqualTo("ThisIsÄString"));
 
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance specifying no
-    /// null terminator and no length prefix. We use a byte count of 64.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position, after the length prefix.
-    /// It should be equal to its known value, followed by a bunch of garbage characters. Because we specified no length
-    /// prefix and no null terminator, all 64 characters will be read as a string, despite the actual string being
-    /// shorter than that.
-    /// To clarify, even though the result looks wrong, this is the expected output. The input parameters are wrong.
+    /// Tests the <see cref="ProcessMemory.Read(Type, UIntPtr)"/> method with a reference type.
+    /// It should fail with a <see cref="UnsupportedTypeReadFailure"/>.
     /// </summary>
     [Test]
-    public void ReadStringWithoutLengthPrefixOrNullTerminatorTest()
+    public void ReadIncompatibleTypeTest()
     {
-        var result = TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,C", 64,
-            new StringSettings(Encoding.Unicode, false, null));
-        
-        // We should have a string that starts with the full known string, and has at least one more character.
-        // We cannot test an exact string or length because the memory region after the string is not guaranteed to
-        // always be the same.
-        Assert.That(result, Does.StartWith("ThisIsÄString"));
-        Assert.That(result, Has.Length.AtLeast("ThisIsÄString".Length + 1));
+        var result = TestProcessMemory!.Read(typeof(string), OuterClassPointer + 0x38);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(UnsupportedTypeReadFailure)));
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(PointerPath)"/> method with a pointer path that fails to evaluate.
+    /// It should fail.
+    /// </summary>
+    [Test]
+    public void ReadWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.Read<long>("bad pointer path");
+        Assert.That(result.IsSuccess, Is.False);
     }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance that has a
-    /// length prefix unit set to null instead of 2, and no null terminator.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// It should be equal to its full known value. The unit being set to null should trigger it to automatically
-    /// determine what the unit should be. It should determine that it is 2 and read the string correctly.
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a zero pointer.
+    /// It should fail with a <see cref="ZeroPointerFailure"/>.
     /// </summary>
     [Test]
-    public void ReadStringWithUnspecifiedLengthPrefixUnitTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,8",
-                stringSettings: new StringSettings(Encoding.Unicode, false, new StringLengthPrefixSettings(4))),
-            Is.EqualTo("ThisIsÄString"));
+    public void ReadWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.Read<long>(UIntPtr.Zero);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance that has a
-    /// length prefix unit with a size of 2 instead of the correct 4.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position, 2 bytes into the length
-    /// prefix.
-    /// The result should be an empty string, because the length prefix should be read as 0.
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
-    public void ReadStringWithZeroLengthPrefixUnitTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,A",
-                stringSettings: new StringSettings(Encoding.Unicode, true, new StringLengthPrefixSettings(2, 2))),
-            Is.EqualTo(string.Empty));
+    public void ReadOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read<long>(OuterClassPointer);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
     
     /// <summary>
-    /// Tests <see cref="ProcessMemory.ReadString(PointerPath, int, StringSettings?)"/>.
-    /// Reads a known string from the target process after initialization, with a StringSettings instance that has a
-    /// UTF-8 encoding instead of the correct UTF-16.
-    /// This method uses a <see cref="PointerPath"/> to read the string at the right position.
-    /// The result should be only the first character of the know value, because the null terminator is hit on the
-    /// second UTF-16 byte that is supposed to be part of the first character.
-    /// To explain a little bit more, a UTF-16 string has a minimum of 2 bytes per character. In this case, the first
-    /// two characters are "Th", which are held in memory as 54 00 68 00. But UTF-8 would write the same "Th" as 54 68.
-    /// The encoding will interpret the second byte (00) as a null terminator that signals the end of the string, and
-    /// read it only as "T" (54), discarding everything after that.
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="DetachedProcessFailure"/>.
     /// </summary>
     [Test]
-    public void ReadStringWithWrongEncodingTest()
-        => Assert.That(TestProcessMemory!.ReadString($"{OuterClassPointer:X}+8,8",
-                stringSettings: new StringSettings(Encoding.UTF8, true, new StringLengthPrefixSettings(4, 2))),
-            Is.EqualTo("T"));
+    public void ReadWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read<long>(OuterClassPointer.ToString("X"));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,PointerPath)"/> method with a pointer path that fails to evaluate.
+    /// It should fail.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.Read(typeof(long), "bad pointer path");
+        Assert.That(result.IsSuccess, Is.False);
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a zero pointer.
+    /// It should fail with a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.Read(typeof(long), UIntPtr.Zero);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read(typeof(long), OuterClassPointer);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read(Type,UIntPtr)"/> method with a detached process.
+    /// It should fail with a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.Read(typeof(long), OuterClassPointer.ToString("X"));
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+
+    #endregion
+    
+    #region Structure reading
+    
+    /// <summary>A struct with a couple fields, to test reading structs.</summary>
+    public record struct TestStruct(long A, ulong B);
+    
+    /// <summary>Structure used to test reading a structure with references.</summary>
+    private record struct TestStructWithReferences(int A, string B);
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read{T}(PointerPath)"/>.
+    /// Reads a known struct from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadStructureTest()
+    {
+        var pointerPath = GetPointerPathForValueAtIndex(IndexOfOutputLong);
+        Assert.That(TestProcessMemory!.Read<TestStruct>(pointerPath).Value,
+            Is.EqualTo(new TestStruct(InitialLongValue, InitialULongValue)));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read<TestStruct>(pointerPath).Value,
+            Is.EqualTo(new TestStruct(ExpectedFinalLongValue, ExpectedFinalULongValue)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read(Type, PointerPath)"/>.
+    /// Reads a known struct from the target process before and after the process changes their value.
+    /// It should be equal to its known values before and after modification.
+    /// </summary>
+    [Test]
+    public void ReadStructureAsObjectTest()
+    {
+        var pointerPath = GetPointerPathForValueAtIndex(IndexOfOutputLong);
+        Assert.That(TestProcessMemory!.Read(typeof(TestStruct), pointerPath).Value,
+            Is.EqualTo(new TestStruct(InitialLongValue, InitialULongValue)));
+        ProceedToNextStep();
+        Assert.That(TestProcessMemory.Read(typeof(TestStruct), pointerPath).Value,
+            Is.EqualTo(new TestStruct(ExpectedFinalLongValue, ExpectedFinalULongValue)));
+    }
+    
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.Read{T}(UIntPtr)"/> method with a structure type that contains reference
+    /// types.
+    /// It should fail with a <see cref="ConversionFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStructureWithReferencesTest()
+    {
+        var result = TestProcessMemory!.Read<TestStructWithReferences>(OuterClassPointer + 0x38);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ConversionFailure)));
+    }
+    
+    #endregion
+    
+    #region String reading
+    
+    /// <summary>Test case for tests using string settings.</summary>
+    public record StringSettingsTestCase(Encoding Encoding, string String, bool IsNullTerminated,
+        StringLengthPrefix? LengthPrefix, byte[]? TypePrefix);
+
+    private static readonly byte[] ExampleTypePrefix = [0x11, 0x22, 0x33, 0x44];
+    
+    private static readonly StringSettingsTestCase[] StringSettingsTestCases = {
+        new(Encoding.Unicode, "Simple string", true, null, null),
+        new(Encoding.UTF8, "Simple string", true, null, null),
+        new(Encoding.UTF8, "String with diàcrîtìçs", true, null, null),
+        new(Encoding.Latin1, "String with diàcrîtìçs", true, null, null),
+        new(Encoding.Latin1, "é", true, null, null),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", true, null, null),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", true, new StringLengthPrefix(4, StringLengthUnit.Bytes), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, new StringLengthPrefix(4, StringLengthUnit.Bytes), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, new StringLengthPrefix(4, StringLengthUnit.Characters), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, new StringLengthPrefix(2, StringLengthUnit.Characters), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, new StringLengthPrefix(1, StringLengthUnit.Characters), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", false, new StringLengthPrefix(4, StringLengthUnit.Bytes), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", false, new StringLengthPrefix(4, StringLengthUnit.Characters), null),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, new StringLengthPrefix(4, StringLengthUnit.Bytes), ExampleTypePrefix),
+        new(Encoding.UTF8, "Mµl十ÿहि鬱", true, null, ExampleTypePrefix),
+    };
+    
+    #region FindStringSettings
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> using predefined test cases.
+    /// The methodology is to allocate some memory, write a string to it using the parameters defined in the test case,
+    /// and then call the tested method on it.
+    /// The result is expected to match the test case settings.
+    /// </summary>
+    /// <remarks>This test depends on allocation methods and writing methods. If all test cases fail, check the tests
+    /// for these features first.</remarks>
+    [TestCaseSource(nameof(StringSettingsTestCases))]
+    public void FindStringSettingsTest(StringSettingsTestCase testCase)
+    {
+        var settings = new StringSettings(testCase.Encoding)
+        {
+            IsNullTerminated = testCase.IsNullTerminated,
+            LengthPrefix = testCase.LengthPrefix,
+            TypePrefix = testCase.TypePrefix
+        };
+
+        // Allocate some memory to write the string.
+        var allocatedSpace = TestProcessMemory!.Allocate(1024, false).Value.ReserveRange(1024).Value;
+        byte[] bytes = settings.GetBytes(testCase.String)
+            ?? throw new ArgumentException("The test case is invalid: the length prefix is too short for the string.");
+        
+        // Fill the allocated space with FF bytes to prevent unexpected null termination results
+        TestProcessMemory.WriteBytes(allocatedSpace.Address, Enumerable.Repeat((byte)255, 1024).ToArray());
+        
+        // Write the string to the allocated space. Because the FindStringSettings expects the address of a pointer
+        // to the string, we write the string with an offset of 8, and then we write the first 8 bytes to point to
+        // the address where we wrote the string.
+        TestProcessMemory.Write(allocatedSpace.Address + 8, bytes);
+        TestProcessMemory.Write(allocatedSpace.Address, allocatedSpace.Address + 8);
+        
+        // Call the tested method on the string pointer (the one we wrote last)
+        var findSettingsResult = TestProcessMemory.FindStringSettings(allocatedSpace.Address, testCase.String);
+        Assert.That(findSettingsResult.IsSuccess, Is.True, findSettingsResult.ToString());
+        
+        // Check that the settings match the test case, i.e. that the determined settings are the same settings we
+        // used to write the string in memory.
+        var foundSettings = findSettingsResult.Value;
+        Assert.Multiple(() =>
+        {
+            Assert.That(foundSettings.Encoding, Is.EqualTo(testCase.Encoding));
+            Assert.That(foundSettings.IsNullTerminated, Is.EqualTo(testCase.IsNullTerminated));
+            Assert.That(foundSettings.LengthPrefix?.Size, Is.EqualTo(testCase.LengthPrefix?.Size));
+            Assert.That(foundSettings.TypePrefix, Is.EqualTo(testCase.TypePrefix));
+        });
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(PointerPath,string)"/> on a known string in the target
+    /// process.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnKnownPathTest()
+    {
+        var dotNetStringSettings = GetDotNetStringSettings();
+        var result = TestProcessMemory!.FindStringSettings(GetPointerPathForValueAtIndex(IndexOfOutputString),
+            InitialStringValue);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        Assert.That(result.Value.Encoding, Is.EqualTo(dotNetStringSettings.Encoding));
+        Assert.That(result.Value.IsNullTerminated, Is.EqualTo(dotNetStringSettings.IsNullTerminated));
+        Assert.That(result.Value.LengthPrefix?.Size,
+            Is.EqualTo(dotNetStringSettings.LengthPrefix?.Size));
+        Assert.That(result.Value.LengthPrefix?.Unit, Is.EqualTo(dotNetStringSettings.LengthPrefix?.Unit));
+        // For the type prefix, we only check the length, because the actual value is dynamic.
+        Assert.That(result.Value.TypePrefix?.Length, Is.EqualTo(dotNetStringSettings.TypePrefix?.Length));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a valid address but the wrong
+    /// expected string.
+    /// The method should return a <see cref="UndeterminedStringSettingsFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsWithWrongStringTest()
+    {
+        var result = TestProcessMemory!.FindStringSettings(GetStringPointerAddress(), "Wrong string");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(UndeterminedStringSettingsFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a valid address but an empty
+    /// expected string.
+    /// The method should return a <see cref="InvalidArgumentFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsWithEmptyStringTest()
+    {
+        var result = TestProcessMemory!.FindStringSettings(GetStringPointerAddress(), "");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(InvalidArgumentFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> on a zero pointer address.
+    /// The method should return a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnZeroPointerTest()
+    {
+        // We do not have a known zero pointer address, so we are going to allocate some memory and point to it.
+        var allocatedSpace = TestProcessMemory!.Allocate(8, false).Value.ReserveRange(8).Value;
+        var result = TestProcessMemory!.FindStringSettings(allocatedSpace.Address, "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a pointer at the maximum possible
+    /// address, which is invalid.
+    /// The method should return an OS failure of some sort.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnInvalidPointerAddressTest()
+    {
+        var result = TestProcessMemory!.FindStringSettings(GetMaxPointerValue(), "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(PointerPath,string)"/> with a pointer to the maximum possible
+    /// address, which is invalid.
+    /// The method should return an OS failure of some sort.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnInvalidStringAddressTest()
+    {
+        // Use a known path that should cause the string address to be 0xFFFFFFFFFFFFFFFF (x64) or 0xFFFFFFFF (x86).
+        PointerPath pointerPath = GetPathToPointerToMaxAddress();
+        var result = TestProcessMemory!.FindStringSettings(pointerPath, "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(PointerPath,string)"/> with a pointer path that cannot be
+    /// evaluated. The method should fail.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnInvalidPointerPathTest()
+    {
+        var result = TestProcessMemory!.FindStringSettings("bad pointer path", "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a detached process.
+    /// The method should return a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.FindStringSettings(0x1234, InitialStringValue);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(PointerPath,string)"/> with a detached process.
+    /// The method should return a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsWithPointerPathOnDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.FindStringSettings("1234", InitialStringValue);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    #endregion
+
+    #region ReadRawString
+
+    /// <summary>Test case for <see cref="ProcessMemoryReadTest.ReadRawStringTest"/>.</summary>
+    public record ReadRawStringTestCase(Encoding Encoding, string String, bool IsNullTerminated, int MaxLength,
+        string? ExpectedStringIfDifferent = null);
+    
+    private static readonly ReadRawStringTestCase[] ReadRawStringTestCases = {
+        new(Encoding.Unicode, "Simple string", true, 100),
+        new(Encoding.Unicode, "Simple string", true, 0, string.Empty),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", true, 10),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", false, 10, "Mµl十ÿहि鬱\0\0"),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", true, 4, "Mµl十"),
+        new(Encoding.Unicode, "Mµl十ÿहि鬱", false, 4, "Mµl十"),
+        new(Encoding.UTF8, "Simple string", true, 100),
+        new(Encoding.UTF8, "String with diàcrîtìçs", true, 100),
+        new(Encoding.Latin1, "String with diàcrîtìçs", true, 100),
+    };
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,System.Nullable{int},bool)"/>.
+    /// Writes a string to memory using a specific encoding, then reads it back with the tested method using the same
+    /// encoding and other various parameters.
+    /// The result must match the expectation of the test case.
+    /// </summary>
+    /// <param name="testCase">Test case defining the parameters to test.</param>
+    [TestCaseSource(nameof(ReadRawStringTestCases))]
+    public void ReadRawStringTest(ReadRawStringTestCase testCase)
+    {
+        var reservedMemory = TestProcessMemory!.Allocate(0x1000, false).Value.ReserveRange(0x1000).Value;
+        byte[] bytes = testCase.Encoding.GetBytes(testCase.String);
+        TestProcessMemory.Write(reservedMemory.Address, bytes);
+        
+        var result = TestProcessMemory.ReadRawString(reservedMemory.Address, testCase.Encoding,
+            testCase.MaxLength, testCase.IsNullTerminated);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        var resultString = result.Value;
+        
+        var expectedString = testCase.ExpectedStringIfDifferent ?? testCase.String;
+        Assert.That(resultString, Is.EqualTo(expectedString));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(PointerPath,Encoding,System.Nullable{int},bool)"/>.
+    /// Calls the method with a pointer path that goes through a known string pointer, before and after the string
+    /// pointer is modified.
+    /// Expect the result to match the known strings in both cases.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithKnownStringTest()
+    {
+        var path = GetPathToRawStringBytes();
+        var firstResult = TestProcessMemory!.ReadRawString(path, Encoding.Unicode);
+        ProceedToNextStep();
+        var secondResult = TestProcessMemory.ReadRawString(path, Encoding.Unicode);
+        
+        Assert.That(firstResult.IsSuccess, Is.True, firstResult.ToString());
+        Assert.That(firstResult.Value, Is.EqualTo(InitialStringValue));
+        
+        Assert.That(secondResult.IsSuccess, Is.True, secondResult.ToString());
+        Assert.That(secondResult.Value, Is.EqualTo(ExpectedFinalStringValue));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,System.Nullable{int},bool)"/>.
+    /// Call the method with a zero pointer as the address.
+    /// Expect the result to be a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.ReadRawString(UIntPtr.Zero, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,System.Nullable{int},bool)"/>.
+    /// Call the method with an unreadable address.
+    /// Expect the result to be an <see cref="OperatingSystemCallFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithUnreadableAddressTest()
+    {
+        var result = TestProcessMemory!.ReadRawString(1, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(PointerPath,Encoding,System.Nullable{int},bool)"/>.
+    /// Call the method with a negative max length.
+    /// Expect the result to be a <see cref="InvalidArgumentFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithNegativeMaxLengthTest()
+    {
+        var result = TestProcessMemory!.ReadRawString(GetPathToRawStringBytes(), Encoding.Unicode, -1);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(InvalidArgumentFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(PointerPath,Encoding,System.Nullable{int},bool)"/>.
+    /// Call the method with a pointer path that cannot be evaluated.
+    /// Expect the result to be a failure.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.ReadRawString("bad pointer path", Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,System.Nullable{int},bool)"/> with a detached
+    /// process. Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadRawString(0x1234, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(PointerPath,Encoding,System.Nullable{int},bool)"/> with a detached
+    /// process. Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadRawString("1234", Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    #endregion
+    
+    #region ReadStringPointer
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> using predefined test cases.
+    /// The methodology is to allocate some memory, write a string to it using the parameters defined in the test case,
+    /// and then call the tested method on it.
+    /// The result is expected to match the test case settings.
+    /// </summary>
+    /// <remarks>This test depends on allocation methods and writing methods. If all test cases fail, check the tests
+    /// for these features first.</remarks>
+    [TestCaseSource(nameof(StringSettingsTestCases))]
+    public void ReadStringPointerTest(StringSettingsTestCase testCase)
+    {
+        var settings = new StringSettings(testCase.Encoding)
+        {
+            IsNullTerminated = testCase.IsNullTerminated,
+            LengthPrefix = testCase.LengthPrefix,
+            TypePrefix = testCase.TypePrefix
+        };
+
+        // Allocate some memory to write the string.
+        var allocatedSpace = TestProcessMemory!.Allocate(1024, false).Value.ReserveRange(1024).Value;
+        byte[] bytes = settings.GetBytes(testCase.String)
+            ?? throw new ArgumentException("The test case is invalid: the length prefix is too short for the string.");
+        
+        // Fill the allocated space with FF bytes to prevent unexpected null termination results
+        TestProcessMemory.WriteBytes(allocatedSpace.Address, Enumerable.Repeat((byte)255, 1024).ToArray());
+        
+        // Write the string to the allocated space. Because ReadStringPointer expects the address of a pointer to the
+        // string, we write the string with an offset of 8, and then we write the first 8 bytes to point to the address
+        // where we wrote the string.
+        TestProcessMemory.Write(allocatedSpace.Address + 8, bytes);
+        TestProcessMemory.Write(allocatedSpace.Address, allocatedSpace.Address + 8);
+        
+        // Call the tested method on the string pointer (the one we wrote last) and check that we got the same string
+        // that we wrote previously.
+        var result = TestProcessMemory.ReadStringPointer(allocatedSpace.Address, settings);
+        Assert.That(result.IsSuccess, Is.True, result.ToString());
+        Assert.That(result.Value, Is.EqualTo(testCase.String));
+    }
+
+    /// <summary>
+    /// Tests the <see cref="ProcessMemory.ReadStringPointer(PointerPath,StringSettings)"/> method with a pointer path
+    /// that points to a known string in the target process.
+    /// The method is called before and after the string pointer is modified.
+    /// The result is expected to match the known strings in both cases.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerOnKnownStringTest()
+    {
+        var path = GetPointerPathForValueAtIndex(IndexOfOutputString);
+        var firstResult = TestProcessMemory!.ReadStringPointer(path, GetDotNetStringSettings());
+        ProceedToNextStep();
+        var secondResult = TestProcessMemory.ReadStringPointer(path, GetDotNetStringSettings());
+        
+        Assert.That(firstResult.IsSuccess, Is.True, firstResult.ToString());
+        Assert.That(firstResult.Value, Is.EqualTo(InitialStringValue));
+        
+        Assert.That(secondResult.IsSuccess, Is.True, secondResult.ToString());
+        Assert.That(secondResult.Value, Is.EqualTo(ExpectedFinalStringValue));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a zero pointer address.
+    /// Expect the result to be a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithZeroPointerTest()
+    {
+        var result = TestProcessMemory!.ReadStringPointer(UIntPtr.Zero, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a pointer that reads 0.
+    /// Expect the result to be a <see cref="ZeroPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithPointerToZeroPointerTest()
+    {
+        // Arrange a usable space in memory that contains only zeroes so that we can get a zero pointer.
+        var allocatedSpace = TestProcessMemory!.Allocate(8, false).Value.ReserveRange(8).Value;
+        
+        var result = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(ZeroPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a zero pointer address.
+    /// Expect the result to be an <see cref="OperatingSystemCallFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithUnreadablePointerTest()
+    {
+        var result = TestProcessMemory!.ReadStringPointer(GetMaxPointerValue(), GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(OperatingSystemCallFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(PointerPath,StringSettings)"/> with an address that points to
+    /// an unreadable memory region.
+    /// Expect the result to be a failure.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithPointerToUnreadableMemoryTest()
+    {
+        var result = TestProcessMemory!.ReadStringPointer(GetPathToPointerToMaxAddress(), GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with invalid string settings.
+    /// Expect the result to be a <see cref="InvalidStringSettingsFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithInvalidSettingsTest()
+    {
+        var settings = new StringSettings(Encoding.Unicode,
+            isNullTerminated: false,
+            lengthPrefix: null);
+        var result = TestProcessMemory!.ReadStringPointer(GetAddressForValueAtIndex(IndexOfOutputString), settings);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(InvalidStringSettingsFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(PointerPath,StringSettings)"/> with a bad pointer path.
+    /// Expect the result to be a failure.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithBadPointerPathTest()
+    {
+        var result = TestProcessMemory!.ReadStringPointer("bad pointer path", GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/>.
+    /// The settings specify a length prefix in bytes. The pointer points to a string with a length prefix in bytes that
+    /// has a value of 10.
+    /// Performs 2 reads: one with a max length of 10 bytes, and one with a max length of 9 bytes.
+    /// Expect the first read to return the full string, and the second read to fail with a
+    /// <see cref="StringTooLongFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithTooLongStringWithBytesPrefixTest()
+    {
+        var allocatedSpace = TestProcessMemory!.Allocate(0x1000, false).Value.ReserveRange(0x1000).Value;
+        var settings = new StringSettings(Encoding.UTF8, false, new StringLengthPrefix(4, StringLengthUnit.Bytes));
+        var stringContent = "0123456789"; // Length of 10 characters, and 10 bytes in UTF-8.
+        var bytes = settings.GetBytes(stringContent)!;
+        
+        // Write the string to the allocated space. Because ReadStringPointer expects the address of a pointer to the
+        // string, we write the string with an offset of 8, and then we write the first 8 bytes to point to the address
+        // where we wrote the string.
+        TestProcessMemory.Write(allocatedSpace.Address + 8, bytes);
+        TestProcessMemory.Write(allocatedSpace.Address, allocatedSpace.Address + 8);
+        
+        // Read the string with a max length of 10 bytes.
+        settings.MaxLength = 10;
+        var firstResult = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        // Read the string with a max length of 9 bytes.
+        settings.MaxLength = 9;
+        var secondResult = TestProcessMemory.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        Assert.That(firstResult.IsSuccess, Is.True, firstResult.ToString());
+        Assert.That(firstResult.Value, Is.EqualTo(stringContent));
+        
+        Assert.That(secondResult.IsSuccess, Is.False);
+        Assert.That(secondResult.Failure, Is.TypeOf(typeof(StringTooLongFailure)));
+        var failure = (StringTooLongFailure)secondResult.Failure;
+        Assert.That(failure.LengthPrefixValue, Is.EqualTo(10));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/>.
+    /// The settings specify a length prefix in bytes. The pointer points to a string with a length prefix in characters
+    /// that has a value of 10.
+    /// Performs 2 reads: one with a max length of 10 characters, and one with a max length of 9 characters.
+    /// Expect the first read to return the full string, and the second read to fail with a
+    /// <see cref="StringTooLongFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithTooLongStringWithCharactersPrefixTest()
+    {
+        var allocatedSpace = TestProcessMemory!.Allocate(0x1000, false).Value.ReserveRange(0x1000).Value;
+        var settings = new StringSettings(Encoding.Unicode, false,
+            new StringLengthPrefix(4, StringLengthUnit.Characters));
+        var stringContent = "0123456789"; // Length of 10 characters, but 16 bytes in UTF-16.
+        var bytes = settings.GetBytes(stringContent)!;
+        
+        // Write the string to the allocated space. Because ReadStringPointer expects the address of a pointer to the
+        // string, we write the string with an offset of 8, and then we write the first 8 bytes to point to the address
+        // where we wrote the string.
+        TestProcessMemory.Write(allocatedSpace.Address + 8, bytes);
+        TestProcessMemory.Write(allocatedSpace.Address, allocatedSpace.Address + 8);
+        
+        // Read the string with a max length of 10 characters.
+        settings.MaxLength = 10;
+        var firstResult = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        // Read the string with a max length of 9 characters.
+        settings.MaxLength = 9;
+        var secondResult = TestProcessMemory.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        Assert.That(firstResult.IsSuccess, Is.True, firstResult.ToString());
+        Assert.That(firstResult.Value, Is.EqualTo(stringContent));
+        
+        Assert.That(secondResult.IsSuccess, Is.False);
+        Assert.That(secondResult.Failure, Is.TypeOf(typeof(StringTooLongFailure)));
+        var failure = (StringTooLongFailure)secondResult.Failure;
+        Assert.That(failure.LengthPrefixValue, Is.EqualTo(10));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/>.
+    /// The settings specify no length prefix, but a null terminator. The pointer points to a string with 10 characters.
+    /// Performs 2 reads: one with a max length of 10 characters, and one with a max length of 9 characters.
+    /// Expect the first read to return the full string, and the second read to fail with a
+    /// <see cref="StringTooLongFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithTooLongStringWithoutPrefixTest()
+    {
+        var allocatedSpace = TestProcessMemory!.Allocate(0x1000, false).Value.ReserveRange(0x1000).Value;
+        var settings = new StringSettings(Encoding.Unicode, true, null);
+        var stringContent = "0123456789"; // Length of 10 characters
+        var bytes = settings.GetBytes(stringContent)!;
+        
+        // Write the string to the allocated space. Because ReadStringPointer expects the address of a pointer to the
+        // string, we write the string with an offset of 8, and then we write the first 8 bytes to point to the address
+        // where we wrote the string.
+        TestProcessMemory.Write(allocatedSpace.Address + 8, bytes);
+        TestProcessMemory.Write(allocatedSpace.Address, allocatedSpace.Address + 8);
+        
+        // Read the string with a max length of 10 characters.
+        settings.MaxLength = 10;
+        var firstResult = TestProcessMemory!.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        // Read the string with a max length of 9 characters.
+        settings.MaxLength = 9;
+        var secondResult = TestProcessMemory.ReadStringPointer(allocatedSpace.Address, settings);
+        
+        Assert.That(firstResult.IsSuccess, Is.True, firstResult.ToString());
+        Assert.That(firstResult.Value, Is.EqualTo(stringContent));
+        
+        Assert.That(secondResult.IsSuccess, Is.False);
+        Assert.That(secondResult.Failure, Is.TypeOf(typeof(StringTooLongFailure)));
+        var failure = (StringTooLongFailure)secondResult.Failure;
+        Assert.That(failure.LengthPrefixValue, Is.Null); // No prefix, so the value should be null.
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadStringPointer(0x1234, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(PointerPath,StringSettings)"/> with a detached process.
+    /// Expect the result to be a <see cref="DetachedProcessFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerWithPointerPathWithDetachedProcessTest()
+    {
+        TestProcessMemory!.Dispose();
+        var result = TestProcessMemory.ReadStringPointer("1234", GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(DetachedProcessFailure)));
+    }
+    
+    #endregion
+    
+    #endregion
+}
+
+/// <summary>
+/// Runs the tests from <see cref="ProcessMemoryReadTest"/> with a 32-bit version of the target app.
+/// </summary>
+[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
+public class ProcessMemoryReadTestX86 : ProcessMemoryReadTest
+{
+    /// <summary>Gets a boolean value defining which version of the target app is used.</summary>
+    protected override bool Is64Bit => false;
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytes(UIntPtr,long)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadBytes((UIntPtr)address, 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadBytesPartial(UIntPtr,byte[],ulong)"/> with a 64-bit address on a 32-bit
+    /// process. Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadBytesPartialOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadBytesPartial((UIntPtr)address, new byte[8], 8);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read{T}(UIntPtr)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadGenericOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Read<int>((UIntPtr)address);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.Read(Type,UIntPtr)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadObjectOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.Read(typeof(int), (UIntPtr)address);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.FindStringSettings(UIntPtr,string)"/> with a 64-bit address on a 32-bit process.
+    /// Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void FindStringSettingsOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.FindStringSettings((UIntPtr)address, "Whatever");
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadRawString(UIntPtr,Encoding,Nullable{int},bool)"/> with a 64-bit address on a
+    /// 32-bit process. Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadRawStringOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadRawString((UIntPtr)address, Encoding.Unicode);
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
+    
+    /// <summary>
+    /// Tests <see cref="ProcessMemory.ReadStringPointer(UIntPtr,StringSettings)"/> with a 64-bit address on a 32-bit
+    /// process. Expect the result to be a <see cref="IncompatibleBitnessPointerFailure"/>.
+    /// </summary>
+    [Test]
+    public void ReadStringPointerOnX86WithX64AddressTest()
+    {
+        var address = (ulong)uint.MaxValue + 1;
+        var result = TestProcessMemory!.ReadStringPointer((UIntPtr)address, GetDotNetStringSettings());
+        Assert.That(result.IsSuccess, Is.False);
+        Assert.That(result.Failure, Is.TypeOf(typeof(IncompatibleBitnessPointerFailure)));
+    }
 }
