@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0-alpha-2025-06-07-4/apiSpec/new?filename=MindControl_PointerPath.md&amp;value=---%0Auid%3A%20MindControl.PointerPath%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="docfx:docurl" content="https://github.com/Doublevil/mind-control/new/v1.0.0/apiSpec/new?filename=MindControl_PointerPath.md&amp;value=---%0Auid%3A%20MindControl.PointerPath%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -89,7 +89,7 @@
 
 
   <h1 id="MindControl_PointerPath" data-uid="MindControl.PointerPath" class="text-break">
-Class PointerPath  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L9"><i class="bi bi-code-slash"></i></a>
+Class PointerPath  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L9"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -157,7 +157,7 @@ A pointer path instance can be reused to optimize performance, as it is only par
 
   <h3 id="MindControl_PointerPath__ctor_System_String_" data-uid="MindControl.PointerPath.#ctor(System.String)">
   PointerPath(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L88"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L88"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Builds a pointer path from the given expression.</p>
@@ -197,7 +197,7 @@ or &quot;1F07A314&quot;, or &quot;1F07A314+A0&quot;, or &quot;1F07A314-A0,4&quot
 
   <h3 id="MindControl_PointerPath__ctor_System_String_System_UIntPtr_System_Int64___" data-uid="MindControl.PointerPath.#ctor(System.String,System.UIntPtr,System.Int64[])">
   PointerPath(string, nuint, params long[])
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L132"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L132"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Builds a pointer path from a base module name, a base module offset, and a series of offsets.</p>
@@ -239,7 +239,7 @@ final memory address. For example, in &quot;mygame.exe+3FF0,4,1C&quot;, this wou
 
   <h3 id="MindControl_PointerPath__ctor_System_UIntPtr_System_Int64___" data-uid="MindControl.PointerPath.#ctor(System.UIntPtr,System.Int64[])">
   PointerPath(nuint, params long[])
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L112"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L112"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Builds a pointer path from a pointer and a series of offsets.</p>
@@ -281,7 +281,7 @@ final memory address. For example, in &quot;1F07A314,4,1C&quot;, this would be [
 
   <h3 id="MindControl_PointerPath_BaseModuleName" data-uid="MindControl.PointerPath.BaseModuleName">
   BaseModuleName
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L58"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L58"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the base module name.
@@ -315,7 +315,7 @@ For expression with no module name, like &quot;01F4684-4,18&quot;, gets a null v
 
   <h3 id="MindControl_PointerPath_BaseModuleOffset" data-uid="MindControl.PointerPath.BaseModuleOffset">
   BaseModuleOffset
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L65"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L65"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the offset of the base module name.
@@ -349,7 +349,7 @@ For expressions without a module offset, like &quot;01F4684-4,18&quot; or &quot;
 
   <h3 id="MindControl_PointerPath_Expression" data-uid="MindControl.PointerPath.Expression">
   Expression
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L49"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L49"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the pointer path expression. Some examples include &quot;myprocess.exe+001F468B,1B,0,A0&quot;,
@@ -382,7 +382,7 @@ or &quot;1F07A314&quot;, or &quot;1F07A314+A0&quot;, or &quot;1F07A314-A0,4&quot
 
   <h3 id="MindControl_PointerPath_IsStrictly64Bit" data-uid="MindControl.PointerPath.IsStrictly64Bit">
   IsStrictly64Bit
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L80"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L80"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets a boolean indicating if the path is a 64-bit only path, or if it can also be used in a 32-bit
@@ -418,7 +418,7 @@ Note that evaluating a 32-bit-compatible address may still end up overflowing.</
 
   <h3 id="MindControl_PointerPath_PointerOffsets" data-uid="MindControl.PointerPath.PointerOffsets">
   PointerOffsets
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L71"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L71"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Gets the collection of pointer offsets to follow sequentially in order to evaluate the memory address.
@@ -455,7 +455,7 @@ For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets
 
   <h3 id="MindControl_PointerPath_IsValid_System_String_System_Boolean_" data-uid="MindControl.PointerPath.IsValid(System.String,System.Boolean)">
   IsValid(string, bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L156"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L156"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Checks the given expression and returns a boolean indicating if it is valid or not.</p>
@@ -497,7 +497,7 @@ For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets
 
   <h3 id="MindControl_PointerPath_ToString" data-uid="MindControl.PointerPath.ToString">
   ToString()
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L440"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L440"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Returns a string that represents the current object.</p>
@@ -530,7 +530,7 @@ For example, for the expression &quot;myprocess.exe+01F4684-4,18+4,C&quot;, gets
 
   <h3 id="MindControl_PointerPath_TryParse_System_String_System_Boolean_" data-uid="MindControl.PointerPath.TryParse(System.String,System.Boolean)">
   TryParse(string, bool)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L171"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L171"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Attempts to parse the given expression. Returns the resulting <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instance if the
@@ -578,7 +578,7 @@ null if the expression is not valid.</p>
 
   <h3 id="MindControl_PointerPath_op_Implicit_System_String__MindControl_PointerPath" data-uid="MindControl.PointerPath.op_Implicit(System.String)~MindControl.PointerPath">
   implicit operator PointerPath(string)
-  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L147"><i class="bi bi-code-slash"></i></a>
+  <a class="header-action link-secondary" title="View source" href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L147"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Implicitly converts the given string to a <a class="xref" href="MindControl.PointerPath.html">PointerPath</a> instance using the constructor.</p>
@@ -617,7 +617,7 @@ null if the expression is not valid.</p>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0-alpha-2025-06-07-4/src/MindControl/Addressing/PointerPath.cs/#L9" class="edit-link">Edit this page</a>
+          <a href="https://github.com/Doublevil/mind-control/blob/v1.0.0/src/MindControl/Addressing/PointerPath.cs/#L9" class="edit-link">Edit this page</a>
         </div>
 
 
