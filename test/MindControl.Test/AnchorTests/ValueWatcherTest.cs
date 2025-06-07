@@ -185,7 +185,7 @@ public class ValueWatcherTest : BaseProcessMemoryTest
     [Test]
     public void ValueReacquiredAndChangedTest()
     {
-        using var reservation = TestProcessMemory!.Reserve(16, false).Value;
+        using var reservation = TestProcessMemory!.Reserve(24, false).Value;
         TestProcessMemory.Write(reservation.Address, reservation.Address + 8).ThrowOnFailure();
         int targetValue = 46;
         TestProcessMemory.Write(reservation.Address + 8, targetValue).ThrowOnFailure();
@@ -221,7 +221,8 @@ public class ValueWatcherTest : BaseProcessMemoryTest
         watcher.UpdateState(); // This should raise a ValueLost event
         
         // Make the pointer path resolve to an area with a 0 value
-        TestProcessMemory.Write(reservation.Address, reservation.Address + 12).ThrowOnFailure();
+        TestProcessMemory.Write(reservation.Address + 16, new byte[8]).ThrowOnFailure();
+        TestProcessMemory.Write(reservation.Address, reservation.Address + 16).ThrowOnFailure();
         watcher.UpdateState(); // This should raise a ValueReacquired event and then a ValueChanged event
         watcher.Dispose();
         
